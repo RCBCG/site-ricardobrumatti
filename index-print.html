@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Simuladores econômicos e de custos para pecuária de corte: cria, recria, engorda e confinamento. Ferramentas gratuitas do Prof. Ricardo C. Brumatti (FAMEZ/UFMS).">
+<meta property="og:title" content="Prof. Ricardo C. Brumatti — Economia Rural & Pecuária de Corte">
+<meta property="og:description" content="Simuladores econômicos e de custos para pecuária de corte: cria, recria, engorda e confinamento. Ferramentas gratuitas do Prof. Ricardo C. Brumatti (FAMEZ/UFMS).">
+<meta property="og:image" content="foto-perfil.jpg">
+<meta property="og:url" content="https://ricardobrumatti.pro.br">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="alternate icon" type="image/png" href="favicon.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<title>Prof. Ricardo C. Brumatti — Economia Rural & Pecuária de Corte</title>
+
+<style>
+/* ─── TOKENS ─────────────────────────────────────────── */
+:root {
+  --bg:        #f8fafc;
+  --bg2:       #f1f5f9;
+  --bg3:       #e2e8f0;
+  --white:     #ffffff;
+  --border:    #e2e8f0;
+  --border2:   #cbd5e1;
+  --text:      #0f172a;
+  --text2:     #334155;
+  --muted:     #475569;
+  --light:     #64748b;
+
+  /* Brand accents */
+  --green:     #064e65;
+  --green-mid: #0d6b83;
+  --green-lt:  #e6f4f7;
+  --gold:      oklch(58% 0.14 72);
+  --gold-lt:   oklch(96% 0.04 72);
+
+  --serif: Georgia, Cambria, 'Times New Roman', Times, serif;
+  --sans:  -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  --radius: 12px;
+  --shadow: 0 1px 3px oklch(0% 0 0 / 0.08), 0 4px 16px oklch(0% 0 0 / 0.06);
+  --shadow-lg: 0 8px 32px oklch(0% 0 0 / 0.10), 0 2px 8px oklch(0% 0 0 / 0.06);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+/* ─── NAV ────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 60px;
+  display: flex; align-items: center;
+  padding: 0 clamp(1.25rem, 4vw, 3rem);
+  background: oklch(100% 0 0 / 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  transition: box-shadow 0.3s;
+}
+nav.scrolled { box-shadow: 0 2px 20px oklch(0% 0 0 / 0.08); }
+
+.nav-inner {
+  width: 100%; max-width: 1280px;
+  margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.nav-logo {
+  font-family: var(--serif);
+  font-size: 1rem;
+  color: var(--text);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.nav-logo strong { color: var(--green); }
+
+.nav-links {
+  display: flex; gap: 2rem;
+  list-style: none;
+}
+.nav-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--green); }
+
+.nav-cta {
+  background: var(--green);
+  color: #fff;
+  border: none; border-radius: 8px;
+  padding: 0.48rem 1.1rem;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  letter-spacing: 0.03em;
+  transition: background 0.2s, transform 0.15s;
+}
+.nav-cta:hover { background: var(--green-mid); transform: translateY(-1px); }
+
+.nav-burger {
+  display: none;
+  flex-direction: column; gap: 5px; cursor: pointer; padding: 4px;
+}
+.nav-burger span {
+  display: block; width: 22px; height: 2px;
+  background: var(--text); border-radius: 2px;
+  transition: all 0.3s;
+}
+
+.mobile-menu {
+  display: none; position: fixed; inset: 0; z-index: 99;
+  background: var(--white);
+  flex-direction: column; align-items: center; justify-content: center; gap: 2.5rem;
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a {
+  font-family: var(--serif); font-size: 2rem;
+  color: var(--text); text-decoration: none;
+  transition: color 0.2s;
+}
+.mobile-menu a:hover { color: var(--green); }
+.mobile-close {
+  position: absolute; top: 1.5rem; right: 1.5rem;
+  font-size: 1.8rem; cursor: pointer; color: var(--muted);
+  background: none; border: none;
+}
+
+/* ─── HERO ───────────────────────────────────────────── */
+#hero {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  padding: 6rem clamp(1.25rem, 4vw, 3rem) 4rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: var(--green-lt);
+  border: 1px solid oklch(42% 0.12 148 / 0.2);
+  border-radius: 100px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.75rem; font-weight: 600;
+  color: var(--green);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+.hero-eyebrow::before {
+  content: '';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  animation: blink 2.4s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.hero-title {
+  font-family: var(--serif);
+  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+  line-height: 1.12;
+  color: var(--text);
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.01em;
+}
+.hero-title em { font-style: italic; color: var(--green); }
+
+.hero-sub {
+  font-size: 1.05rem; color: var(--muted);
+  max-width: 44ch; line-height: 1.75; margin-bottom: 2rem;
+  font-weight: 400;
+}
+
+.hero-actions { display: flex; gap: 0.875rem; flex-wrap: wrap; }
+
+.btn-primary {
+  background: var(--green); color: #fff;
+  border: none; border-radius: 10px;
+  padding: 0.8rem 1.75rem;
+  font-family: var(--sans); font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+.btn-primary:hover {
+  background: var(--green-mid);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px oklch(42% 0.12 148 / 0.25);
+}
+
+.btn-outline {
+  background: transparent; color: var(--text2);
+  border: 1.5px solid var(--border2); border-radius: 10px;
+  padding: 0.8rem 1.75rem;
+  font-family: var(--sans); font-size: 0.9rem; font-weight: 500;
+  cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  transition: border-color 0.2s, color 0.2s, transform 0.15s;
+}
+.btn-outline:hover { border-color: var(--green); color: var(--green); transform: translateY(-2px); }
+
+.hero-stats {
+  display: flex; gap: 2.5rem; margin-top: 3rem; padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.stat { display: flex; flex-direction: column; gap: 0.15rem; }
+.stat-num {
+  font-family: var(--serif); font-size: 1.9rem;
+  color: var(--green); line-height: 1;
+}
+.stat-label {
+  font-size: 0.75rem; color: var(--muted);
+  font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;
+}
+
+/* Hero right: institution cards */
+.hero-right {
+  display: flex; flex-direction: column; gap: 1.25rem;
+}
+
+.institution-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.institution-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--green), var(--gold));
+}
+.inst-label {
+  font-size: 0.7rem; font-weight: 700;
+  color: var(--green); text-transform: uppercase;
+  letter-spacing: 0.1em; margin-bottom: 0.6rem;
+}
+.inst-title {
+  font-family: var(--serif); font-size: 1.1rem;
+  color: var(--text); margin-bottom: 0.4rem;
+  line-height: 1.3;
+}
+.inst-sub { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+.tool-count-card {
+  background: var(--green);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+.tool-count-item { text-align: center; }
+.tool-count-num {
+  font-family: var(--serif); font-size: 2rem;
+  color: #fff; display: block; line-height: 1;
+}
+.tool-count-label {
+  font-size: 0.72rem; color: oklch(90% 0.04 148);
+  font-weight: 500; margin-top: 0.25rem;
+  display: block;
+}
+
+/* ─── LAYOUT HELPERS ─────────────────────────────────── */
+.section-wrap {
+  max-width: 1280px; margin: 0 auto;
+  padding: 5rem clamp(1.25rem, 4vw, 3rem);
+}
+
+.section-eyebrow {
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--green); text-transform: uppercase;
+  letter-spacing: 0.12em; margin-bottom: 0.6rem;
+}
+.section-title {
+  font-family: var(--serif);
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  color: var(--text); line-height: 1.15;
+  margin-bottom: 0.75rem;
+}
+.section-desc {
+  color: var(--muted); font-size: 0.97rem;
+  max-width: 52ch; line-height: 1.75;
+}
+
+.section-head {
+  display: flex; align-items: flex-end;
+  justify-content: space-between; gap: 2rem;
+  margin-bottom: 3rem; flex-wrap: wrap;
+}
+
+/* ─── FERRAMENTAS ────────────────────────────────────── */
+#ferramentas { background: var(--bg); }
+
+.cat-tabs {
+  display: flex; gap: 0; margin-bottom: 2.5rem;
+  border-bottom: 2px solid var(--border);
+  overflow-x: auto; padding-bottom: 0;
+}
+.cat-tab {
+  background: none; border: none;
+  padding: 0.8rem 1.4rem 1rem;
+  font-family: var(--sans); font-size: 0.84rem; font-weight: 600;
+  color: var(--muted); cursor: pointer;
+  position: relative; white-space: nowrap;
+  transition: color 0.2s;
+  letter-spacing: 0.02em;
+}
+.cat-tab::after {
+  content: '';
+  position: absolute; bottom: -2px; left: 0; right: 0; height: 2px;
+  background: var(--green);
+  transform: scaleX(0);
+  transition: transform 0.22s;
+  border-radius: 2px 2px 0 0;
+}
+.cat-tab:hover { color: var(--text); }
+.cat-tab.active { color: var(--green); }
+.cat-tab.active::after { transform: scaleX(1); }
+
+.tool-panel { display: none; }
+.tool-panel.active {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1rem;
+}
+
+.tool-card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.3rem 1.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.18s, box-shadow 0.2s;
+  display: flex; align-items: center; gap: 1rem;
+  text-decoration: none;
+}
+.tool-card:hover {
+  border-color: var(--green);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.tool-icon-wrap {
+  width: 44px; height: 44px; flex-shrink: 0;
+  background: var(--green-lt);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.tool-icon-wrap svg { width: 20px; height: 20px; color: var(--green); }
+.tool-icon-wrap.gold-bg { background: var(--gold-lt); }
+.tool-icon-wrap.gold-bg svg { color: var(--gold); }
+
+.tool-text { flex: 1; min-width: 0; }
+.tool-name {
+  font-weight: 600; font-size: 0.9rem;
+  color: var(--text); margin-bottom: 0.25rem;
+  line-height: 1.3;
+}
+.tool-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.45; }
+
+.tool-arrow {
+  color: var(--light); flex-shrink: 0;
+  transition: color 0.2s, transform 0.2s;
+}
+.tool-card:hover .tool-arrow { color: var(--green); transform: translateX(4px); }
+
+/* ─── MODAL ──────────────────────────────────────────── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: oklch(20% 0.01 60 / 0.55);
+  backdrop-filter: blur(8px);
+  align-items: center; justify-content: center; padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%; max-width: 1100px;
+  max-height: 92vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 40px 100px oklch(0% 0 0 / 0.2);
+  animation: modal-in 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+  overflow: hidden;
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.94) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.modal-title {
+  font-family: var(--serif); font-size: 1.1rem; color: var(--text);
+}
+.modal-close {
+  background: var(--bg2); border: none; border-radius: 8px;
+  color: var(--muted); cursor: pointer;
+  font-size: 1.1rem; line-height: 1;
+  padding: 0.35rem 0.6rem;
+  transition: background 0.2s, color 0.2s;
+}
+.modal-close:hover { background: var(--bg3); color: var(--text); }
+
+.modal-body {
+  flex: 1; overflow: auto; background: var(--bg);
+}
+.modal-body iframe {
+  width: 100%; min-height: 76vh; border: none; display: block;
+}
+
+/* ─── SOBRE ──────────────────────────────────────────── */
+#sobre { background: var(--white); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+.about-grid {
+  display: grid; grid-template-columns: 340px 1fr;
+  gap: 5rem; align-items: start;
+}
+
+.about-left { position: sticky; top: 80px; }
+
+.profile-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.profile-photo {
+  height: 280px;
+  background: linear-gradient(135deg, var(--green-lt) 0%, var(--gold-lt) 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0.75rem; position: relative; overflow: hidden;
+}
+.profile-photo-stripe {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    -45deg, oklch(90% 0.04 148 / 0.5) 0, oklch(90% 0.04 148 / 0.5) 1px,
+    transparent 1px, transparent 14px
+  );
+}
+.profile-photo-label {
+  position: relative; z-index: 1;
+  text-align: center; padding: 1rem;
+  font-family: monospace; font-size: 0.7rem; color: var(--muted);
+}
+
+.profile-info { padding: 1.25rem; }
+.profile-name {
+  font-family: var(--serif); font-size: 1.1rem;
+  color: var(--text); margin-bottom: 0.25rem;
+}
+.profile-role {
+  font-size: 0.8rem; color: var(--muted); line-height: 1.5;
+}
+
+.affil-list {
+  margin-top: 1.25rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.affil-link {
+  display: flex; align-items: center; gap: 0.6rem;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.55rem 0.85rem;
+  text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.affil-link:hover { border-color: var(--green); box-shadow: var(--shadow); }
+.affil-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); flex-shrink: 0;
+}
+.affil-dot.gold { background: var(--gold); }
+.affil-name-text { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+.affil-role-text { font-size: 0.72rem; color: var(--muted); margin-left: auto; }
+
+.about-bio {
+  font-size: 0.95rem; color: var(--text2);
+  line-height: 1.85; margin-bottom: 2rem;
+}
+.about-bio p + p { margin-top: 1rem; }
+
+.expertise-wrap {
+  margin-bottom: 2rem;
+}
+.expertise-title {
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--green); text-transform: uppercase;
+  letter-spacing: 0.1em; margin-bottom: 1rem;
+}
+.expertise-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;
+}
+.exp-tag {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.55rem 0.85rem;
+  font-size: 0.82rem; color: var(--text2);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.exp-tag::before {
+  content: '';
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--green); flex-shrink: 0;
+}
+
+.social-row {
+  display: flex; gap: 0.6rem; flex-wrap: wrap;
+  margin-top: 2rem;
+}
+.social-btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 0.5rem 0.9rem;
+  font-size: 0.8rem; font-weight: 500; color: var(--muted);
+  text-decoration: none; transition: border-color 0.2s, color 0.2s;
+}
+.social-btn:hover { border-color: var(--green); color: var(--green); }
+.social-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* ─── ARTIGOS ────────────────────────────────────────── */
+#blog { background: var(--bg2); border-top: 1px solid var(--border); }
+
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.article-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-decoration: none;
+  display: flex; flex-direction: column;
+  transition: border-color 0.2s, transform 0.18s, box-shadow 0.2s;
+}
+.article-card:hover {
+  border-color: var(--green);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.article-body { padding: 1.2rem; flex: 1; display: flex; flex-direction: column; gap: 0.65rem; }
+.article-tag {
+  display: inline-block;
+  background: var(--green-lt); color: var(--green);
+  font-size: 0.68rem; font-weight: 700;
+  padding: 0.2rem 0.6rem; border-radius: 100px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.article-title {
+  font-family: var(--serif); font-size: 0.98rem;
+  color: var(--text); line-height: 1.35;
+}
+.article-excerpt {
+  font-size: 0.8rem; color: var(--muted); line-height: 1.6; flex: 1;
+}
+.article-meta {
+  font-size: 0.72rem; color: var(--light);
+  display: flex; gap: 1rem;
+  padding-top: 0.75rem; border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+/* ─── CONTATO ────────────────────────────────────────── */
+#contato {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+}
+
+.contact-grid {
+  display: grid; grid-template-columns: 1fr 1.2fr;
+  gap: 5rem; align-items: start;
+}
+
+.contact-info { }
+.contact-desc {
+  font-size: 0.95rem; color: var(--muted);
+  line-height: 1.8; margin-bottom: 2rem;
+}
+.contact-links { display: flex; flex-direction: column; gap: 0.6rem; }
+.contact-link {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 10px; text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.contact-link:hover { border-color: var(--green); box-shadow: var(--shadow); }
+.contact-link-icon {
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: var(--green-lt); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.contact-link-icon svg { width: 16px; height: 16px; color: var(--green); }
+.contact-link-text { }
+.contact-link-label { font-size: 0.7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.contact-link-val { font-size: 0.85rem; font-weight: 500; color: var(--text); }
+
+/* Form */
+.contact-form {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 16px; padding: 2rem;
+}
+.form-title {
+  font-family: var(--serif); font-size: 1.3rem;
+  color: var(--text); margin-bottom: 1.5rem;
+}
+
+.form-row { display: grid; gap: 1rem; margin-bottom: 1rem; }
+.form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+
+.form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+.form-label {
+  font-size: 0.78rem; font-weight: 600; color: var(--text2);
+  letter-spacing: 0.03em;
+}
+.form-label span { color: var(--green); }
+.form-input, .form-select, .form-textarea {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 0.65rem 0.85rem;
+  font-family: var(--sans); font-size: 0.875rem; color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none; border-color: var(--green);
+  box-shadow: 0 0 0 3px oklch(42% 0.12 148 / 0.12);
+}
+.form-textarea { resize: vertical; min-height: 100px; }
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2378716c' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.6rem center; background-repeat: no-repeat; background-size: 1.2em;
+  padding-right: 2.2rem;
+}
+
+.outro-field { display: none; margin-top: 0.5rem; }
+
+.form-submit {
+  width: 100%; background: var(--green); color: #fff;
+  border: none; border-radius: 10px;
+  padding: 0.9rem; margin-top: 0.5rem;
+  font-family: var(--sans); font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; transition: background 0.2s, transform 0.15s;
+}
+.form-submit:hover:not(:disabled) { background: var(--green-mid); transform: translateY(-1px); }
+.form-submit:disabled { background: var(--light); cursor: not-allowed; }
+
+.form-status {
+  margin-top: 0.75rem; padding: 0.75rem 1rem;
+  border-radius: 8px; font-size: 0.85rem; font-weight: 500;
+  display: none; text-align: center;
+}
+.form-status.success { background: oklch(90% 0.08 145); color: var(--green); display: block; }
+.form-status.error { background: #fee2e2; color: #991b1b; display: block; }
+
+/* ─── FOOTER ─────────────────────────────────────────── */
+footer {
+  background: var(--text);
+  color: oklch(80% 0.01 60);
+}
+.footer-inner {
+  max-width: 1280px; margin: 0 auto;
+  padding: 3.5rem clamp(1.25rem, 4vw, 3rem) 2rem;
+  display: grid; grid-template-columns: 1.8fr 1fr 1fr;
+  gap: 3rem;
+}
+.footer-brand { }
+.footer-logo {
+  font-family: var(--serif); font-size: 1.1rem;
+  color: #fff; margin-bottom: 0.75rem;
+}
+.footer-logo span { color: oklch(72% 0.14 148); }
+.footer-tagline {
+  font-size: 0.82rem; line-height: 1.7;
+  color: oklch(62% 0.01 60); max-width: 28ch; margin-bottom: 1.5rem;
+}
+.footer-social { display: flex; gap: 0.6rem; }
+.footer-social a {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  background: oklch(22% 0.01 60); border-radius: 8px;
+  color: oklch(70% 0.01 60); text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+.footer-social a:hover { background: var(--green); color: #fff; }
+.footer-social svg { width: 15px; height: 15px; }
+
+.footer-col-title {
+  font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: oklch(72% 0.14 148); margin-bottom: 1rem;
+}
+.footer-links { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+.footer-links a {
+  color: oklch(62% 0.01 60); text-decoration: none;
+  font-size: 0.83rem; transition: color 0.2s;
+}
+.footer-links a:hover { color: #fff; }
+.footer-links button {
+  background: none; border: none; cursor: pointer;
+  color: oklch(62% 0.01 60); font-size: 0.83rem;
+  font-family: var(--sans); text-align: left; padding: 0;
+  transition: color 0.2s;
+}
+.footer-links button:hover { color: #fff; }
+
+.footer-bottom {
+  max-width: 1280px; margin: 0 auto;
+  padding: 1.5rem clamp(1.25rem, 4vw, 3rem);
+  border-top: 1px solid oklch(22% 0.01 60);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+}
+.footer-copy { font-size: 0.78rem; color: oklch(50% 0.01 60); }
+.footer-disclaimer {
+  font-size: 0.72rem; color: oklch(42% 0.01 60);
+  max-width: 60ch; text-align: right; line-height: 1.5;
+}
+
+/* ─── SCROLL REVEAL ──────────────────────────────────── */
+.reveal {
+  opacity: 0; transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-d1 { transition-delay: 0.1s; }
+.reveal-d2 { transition-delay: 0.2s; }
+.reveal-d3 { transition-delay: 0.3s; }
+
+/* ─── RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 1024px) {
+  #hero { grid-template-columns: 1fr; min-height: auto; padding-top: 7rem; }
+  .hero-right { display: none; }
+  .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+  .about-left { position: static; }
+  .profile-photo { height: 200px; }
+  .contact-grid { grid-template-columns: 1fr; gap: 3rem; }
+  .footer-inner { grid-template-columns: 1fr; gap: 2rem; }
+  .footer-disclaimer { text-align: left; }
+}
+
+@media (max-width: 768px) {
+  .nav-links, .nav-cta { display: none; }
+  .nav-burger { display: flex; }
+  .hero-stats { gap: 1.5rem; }
+  .expertise-grid { grid-template-columns: 1fr; }
+  .form-row.cols-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .section-wrap { padding: 3.5rem 1.25rem; }
+  .articles-grid { grid-template-columns: 1fr; }
+  .tool-panel.active { grid-template-columns: 1fr; }
+}
+
+/* ─── PRINT ──────────────────────────────────────────── */
+@media print {
+  @page { size: A4 portrait; margin: 1.2cm; }
+
+  html, body {
+    background: #fff !important;
+    color: #1c1917 !important;
+    font-size: 10pt;
+    line-height: 1.5;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide interactive chrome */
+  nav, .mobile-menu, .modal-overlay,
+  .nav-burger, .nav-cta, .nav-links,
+  .form-submit, .form-status,
+  .btn-primary, .btn-outline,
+  .hero-actions,
+  .tool-arrow { display: none !important; }
+
+  /* Reset fixed positioning */
+  .about-left { position: static !important; }
+
+  /* Hero */
+  #hero {
+    min-height: auto !important;
+    padding: 0 !important;
+    display: block !important;
+    page-break-after: always;
+    break-after: page;
+  }
+  .hero-content { margin-bottom: 2rem; }
+  .hero-title { font-size: 28pt !important; }
+  .hero-sub { font-size: 11pt !important; }
+  .hero-right { display: grid !important; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .tool-count-card { grid-column: 1 / -1; }
+  .hero-stats { margin-top: 1.5rem !important; padding-top: 1rem !important; }
+  .stat-num { font-size: 18pt !important; }
+
+  /* Section wraps */
+  .section-wrap {
+    padding: 1rem 0 !important;
+    max-width: 100% !important;
+  }
+
+  section { page-break-inside: auto; }
+  section + section { page-break-before: always; }
+
+  .section-title { font-size: 20pt !important; }
+  .section-desc { font-size: 10pt !important; }
+
+  /* Show ALL tool panels at once (no tabs in print) */
+  .cat-tabs { display: none !important; }
+  .tool-panel { display: grid !important; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .tool-panel::before {
+    grid-column: 1 / -1;
+    font-family: var(--serif);
+    font-size: 13pt;
+    color: var(--green) !important;
+    font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 0.3rem;
+    border-bottom: 1px solid #e2ddd6;
+    padding-bottom: 0.3rem;
+  }
+  #cat-simuladores::before { content: 'Simuladores Econômicos'; }
+  #cat-paineis::before { content: 'Painéis Mercadológicos'; }
+  #cat-calculadoras::before { content: 'Calculadoras e Ferramentas'; }
+
+  .tool-card {
+    padding: 0.7rem 0.9rem !important;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #cdc8bf !important;
+    transform: none !important;
+  }
+  .tool-icon-wrap {
+    width: 32px !important; height: 32px !important;
+  }
+  .tool-icon-wrap svg { width: 16px !important; height: 16px !important; }
+  .tool-name { font-size: 10pt !important; }
+  .tool-desc { font-size: 8pt !important; }
+
+  /* About */
+  .about-grid {
+    grid-template-columns: 220px 1fr !important;
+    gap: 2rem !important;
+  }
+  .profile-photo img { height: 220px !important; }
+  .about-bio { font-size: 10pt !important; line-height: 1.6 !important; }
+  .about-bio p + p { margin-top: 0.5rem !important; }
+  .expertise-grid { grid-template-columns: 1fr 1fr !important; }
+  .exp-tag { font-size: 8.5pt !important; padding: 0.35rem 0.6rem !important; }
+  .social-row { display: none !important; }
+
+  /* Blog */
+  .articles-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem !important;
+  }
+  .article-card {
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #cdc8bf !important;
+    transform: none !important;
+  }
+  .article-body { padding: 0.7rem !important; gap: 0.35rem !important; }
+  .article-title { font-size: 9.5pt !important; }
+  .article-excerpt { font-size: 8.5pt !important; line-height: 1.4 !important; }
+  .article-meta { font-size: 7.5pt !important; padding-top: 0.4rem !important; }
+  .article-tag { font-size: 7pt !important; }
+
+  /* Contact: show only info, hide form */
+  .contact-grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+  .contact-form { display: none !important; }
+  .contact-link { padding: 0.5rem 0.75rem !important; }
+  .contact-link-val { font-size: 9pt !important; }
+  .contact-link-label { font-size: 7.5pt !important; }
+
+  /* Reveal: make everything visible immediately */
+  .reveal { opacity: 1 !important; transform: none !important; }
+
+  /* Hero card pattern decoration */
+  .institution-card { box-shadow: none !important; border: 1px solid #cdc8bf !important; padding: 0.85rem !important; }
+  .inst-title { font-size: 11pt !important; }
+  .inst-sub { font-size: 8.5pt !important; }
+  .tool-count-card { padding: 0.85rem !important; }
+  .tool-count-num { font-size: 18pt !important; }
+  .tool-count-label { font-size: 7.5pt !important; }
+
+  /* Footer */
+  footer {
+    background: #fff !important;
+    color: #44403c !important;
+    border-top: 2px solid #1c1917;
+    page-break-before: always;
+  }
+  .footer-inner { padding: 1rem 0 !important; gap: 1.5rem !important; }
+  .footer-logo { color: #1c1917 !important; }
+  .footer-logo span { color: var(--green) !important; }
+  .footer-tagline, .footer-links a, .footer-links button { color: #44403c !important; }
+  .footer-bottom { padding: 0.75rem 0 !important; }
+  .footer-copy, .footer-disclaimer { color: #78716c !important; }
+  .footer-social a { background: #f4f2ee !important; color: var(--green) !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ──────────────────────────────────────────── -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a class="nav-logo" href="#hero">Ricardo <strong>C. Brumatti</strong></a>
+    <ul class="nav-links">
+      <li><a href="#ferramentas">Ferramentas</a></li>
+      <li><a href="#sobre">Sobre</a></li>
+      <li><a href="#blog">Blog</a></li>
+      <li><a href="#contato">Contato</a></li>
+    </ul>
+    <a class="nav-cta" href="#ferramentas">Acessar Simuladores</a>
+    <button class="nav-burger" id="burgerBtn" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ─── MOBILE MENU ───────────────────────────────────── -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="menuClose">✕</button>
+  <a href="#ferramentas" onclick="closeMobile()">Ferramentas</a>
+  <a href="#sobre" onclick="closeMobile()">Sobre</a>
+  <a href="#blog" onclick="closeMobile()">Blog</a>
+  <a href="#contato" onclick="closeMobile()">Contato</a>
+</div>
+
+<!-- ─── HERO ──────────────────────────────────────────── -->
+<section id="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">FAMEZ · UFMS · Campo Grande, MS</div>
+    <h1 class="hero-title">
+      Análise Econômica<br>
+      para a <em>Pecuária</em><br>
+      de Corte
+    </h1>
+    <p class="hero-sub">
+      Simuladores, painéis de mercado e calculadoras econômicas desenvolvidas para apoiar decisões estratégicas na bovinocultura de corte.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="#ferramentas">
+        Acessar Ferramentas
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a class="btn-outline" href="#sobre">Sobre o Professor</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-num" data-count="12">0</span>
+        <span class="stat-label">Ferramentas</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" data-count="27">0</span>
+        <span class="stat-label">Anos de pesquisa</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" data-count="6">0</span>
+        <span class="stat-label">Simuladores</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="institution-card reveal">
+      <div class="inst-label">Instituição</div>
+      <div class="inst-title">FAMEZ — Faculdade de Medicina Veterinária e Zootecnia</div>
+      <div class="inst-sub">Universidade Federal de Mato Grosso do Sul · Docente em Economia e Projetos Agropecuários</div>
+    </div>
+    <div class="institution-card reveal reveal-d1">
+      <div class="inst-label">Formação</div>
+      <div class="inst-title">Zootecnista · Mestre · Doutor</div>
+      <div class="inst-sub">Zootecnia pela USP (1998 · 2002 · 2006). Orientador de Mestrado e Doutorado (2014–2025).</div>
+    </div>
+    <div class="tool-count-card reveal reveal-d2">
+      <div class="tool-count-item">
+        <span class="tool-count-num">6</span>
+        <span class="tool-count-label">Simuladores Econômicos</span>
+      </div>
+      <div class="tool-count-item">
+        <span class="tool-count-num">2</span>
+        <span class="tool-count-label">Painéis de Mercado</span>
+      </div>
+      <div class="tool-count-item">
+        <span class="tool-count-num">4</span>
+        <span class="tool-count-label">Calculadoras</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FERRAMENTAS ───────────────────────────────────── -->
+<section id="ferramentas">
+  <div class="section-wrap">
+    <div class="section-head reveal">
+      <div>
+        <div class="section-eyebrow">Plataforma de Análise</div>
+        <h2 class="section-title">Ferramentas Econômicas</h2>
+        <p class="section-desc">Clique em qualquer ferramenta para abrí-la diretamente nesta página.</p>
+      </div>
+    </div>
+
+    <div class="cat-tabs">
+      <button class="cat-tab active" onclick="showCat('simuladores', this)">Simuladores Econômicos</button>
+      <button class="cat-tab" onclick="showCat('paineis', this)">Painéis Mercadológicos</button>
+      <button class="cat-tab" onclick="showCat('calculadoras', this)">Calculadoras e Ferramentas</button>
+    </div>
+
+    <!-- SIMULADORES -->
+    <div class="tool-panel active" id="cat-simuladores">
+
+      <div class="tool-card reveal" onclick="openTool('confinamento','Simulação Econômica de Confinamento')">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Confinamento</div>
+          <div class="tool-desc">Análise econômica completa — custos, margens e ponto de equilíbrio.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="tool-card reveal reveal-d1" onclick="openTool('cria','Cria Certa — Custo Real do Bezerro')">
+        <div class="tool-icon-wrap gold-bg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="9" rx="7" ry="5"/><path d="M5 9c0 4.97 3.13 9 7 9s7-4.03 7-9"/><path d="M9 3.5C7.5 2 5 2.5 4 4"/><path d="M15 3.5C16.5 2 19 2.5 20 4"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Cria — Custo do Bezerro</div>
+          <div class="tool-desc">Custo real do bezerro desmamado com índices zootécnicos.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="tool-card reveal reveal-d2" onclick="openTool('engorda','Recria a Pasto + Engorda em Confinamento')">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Recria + Engorda Completa</div>
+          <div class="tool-desc">Ciclo integrado de recria a pasto e terminação em confinamento.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="tool-card reveal" onclick="openTool('recria','Simulação Econômica da Recria a Pasto')">
+        <div class="tool-icon-wrap gold-bg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Recria a Pasto</div>
+          <div class="tool-desc">Análise por etapas (sequestro + pasto) com TIR e ágios.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="tool-card reveal reveal-d1" onclick="openTool('ponto-venda','Ponto Ótimo de Venda — Confinamento')">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Ponto Ótimo de Venda</div>
+          <div class="tool-desc">Identifica o momento ideal de venda pelo modelo RMg = CMg.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="tool-card reveal reveal-d2" onclick="openTool('bioecon','BioEcon Corte — Simulador de Rentabilidade')">
+        <div class="tool-icon-wrap gold-bg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">BioEcon Corte</div>
+          <div class="tool-desc">Integração de parâmetros biológicos e econômicos sistêmicos.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+    </div>
+
+    <!-- PAINÉIS -->
+    <div class="tool-panel" id="cat-paineis">
+
+      <div class="tool-card" onclick="openTool('painel-mercado','Preços & Mercado Futuro — B3 e CEPEA')">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Preços & Mercado Futuro</div>
+          <div class="tool-desc">Cotações B3, CEPEA e indicadores de mercado em tempo real.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="tool-card" onclick="openTool('painel-historico','Painel de Séries Históricas')">
+        <div class="tool-icon-wrap gold-bg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Painel de Séries Históricas</div>
+          <div class="tool-desc">Séries temporais de preços e indicadores — via Looker Studio.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+    </div>
+
+    <!-- CALCULADORAS -->
+    <div class="tool-panel" id="cat-calculadoras">
+
+      <div class="tool-card" onclick="openTool('rentabilidade','Simulador de Rentabilidade da Pecuária')">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Rentabilidade</div>
+          <div class="tool-desc">TIR, VPL, payback e margem líquida da atividade pecuária.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="tool-card" onclick="openTool('leilao','Eficiência na Venda em Leilão')">
+        <div class="tool-icon-wrap gold-bg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Venda em Leilão</div>
+          <div class="tool-desc">Avalia eficiência da comercialização em leilão vs. venda direta.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="tool-card" onclick="openTool('agio','Análise de Viabilidade — Ágio do Bezerro')">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Ágio do Bezerro</div>
+          <div class="tool-desc">Determina o ágio máximo a pagar mantendo viabilidade econômica.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+      <div class="tool-card" onclick="openTool('fluxo-caixa','Dashboard de Planejamento Pecuário — Fluxo de Caixa')">
+        <div class="tool-icon-wrap gold-bg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Fluxo de Caixa</div>
+          <div class="tool-desc">Dashboard de planejamento — entradas, saídas e saldo projetado.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── MODAL ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="toolModal" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">Ferramenta</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ─── SOBRE ──────────────────────────────────────────── -->
+<section id="sobre">
+  <div class="section-wrap">
+    <div class="about-grid">
+
+      <div class="about-left reveal">
+        <div class="profile-card">
+          <div class="profile-photo" style="background:none;height:auto;">
+            <img src="foto-perfil.jpg" alt="Prof. Ricardo C. Brumatti" style="width:100%;height:320px;object-fit:cover;object-position:center top;display:block;">
+          </div>
+          <div class="profile-info">
+            <div class="profile-name">Prof. Ricardo C. Brumatti</div>
+            <div class="profile-role">Docente · Economista Rural · FAMEZ/UFMS</div>
+          </div>
+        </div>
+
+        <div class="affil-list">
+          <a class="affil-link" href="https://famez.ufms.br/" target="_blank" rel="noopener">
+            <div class="affil-dot"></div>
+            <span class="affil-name-text">FAMEZ/UFMS</span>
+            <span class="affil-role-text">Docente</span>
+          </a>
+          <a class="affil-link" href="http://lattes.cnpq.br/0798088146657300" target="_blank" rel="noopener">
+            <div class="affil-dot gold"></div>
+            <span class="affil-name-text">Currículo Lattes</span>
+            <span class="affil-role-text">CNPq</span>
+          </a>
+          <a class="affil-link" href="https://www.farmnews.com.br/category/gestao/" target="_blank" rel="noopener">
+            <div class="affil-dot"></div>
+            <span class="affil-name-text">Farm News</span>
+            <span class="affil-role-text">Colunista</span>
+          </a>
+          <a class="affil-link" href="https://taplink.cc/rcbrumatti" target="_blank" rel="noopener">
+            <div class="affil-dot gold"></div>
+            <span class="affil-name-text">Taplink</span>
+            <span class="affil-role-text">Links</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="reveal reveal-d1">
+        <div class="section-eyebrow">Sobre o Professor</div>
+        <h2 class="section-title">Prof. Ricardo C. Brumatti</h2>
+
+        <div class="about-bio">
+          <p>Docente da Faculdade de Medicina Veterinária e Zootecnia (FAMEZ) da Universidade Federal de Mato Grosso do Sul (UFMS), Campo Grande, MS, nas áreas de Economia e Projetos Agropecuários.</p>
+          <p>Zootecnista (1998), Mestre (2002) e Doutor (2006) em Zootecnia pela Universidade de São Paulo. Orientador de mestrado e doutorado no Programa de Pós-graduação em Ciência Animal (2014–2025) e Tutor do Programa de Educação Tutorial do curso de Zootecnia (2014–2020).</p>
+          <p>Atua principalmente nos estudos econômicos sobre a Bovinocultura de Corte e Bovinocultura de Leite — com ênfase em simulações econômicas, fluxos de caixa, análises de mercado, políticas públicas e desenvolvimento de ferramentas para auxílio na tomada de decisões gerenciais.</p>
+          <p>Em parceria com outros pesquisadores, atua em estudos de eficiência técnico-econômica aplicados à Suinocultura, Piscicultura, Ovinocultura, Qualidade de Carnes e Mercado Consumidor.</p>
+        </div>
+
+        <div class="expertise-wrap">
+          <div class="expertise-title">Áreas de Atuação</div>
+          <div class="expertise-grid">
+            <div class="exp-tag">Simulações econômicas</div>
+            <div class="exp-tag">Bovinocultura de corte</div>
+            <div class="exp-tag">Análise de mercado</div>
+            <div class="exp-tag">Fluxo de caixa rural</div>
+            <div class="exp-tag">Eficiência técnico-econômica</div>
+            <div class="exp-tag">Políticas públicas agro</div>
+            <div class="exp-tag">Bovinocultura de leite</div>
+            <div class="exp-tag">Projetos agropecuários</div>
+          </div>
+        </div>
+
+        <div class="social-row">
+          <a class="social-btn" href="https://www.instagram.com/rcbrumatti/" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            Instagram
+          </a>
+          <a class="social-btn" href="https://x.com/profbrumatti" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            Twitter / X
+          </a>
+          <a class="social-btn" href="http://www.linkedin.com/in/ricardo-c-brumatti-86344434" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M8 11v5M8 8v.01M12 16v-5m4 5v-3a2 2 0 0 0-4 0"/></svg>
+            LinkedIn
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── BLOG ───────────────────────────────────────────── -->
+<section id="blog">
+  <div class="section-wrap">
+    <div class="section-head reveal">
+      <div>
+        <div class="section-eyebrow">Análises & Publicações</div>
+        <h2 class="section-title">Visão Econômica da<br>Pecuária de Corte</h2>
+        <p class="section-desc">Análises técnico-econômicas publicadas em parceria com <a href="https://www.farmnews.com.br" target="_blank" rel="noopener" style="color:var(--green);text-decoration:underline">FarmNews</a> e ABCZ.</p>
+      </div>
+      <a class="btn-outline" href="artigos.html">
+        Ver todos
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <div class="articles-grid">
+
+      <a class="article-card reveal" href="https://farmnews.com.br/gestao/pecuaria-de-corte-e-lucro-o-desafio-de-uma-retomada-lenta/" target="_blank" rel="noopener">
+        <div class="article-body">
+          <span class="article-tag">Mercado</span>
+          <h3 class="article-title">Pecuária de corte e lucro: o desafio de uma retomada lenta!</h3>
+          <p class="article-excerpt">Os números não mentem e mostram uma realidade que o produtor sente no bolso: as margens da pecuária de corte encolheram.</p>
+          <div class="article-meta"><span>Ago/2025</span><span>FarmNews</span></div>
+        </div>
+      </a>
+
+      <a class="article-card reveal reveal-d1" href="https://farmnews.com.br/gestao/confinamento-em-2025-margem-estreita-entre-lucro-e-prejuizo/" target="_blank" rel="noopener">
+        <div class="article-body">
+          <span class="article-tag">Confinamento</span>
+          <h3 class="article-title">Confinamento em 2025: margem estreita entre lucro e prejuízo!</h3>
+          <p class="article-excerpt">O sucesso no confinamento em 2025 não será para quem gosta de se aventurar, mas para quem é gestor de verdade.</p>
+          <div class="article-meta"><span>Jul/2025</span><span>FarmNews</span></div>
+        </div>
+      </a>
+
+      <a class="article-card reveal reveal-d2" href="https://farmnews.com.br/gestao/recria-intensiva-a-fabrica-de-supergarrotes-que-acelera-seu-lucro/" target="_blank" rel="noopener">
+        <div class="article-body">
+          <span class="article-tag">Estratégia</span>
+          <h3 class="article-title">Recria Intensiva: a Fábrica de Supergarrotes que Acelera seu Lucro!</h3>
+          <p class="article-excerpt">A recria intensiva vai muito além de apenas acelerar o ganho de peso. Trata-se de uma verdadeira fábrica com alto desempenho econômico.</p>
+          <div class="article-meta"><span>2025</span><span>FarmNews</span></div>
+        </div>
+      </a>
+
+      <a class="article-card reveal" href="https://farmnews.com.br/gestao/indicadores-economicos-na-pecuaria-de-corte-o-que-e-como-avaliar/" target="_blank" rel="noopener">
+        <div class="article-body">
+          <span class="article-tag">Gestão</span>
+          <h3 class="article-title">Indicadores Econômicos na Pecuária de Corte: o que e como avaliar?</h3>
+          <p class="article-excerpt">O controle de indicadores econômicos na pecuária ainda acontece de modo fragmentado, com retrabalho e defasagem nas decisões.</p>
+          <div class="article-meta"><span>2025</span><span>FarmNews</span></div>
+        </div>
+      </a>
+
+      <a class="article-card reveal reveal-d1" href="https://farmnews.com.br/gestao/confinamento-como-equilibrar-custos-e-ganhos/" target="_blank" rel="noopener">
+        <div class="article-body">
+          <span class="article-tag">Confinamento</span>
+          <h3 class="article-title">Confinamento: Como Equilibrar Custos e Ganhos?</h3>
+          <p class="article-excerpt">O confinamento permite reduzir ciclo e aumentar produtividade, mas aumenta riscos. Como equilibrar esses fatores?</p>
+          <div class="article-meta"><span>2025</span><span>FarmNews</span></div>
+        </div>
+      </a>
+
+      <a class="article-card reveal reveal-d2" href="https://www.abcz.org.br/noticias/noticia/30963/pmgz-carne-2025---genetica-melhoradora--impacto-economico-e-zootecnico-na-pecuaria-de-corte" target="_blank" rel="noopener">
+        <div class="article-body">
+          <span class="article-tag">Genética</span>
+          <h3 class="article-title">PMGZ Carne 2025 — Impacto Econômico e Zootécnico na Pecuária de Corte</h3>
+          <p class="article-excerpt">Resultados consolidados de 2025 do programa PMGZ Carne e seus impactos econômicos e zootécnicos.</p>
+          <div class="article-meta"><span>Dez/2025</span><span>ABCZ</span></div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── CONTATO ────────────────────────────────────────── -->
+<section id="contato">
+  <div class="section-wrap">
+    <div class="contact-grid">
+
+      <div class="reveal">
+        <div class="section-eyebrow">Fale Conosco</div>
+        <h2 class="section-title">Contato</h2>
+        <p class="contact-desc">
+          Professor, consultor ou pesquisador? Entre em contato para dúvidas sobre as ferramentas, metodologias ou pesquisas.
+        </p>
+        <div class="contact-links">
+          <a class="contact-link" href="https://www.instagram.com/rcbrumatti/" target="_blank" rel="noopener">
+            <div class="contact-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></div>
+            <div class="contact-link-text"><div class="contact-link-label">Instagram</div><div class="contact-link-val">@rcbrumatti</div></div>
+          </a>
+          <a class="contact-link" href="https://x.com/profbrumatti" target="_blank" rel="noopener">
+            <div class="contact-link-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></div>
+            <div class="contact-link-text"><div class="contact-link-label">Twitter / X</div><div class="contact-link-val">@profbrumatti</div></div>
+          </a>
+          <a class="contact-link" href="http://www.linkedin.com/in/ricardo-c-brumatti-86344434" target="_blank" rel="noopener">
+            <div class="contact-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M8 11v5M8 8v.01M12 16v-5m4 5v-3a2 2 0 0 0-4 0"/></svg></div>
+            <div class="contact-link-text"><div class="contact-link-label">LinkedIn</div><div class="contact-link-val">Ricardo C. Brumatti</div></div>
+          </a>
+          <a class="contact-link" href="https://famez.ufms.br/" target="_blank" rel="noopener">
+            <div class="contact-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div class="contact-link-text"><div class="contact-link-label">Instituição</div><div class="contact-link-val">FAMEZ/UFMS — Campo Grande, MS</div></div>
+          </a>
+        </div>
+      </div>
+
+      <div class="reveal reveal-d1">
+        <div class="contact-form">
+          <h3 class="form-title">Envie uma mensagem</h3>
+
+          <form id="contactForm" onsubmit="submitForm(event)">
+            <div class="form-row cols-2">
+              <div class="form-group">
+                <label class="form-label" for="f-nome">Nome <span>*</span></label>
+                <input class="form-input" id="f-nome" name="nome" type="text" required placeholder="Seu nome">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="f-email">Email <span>*</span></label>
+                <input class="form-input" id="f-email" name="email" type="email" required placeholder="seu@email.com">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="f-atuacao">Atuação profissional <span>*</span></label>
+                <select class="form-select" id="f-atuacao" name="atuacao" required onchange="toggleOutroAtuacao(this)">
+                  <option value="">Selecione...</option>
+                  <option>Estudante / Universitário</option>
+                  <option>Criador / Pecuarista</option>
+                  <option>Técnico de Campo / Consultor</option>
+                  <option>Médico Veterinário</option>
+                  <option>Zootecnista</option>
+                  <option>Engenheiro Agrônomo</option>
+                  <option>Pesquisador / Acadêmico</option>
+                  <option>Profissional de Indústria</option>
+                  <option>Jornalista / Meios de comunicação</option>
+                  <option value="Outro (especificar)">Outro (especificar)</option>
+                </select>
+                <input class="form-input outro-field" id="f-atuacao-outro" name="outroAtuacaoInput" type="text" placeholder="Especifique sua atuação">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="f-origem">Como conheceu o site? <span>*</span></label>
+                <select class="form-select" id="f-origem" name="origem" required onchange="toggleOutroOrigem(this)">
+                  <option value="">Selecione...</option>
+                  <option>Redes e sites da UFMS</option>
+                  <option>Plataforma Lattes</option>
+                  <option>Busca na web - Google</option>
+                  <option>Redes sociais - Instagram</option>
+                  <option>Redes sociais - X (Twitter)</option>
+                  <option>Redes sociais - Outros</option>
+                  <option>Publicações no site Farmnews</option>
+                  <option value="Outro">Outro</option>
+                </select>
+                <input class="form-input outro-field" id="f-origem-outro" name="outroOrigemInput" type="text" placeholder="Especifique como conheceu">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="f-msg">Mensagem</label>
+                <textarea class="form-textarea" id="f-msg" name="mensagem" rows="4" placeholder="Escreva sua mensagem aqui..."></textarea>
+              </div>
+            </div>
+
+            <button class="form-submit" type="submit" id="formSubmitBtn">Enviar Mensagem</button>
+            <div class="form-status" id="formStatus"></div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">Ricardo <span>C. Brumatti</span></div>
+      <p class="footer-tagline">Professor de Economia Rural. Ferramentas que movem a pecuária de corte com precisão técnica.</p>
+      <div class="footer-social">
+        <a href="https://www.instagram.com/rcbrumatti/" target="_blank" rel="noopener" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <a href="https://x.com/profbrumatti" target="_blank" rel="noopener" aria-label="Twitter">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="http://www.linkedin.com/in/ricardo-c-brumatti-86344434" target="_blank" rel="noopener" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M8 11v5M8 8v.01M12 16v-5m4 5v-3a2 2 0 0 0-4 0"/></svg>
+        </a>
+        <a href="http://lattes.cnpq.br/0798088146657300" target="_blank" rel="noopener" aria-label="Lattes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div>
+      <div class="footer-col-title">Simuladores</div>
+      <ul class="footer-links">
+        <li><button onclick="openTool('confinamento','Simulação de Confinamento');return false;">Confinamento</button></li>
+        <li><button onclick="openTool('cria','Cria — Custo do Bezerro');return false;">Cria — Custo Bezerro</button></li>
+        <li><button onclick="openTool('engorda','Recria + Engorda');return false;">Recria + Engorda</button></li>
+        <li><button onclick="openTool('recria','Recria a Pasto');return false;">Recria a Pasto</button></li>
+        <li><button onclick="openTool('ponto-venda','Ponto Ótimo de Venda');return false;">Ponto Ótimo de Venda</button></li>
+        <li><button onclick="openTool('bioecon','BioEcon Corte');return false;">BioEcon Corte</button></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="footer-col-title">Ferramentas</div>
+      <ul class="footer-links">
+        <li><button onclick="openTool('painel-mercado','Preços & Mercado Futuro');return false;">Preços & Mercado Futuro</button></li>
+        <li><button onclick="openTool('painel-historico','Séries Históricas');return false;">Séries Históricas</button></li>
+        <li><button onclick="openTool('rentabilidade','Rentabilidade');return false;">Rentabilidade</button></li>
+        <li><button onclick="openTool('leilao','Venda em Leilão');return false;">Venda em Leilão</button></li>
+        <li><button onclick="openTool('agio','Ágio do Bezerro');return false;">Ágio do Bezerro</button></li>
+        <li><button onclick="openTool('fluxo-caixa','Fluxo de Caixa');return false;">Fluxo de Caixa</button></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p class="footer-copy">© 2026 Ricardo C. Brumatti — FAMEZ/UFMS · Campo Grande, MS</p>
+    <p class="footer-disclaimer">As ferramentas oferecem análise econômica com base nos dados informados. Os resultados são referência; o uso é de inteira responsabilidade do usuário.</p>
+  </div>
+</footer>
+
+<!-- ─── SCRIPTS ────────────────────────────────────────── -->
+<script>
+/* NAV */
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+
+/* MOBILE MENU */
+const burger = document.getElementById('burgerBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+burger.addEventListener('click', () => mobileMenu.classList.add('open'));
+document.getElementById('menuClose').addEventListener('click', () => mobileMenu.classList.remove('open'));
+function closeMobile() { mobileMenu.classList.remove('open'); }
+
+/* CATEGORY TABS */
+function showCat(id, btn) {
+  document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('cat-' + id).classList.add('active');
+  btn.classList.add('active');
+  // re-trigger reveal
+  document.querySelectorAll('#cat-' + id + ' .reveal').forEach((el, i) => {
+    el.classList.remove('visible');
+    setTimeout(() => el.classList.add('visible'), i * 80);
+  });
+}
+
+/* MODAL */
+const toolMap = {
+  'confinamento':     'ferramentas/confinamento-custos.html',
+  'cria':             'ferramentas/cria.html',
+  'engorda':          'ferramentas/engorda-completa.html',
+  'recria':           'ferramentas/recria.html',
+  'ponto-venda':      'ferramentas/confinamento-venda.html',
+  'bioecon':          'ferramentas/bioecon.html',
+  'painel-mercado':   'ferramentas/painel-mercado.html',
+  'painel-historico': 'ferramentas/painel-historico.html',
+  'rentabilidade':    'ferramentas/rentabilidade.html',
+  'leilao':           'ferramentas/venda-leilao.html',
+  'agio':             'ferramentas/agio-bezerro.html',
+  'fluxo-caixa':      'ferramentas/fluxo-caixa.html',
+};
+
+function openTool(id, title) {
+  const overlay = document.getElementById('toolModal');
+  const body    = document.getElementById('modalBody');
+  document.getElementById('modalTitle').textContent = title;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  const src = toolMap[id];
+  if (src) {
+    body.innerHTML = `<iframe src="${src}" allowfullscreen></iframe>`;
+  } else {
+    body.innerHTML = `<div style="padding:3rem;text-align:center;color:#78716c">Ferramenta não encontrada: ${id}</div>`;
+  }
+}
+
+function closeModal() {
+  document.getElementById('toolModal').classList.remove('open');
+  document.getElementById('modalBody').innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('toolModal')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* SCROLL REVEAL */
+const reveals = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } });
+}, { threshold: 0.1 });
+reveals.forEach(el => revealObs.observe(el));
+
+/* COUNTERS */
+let countDone = false;
+const heroEl = document.getElementById('hero');
+const cntObs = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting && !countDone) {
+    countDone = true;
+    document.querySelectorAll('[data-count]').forEach(el => {
+      const target = parseInt(el.dataset.count);
+      let start = 0; const dur = 1800; let t0;
+      const step = ts => {
+        if (!t0) t0 = ts;
+        const p = Math.min((ts - t0) / dur, 1);
+        el.textContent = Math.floor((1 - Math.pow(1 - p, 3)) * target) + '+';
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+}, { threshold: 0.4 });
+cntObs.observe(heroEl);
+
+/* FORM */
+function toggleOutroAtuacao(sel) {
+  const el = document.getElementById('f-atuacao-outro');
+  el.style.display = sel.value === 'Outro (especificar)' ? 'block' : 'none';
+  el.required = sel.value === 'Outro (especificar)';
+}
+function toggleOutroOrigem(sel) {
+  const el = document.getElementById('f-origem-outro');
+  el.style.display = sel.value === 'Outro' ? 'block' : 'none';
+  el.required = sel.value === 'Outro';
+}
+
+function submitForm(e) {
+  e.preventDefault();
+  const btn    = document.getElementById('formSubmitBtn');
+  const status = document.getElementById('formStatus');
+  const form   = e.target;
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbyOhVQuCnAGSWrtJl8ApW1d6VuXk3R9Ol6XfAJJ0jyWzmqwzaynAICbs0gDANRd622R/exec';
+
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  status.className = 'form-status';
+  status.style.display = 'none';
+
+  const data = new FormData(form);
+  if (data.get('atuacao') === 'Outro (especificar)') {
+    data.set('atuacao', 'Outro: ' + (data.get('outroAtuacaoInput') || ''));
+  }
+  if (data.get('origem') === 'Outro') {
+    data.set('origem', 'Outro: ' + (data.get('outroOrigemInput') || ''));
+  }
+  data.delete('outroAtuacaoInput');
+  data.delete('outroOrigemInput');
+
+  fetch(scriptURL, { method: 'POST', body: data })
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === 'success') {
+        status.textContent = '✅ Mensagem enviada com sucesso!';
+        status.className = 'form-status success';
+        form.reset();
+      } else { throw new Error(d.message || 'Erro desconhecido'); }
+    })
+    .catch(err => {
+      status.textContent = '❌ Erro ao enviar: ' + err.message;
+      status.className = 'form-status error';
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = 'Enviar Mensagem';
+      setTimeout(() => { status.className = 'form-status'; status.style.display = 'none'; }, 6000);
+    });
+}
+</script>
+<script>
+/* Auto-print when ready */
+(async () => {
+  try {
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+  } catch(e) {}
+  setTimeout(() => window.print(), 600);
+})();
+</script>
+</body>
+</html>

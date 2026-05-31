@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artigos & Publicações — Prof. Ricardo C. Brumatti</title>
+  <meta name="description" content="Análises técnico-econômicas sobre pecuária de corte, confinamento, melhoramento genético e gestão de custos rurais por Ricardo Brumatti.">
+  <meta property="og:title" content="Artigos & Publicações — Prof. Ricardo C. Brumatti">
+  <meta property="og:description" content="Análises técnico-econômicas sobre pecuária de corte, confinamento, melhoramento genético e gestão de custos rurais por Ricardo Brumatti.">
+  <meta property="og:image" content="foto-perfil.jpg">
+  <meta property="og:url" content="https://ricardobrumatti.pro.br/artigos.html">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <style>
+    :root {
+      --bg:        #f8fafc;
+      --bg2:       #f1f5f9;
+      --bg3:       #e2e8f0;
+      --white:     #ffffff;
+      --border:    #e2e8f0;
+      --border2:   #cbd5e1;
+      --text:      #0f172a;
+      --text2:     #334155;
+      --muted:     #475569;
+      --light:     #64748b;
+      --green:     #064e65;
+      --green-mid: #0d6b83;
+      --green-lt:  #e6f4f7;
+      --sans:      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --serif:     Georgia, serif;
+      --radius:    12px;
+      --shadow:    0 1px 3px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.03);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.9);
+    }
+    
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .back-btn:hover {
+      color: var(--green);
+    }
+
+    .site-title {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .site-title span {
+      color: var(--green);
+    }
+
+    main {
+      flex-grow: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+
+    .page-title-section {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .page-eyebrow {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--green);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-title {
+      font-family: var(--serif);
+      font-size: 2.2rem;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.75rem;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: transform 0.2s, box-shadow 0.2s;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      border-color: var(--border2);
+    }
+
+    .card-content {
+      padding: 1.75rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tag-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      gap: 1rem;
+    }
+
+    .tag {
+      display: inline-block;
+      background-color: var(--green-lt);
+      color: var(--green);
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    h3 {
+      font-family: var(--serif);
+      margin: 0 0 0.75rem 0;
+      color: var(--text);
+      font-size: 1.15rem;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    p {
+      color: var(--text2);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .card-footer {
+      padding: 1.25rem 1.75rem;
+      border-top: 1px solid var(--border);
+      background-color: var(--bg2);
+    }
+
+    .btn {
+      text-decoration: none;
+      color: var(--green);
+      font-weight: 600;
+      font-size: 0.88rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: color 0.2s;
+    }
+    
+    .btn:hover {
+      color: var(--green-mid);
+    }
+
+    footer {
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    footer p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    footer .footer-sub {
+      font-size: 0.75rem;
+      color: var(--light);
+    }
+
+    @media (max-width: 480px) {
+      .page-title {
+        font-size: 1.8rem;
+      }
+      .grid-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav-container">
+    <a href="index.html" class="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Voltar ao site
+    </a>
+    <a href="index.html" class="site-title">Ricardo <span>C. Brumatti</span></a>
+  </div>
+</header>
+
+<main>
+  <div class="page-title-section">
+    <div class="page-eyebrow">Análises & Publicações</div>
+    <h1 class="page-title">Artigos Técnicos</h1>
+  </div>
+
+  <div class="grid-container">
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Genética</span>
+          <span class="meta">08/12/2025</span>
+        </div>
+        <h3>PMGZ Carne 2025 - Genética Melhoradora: Impacto Econômico e Zootécnico</h3>
+        <p>Resultados consolidados de 2025 do programa PMGZ Carne e a avaliação do impacto financeiro do melhoramento genético.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://www.abcz.org.br/noticias/noticia/30963/pmgz-carne-2025---genetica-melhoradora--impacto-economico-e-zootecnico-na-pecuaria-de-corte" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Visita Técnica</span>
+          <span class="meta">14/11/2025</span>
+        </div>
+        <h3>Melhoramento Genético na Fazenda Nova Piratininga</h3>
+        <p>Visita técnica à Fazenda Nova Piratininga, em São Miguel do Araguaia (GO), destacando as inovações no melhoramento genético.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://www.abcz.org.br/noticias/noticia/30940/melhoramento-genetico-e-destaque-durante-visita-tecnica-da-abcz-a-fazenda-nova-piratininga" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Finanças</span>
+          <span class="meta">09/01/2025</span>
+        </div>
+        <h3>Avaliação Financeira da Venda de Reprodutores</h3>
+        <p>Análise das estratégias de comercialização para reprodutores zebuínos no Brasil, focando nos impactos financeiros do parcelamento.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://www.abcz.org.br/noticias/noticia/30269/genetica-de-valor--avaliacao-financeira-da-comercializacao-de-reprodutores-melhoradores" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Mercado</span>
+          <span class="meta">Ago/2025</span>
+        </div>
+        <h3>Pecuária de Corte e Lucro: O Desafio de uma Retomada Lenta!</h3>
+        <p>Os números mostram uma realidade que o produtor sente no bolso: as margens da pecuária de corte encolheram e exigem gestão de excelência.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://www.farmnews.com.br/gestao/pecuaria-de-corte-e-lucro-o-desafio-de-uma-retomada-lenta/" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Confinamento</span>
+          <span class="meta">Jul/2025</span>
+        </div>
+        <h3>Confinamento em 2025: Margem Estreita entre Lucro e Prejuízo</h3>
+        <p>O sucesso no confinamento em 2025 depende de ótima gestão de custos, controle de nutrição e escolha estratégica dos animais.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://farmnews.com.br/gestao/confinamento-em-2025-margem-estreita-entre-lucro-e-prejuizo/" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Recria</span>
+          <span class="meta">2025</span>
+        </div>
+        <h3>Recria Intensiva: A Fábrica de Supergarrotes e Lucro</h3>
+        <p>A recria intensiva acelera o ganho de peso, reduz o ciclo do animal e eleva a eficiência econômica dos pastos brasileiros.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://farmnews.com.br/gestao/recria-intensiva-a-fabrica-de-supergarrotes-que-acelera-seu-lucro/" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Confinamento</span>
+          <span class="meta">2025</span>
+        </div>
+        <h3>Custo da Engorda no Confinamento: Otimizando Margens</h3>
+        <p>Como a oscilação do custo alimentar e insumos interfere no custo final da arroba produzida e na rentabilidade do confinador.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://farmnews.com.br/gestao/custo-da-engorda-no-confinamento-estrategia-para-otimizar-margem/" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Confinamento</span>
+          <span class="meta">2025</span>
+        </div>
+        <h3>Confinamento: Como Equilibrar Custos e Ganhos?</h3>
+        <p>O equilíbrio essencial para pecuaristas reduzirem o ciclo produtivo sem estourarem o orçamento de custeio.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://farmnews.com.br/gestao/confinamento-como-equilibrar-custos-e-ganhos/" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Gestão</span>
+          <span class="meta">2025</span>
+        </div>
+        <h3>Indicadores Econômicos: O Que e Como Avaliar?</h3>
+        <p>Como evitar a gestão fragmentada de indicadores econômicos e obter tomadas de decisão rápidas na fazenda.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://farmnews.com.br/gestao/indicadores-economicos-na-pecuaria-de-corte-o-que-e-como-avaliar/" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Cria</span>
+          <span class="meta">2025</span>
+        </div>
+        <h3>Custos na Fase de Cria: Entendendo os Gastos</h3>
+        <p>Uma análise profunda sobre os custos fixos e variáveis na produção de bezerros sob diferentes níveis tecnológicos.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://farmnews.com.br/gestao/custos-na-fase-de-cria-entendendo-os-gastos-na-pecuaria-de-corte/" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Terminação</span>
+          <span class="meta">2025</span>
+        </div>
+        <h3>Custos na Pecuária: A Fase de Terminação</h3>
+        <p>Entendendo a composição de custos e o peso econômico da nutrição no período final de engorda bovina.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://farmnews.com.br/gestao/custos-na-pecuaria-de-corte-entendendo-os-gastos-na-fase-de-terminacao/" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="tag-meta-row">
+          <span class="tag">Gestão</span>
+          <span class="meta">2025</span>
+        </div>
+        <h3>Gestão de Custos: O Início do Melhor Resultado</h3>
+        <p>A importância da implantação da cultura de controle de custos na fazenda e o papel estratégico da universidade no campo.</p>
+      </div>
+      <div class="card-footer">
+        <a href="https://farmnews.com.br/gestao/gestao-de-custos-o-inicio-de-uma-caminhada-rumo-ao-melhor-resultado/" target="_blank" rel="noopener" class="btn">
+          Ler Artigo Completo
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <p>Prof. Ricardo C. Brumatti | FAMEZ/UFMS | <a href="index.html" style="color:var(--green);text-decoration:none">ricardobrumatti.pro.br</a></p>
+  <p class="footer-sub">&copy; 2026 Todos os direitos reservados. Desenvolvimento para fins acadêmicos e profissionais.</p>
+</footer>
+
+</body>
+</html>

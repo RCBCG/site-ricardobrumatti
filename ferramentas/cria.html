@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador gratuito: Cria Certa - Simulador de Custo Real do Bezerro. Desenvolvido pelo Prof. Ricardo C. Brumatti (FAMEZ/UFMS) para análise econômica e pecuária de corte.">
+    <title>Cria Certa - Simulador de Custo Real do Bezerro</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    
+    <!-- Bibliotecas Externas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration (Image 2 Colors) -->
+    <script id="tailwind-theme-config">
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            emerald: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c', // Overridden to darker deep teal
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            blue: {
+                                50: '#f8fafc',
+                                100: '#f1f5f9',
+                                200: '#e2e8f0',
+                                300: '#cbd5e1',
+                                400: '#94a3b8',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            teal: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            green: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Configuração Tailwind para Dark Mode -->
+    <script>
+        /* Removed local config to use global brand theme config */
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        
+        /* Utilitários */
+        .input-group label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.25rem; }
+        .input-group input { width: 100%; padding: 0.5rem; border-radius: 0.375rem; transition: all 0.2s; border: 1px solid #cbd5e1; }
+        .input-group input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .kpi-value { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* Spinner */
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- ALTO CONTRASTE --- */
+        .high-contrast { background-color: #000 !important; color: #fff !important; }
+        .high-contrast .bg-white, .high-contrast .bg-slate-50, .high-contrast .section-card { background-color: #000 !important; border: 2px solid #fff !important; color: #fff !important; }
+        .high-contrast input { background-color: #000 !important; color: #fff !important; border-color: #fff !important; }
+        .high-contrast .text-slate-500, .high-contrast .text-slate-400 { color: #ccc !important; }
+        .high-contrast .text-blue-600, .high-contrast .text-blue-500, .high-contrast .text-blue-400 { color: #ffff00 !important; } /* Amarelo destaque */
+        .high-contrast .text-emerald-600 { color: #00ff00 !important; }
+        .high-contrast .text-red-600, .high-contrast .text-red-500 { color: #ff5555 !important; }
+        .high-contrast button { border: 1px solid #fff !important; }
+
+        /* --- TOUR GUIADO (Overlay) --- */
+        #tourOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 60; display: none; }
+        .tour-highlight { position: relative; z-index: 70; box-shadow: 0 0 0 4px #3b82f6, 0 0 0 5000px rgba(0,0,0,0.7); background: white; pointer-events: none; border-radius: 8px; }
+        .dark .tour-highlight { background: #1e293b; }
+        #tourTooltip { position: fixed; z-index: 80; background: white; padding: 20px; border-radius: 8px; max-width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transition: all 0.3s; }
+
+        /* --- PDF OCULTO --- */
+        #printContainer { position: fixed; top: 0; left: -9999px; z-index: -1; background-color: #f8fafc; }
+        .a4-page { width: 210mm; height: 297mm; padding: 15mm; background: white; display: flex; flex-direction: column; box-sizing: border-box; }
+        .pdf-table td, .pdf-table th { border-bottom: 1px solid #e2e8f0; }
+    </style>
+
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <script>
+        if (window.self !== window.top) {
+            document.write('<style>.back-btn-container { display: none !important; }</style>');
+        }
+    </script>
+    <div class="back-btn-container no-print" style="padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; width: 100%;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#0d9488'" onmouseout="this.style.color='#64748b'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar ao site
+        </a>
+        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">ricardobrumatti.pro.br</span>
+    </div>
+
+
+    <!-- Navbar / Cabeçalho Institucional -->
+    <header class="bg-slate-900 text-white shadow-xl sticky top-0 z-50 border-b border-slate-700">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
+                
+                <!-- Logo e Títulos -->
+                <div class="flex items-center gap-4 w-full lg:w-auto">
+                    <div class="bg-white p-2 rounded-lg shrink-0">
+                        <i class="fa-solid fa-cow text-3xl text-slate-900"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold tracking-tight leading-tight">Cria Certa</h1>
+                        <h2 class="text-xs md:text-sm font-light text-slate-300">Simulador de Custo Real do Bezerro Desmamado</h2>
+                    </div>
+                </div>
+
+                <!-- Barra de Ferramentas -->
+                <div class="flex flex-wrap items-center justify-center lg:justify-end gap-2 w-full lg:w-auto">
+                    
+                    <!-- Grupo Acessibilidade/Visual -->
+                    <div class="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+                        <button onclick="toggleTour()" title="Tour Guiado" class="p-2 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition"><i class="fa-solid fa-signs-post"></i></button>
+                        <button onclick="toggleDarkMode()" title="Tema Escuro" class="p-2 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition"><i class="fa-solid fa-moon"></i></button>
+                        <button onclick="toggleHighContrast()" title="Alto Contraste" class="p-2 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                        <button onclick="toggleHelp()" title="Ajuda Metodológica" class="p-2 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition"><i class="fa-solid fa-circle-question"></i></button>
+                    </div>
+
+                    <!-- Grupo Ação -->
+                    <div class="flex gap-2">
+                        <button onclick="carregarExemplo()" class="bg-emerald-600 hover:bg-emerald-700 px-3 py-2 rounded text-xs font-bold transition flex items-center gap-2 shadow-lg hover:shadow-emerald-900/50">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Ver Exemplo
+                        </button>
+                        <button onclick="toggleHistory()" class="bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded text-xs font-bold transition flex items-center gap-2 shadow-lg hover:shadow-indigo-900/50">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Histórico
+                        </button>
+                        <button onclick="gerarPDF()" id="btnPDF" class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-xs font-bold transition flex items-center gap-2 shadow-lg hover:shadow-blue-900/50">
+                            <i class="fa-solid fa-file-pdf"></i> Relatório
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Assinatura Institucional -->
+            <div class="mt-3 pt-2 border-t border-slate-800 text-[10px] md:text-xs text-slate-400 text-center lg:text-left flex flex-col md:flex-row justify-between items-center gap-1">
+                <span><i class="fa-solid fa-code mr-1"></i>Aplicação desenvolvida por <strong>Prof. Ricardo C. Brumatti</strong> - FAMEZ/UFMS - Campo Grande, MS</span>
+                <span class="bg-slate-800 px-2 py-0.5 rounded text-slate-500">Uso gratuito, sem fins comerciais</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Interface Principal (SPA) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Coluna de Inputs (Esquerda) -->
+            <div class="lg:col-span-4 space-y-6" id="inputSection">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
+                        <h2 class="text-lg font-bold text-slate-800 dark:text-white"><i class="fa-solid fa-sliders mr-2 text-blue-600 dark:text-blue-400"></i>Parâmetros</h2>
+                        <button onclick="abrirCalculadoraAux()" class="text-xs text-blue-600 hover:underline dark:text-blue-400"><i class="fa-solid fa-calculator mr-1"></i>Calc. R$/@</button>
+                    </div>
+                    
+                    <form id="simuladorForm" oninput="calcularResultados()">
+                        <!-- 1. Matrizes -->
+                        <fieldset class="mb-4">
+                            <legend class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">1. Rebanho de Matrizes</legend>
+                            <div class="space-y-3">
+                                <div class="input-group">
+                                    <label class="dark:text-slate-300">Quantidade de Vacas (cab)</label>
+                                    <input type="number" id="qtdVacas" value="1000" min="1" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="input-group">
+                                    <label class="dark:text-slate-300">Valor da Vaca (R$/cab)</label>
+                                    <input type="number" id="valorVaca" value="4500" step="0.01" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="input-group">
+                                    <label class="dark:text-slate-300">Custo Manutenção Vaca (R$/mês)</label>
+                                    <input type="number" id="custoMesVaca" value="85.00" step="0.01" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- 2. Reprodução -->
+                        <fieldset class="mb-4">
+                            <legend class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">2. Reprodução</legend>
+                            <div class="input-group">
+                                <label class="dark:text-slate-300">Custo Estação Monta (R$/vaca)</label>
+                                <input type="number" id="custoEstacaoMonta" value="65.00" step="0.01" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                            </div>
+                        </fieldset>
+
+                        <!-- 3. Fase de Cria -->
+                        <fieldset class="mb-4">
+                            <legend class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">3. Custo do Bezerro</legend>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="input-group">
+                                    <label class="dark:text-slate-300">Custo (R$/cab/mês)</label>
+                                    <input type="number" id="custoMesBezerro" value="35.00" step="0.01" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="input-group">
+                                    <label class="dark:text-slate-300">Duração (meses)</label>
+                                    <input type="number" id="duracaoCria" value="8" step="1" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- 4. Índices Zootécnicos -->
+                        <fieldset class="mb-4">
+                            <legend class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">4. Índices Zootécnicos</legend>
+                            <div class="space-y-3">
+                                <div class="input-group">
+                                    <label class="dark:text-slate-300">Taxa de Prenhez (%)</label>
+                                    <input type="number" id="taxaPrenhez" value="82" max="100" step="0.1" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="input-group">
+                                        <label class="dark:text-slate-300">Mort. Pré-Parto (%)</label>
+                                        <input type="number" id="mortPreParto" value="3" max="100" step="0.1" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="dark:text-slate-300">Mort. Pós-Parto (%)</label>
+                                        <input type="number" id="mortPosParto" value="4" max="100" step="0.1" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <!-- 5. Venda e Fixos -->
+                        <fieldset class="mb-4">
+                            <legend class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">5. Comercialização & Fixos</legend>
+                            <div class="space-y-3">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="input-group">
+                                        <label class="dark:text-slate-300">Preço Venda (R$/cab)</label>
+                                        <input type="number" id="precoVenda" value="2800" step="0.01" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                    </div>
+                                    <div class="input-group">
+                                        <label class="dark:text-slate-300">Peso Desmama (kg)</label>
+                                        <input type="number" id="pesoDesmama" value="210" step="0.1" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label class="dark:text-slate-300">Custos Fixos (R$/vaca/ano)</label>
+                                    <input type="number" id="custosFixos" value="120.00" step="0.01" onfocus="this.select()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <div class="pt-4 border-t dark:border-slate-700">
+                            <button type="button" onclick="calcularResultados()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-md flex justify-center items-center gap-2">
+                                <i class="fa-solid fa-rotate"></i> Atualizar Cálculos
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Coluna de Resultados (Direita) -->
+            <div class="lg:col-span-8 space-y-6" id="resultsSection">
+                <!-- Cards de KPI -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="kpiBlock">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-md border-l-4 border-emerald-500 overflow-hidden" id="cardLucro">
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Lucro Total</p>
+                        <h3 class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 kpi-value" id="resLucroTotal">R$ 0,00</h3>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-2">Margem Líquida: <span id="resMargemLiq" class="font-bold text-slate-600 dark:text-slate-300">0%</span></p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-md border-l-4 border-blue-500 overflow-hidden">
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">ROI</p>
+                        <h3 class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1 kpi-value" id="resRoi">0%</h3>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-2">Retorno s/ Investimento</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-md border-l-4 border-amber-500 overflow-hidden">
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Custo Unitário (Bezerro)</p>
+                        <h3 class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 kpi-value" id="resCustoUnit">R$ 0,00</h3>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-2">Break-even: <span id="resBreakEven" class="font-bold text-slate-600 dark:text-slate-300">0</span> cab</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-md border-l-4 border-purple-500 overflow-hidden">
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Produção</p>
+                        <h3 class="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1 kpi-value" id="resBezerrosDesmamados">0</h3>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-2">Bezerros Desmamados</p>
+                    </div>
+                </div>
+
+                <!-- Gráficos -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-white mb-4 border-b dark:border-slate-700 pb-2">Composição dos Custos</h3>
+                        <div class="relative h-64 w-full">
+                            <canvas id="doughnutChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-white mb-4 border-b dark:border-slate-700 pb-2">Análise Financeira (Total)</h3>
+                        <div class="relative h-64 w-full">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tornado -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
+                    <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-white">Sensibilidade do Lucro (+/- 10%)</h3>
+                        <span class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-slate-500 dark:text-slate-300">Análise de Impacto</span>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="tornadoChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Tabelas -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="detailsBlock">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-white mb-4 border-b dark:border-slate-700 pb-2">Análise por Cabeça (Desmama)</h3>
+                        <table class="w-full text-sm text-left dark:text-slate-300">
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                <tr><td class="py-2 text-slate-500 dark:text-slate-400">Preço de Venda</td><td class="py-2 font-semibold text-right" id="tabCabVenda">R$ 0,00</td></tr>
+                                <tr><td class="py-2 text-slate-500 dark:text-slate-400">Custo Unitário Total</td><td class="py-2 font-semibold text-right text-red-500 dark:text-red-400" id="tabCabCusto">R$ 0,00</td></tr>
+                                <tr class="bg-slate-50 dark:bg-slate-700/50"><td class="py-2 pl-2 font-bold text-slate-700 dark:text-white">Lucro / Cabeça</td><td class="py-2 pr-2 font-bold text-right" id="tabCabLucro">R$ 0,00</td></tr>
+                                <tr><td class="py-2 text-slate-500 dark:text-slate-400">Margem / Cabeça</td><td class="py-2 font-semibold text-right" id="tabCabMargem">0%</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-white mb-4 border-b dark:border-slate-700 pb-2">Análise por Peso (R$/kg)</h3>
+                        <table class="w-full text-sm text-left dark:text-slate-300">
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                                <tr><td class="py-2 text-slate-500 dark:text-slate-400">Preço Venda / kg</td><td class="py-2 font-semibold text-right" id="tabKgVenda">R$ 0,00</td></tr>
+                                <tr><td class="py-2 text-slate-500 dark:text-slate-400">Custo Produção / kg</td><td class="py-2 font-semibold text-right text-red-500 dark:text-red-400" id="tabKgCusto">R$ 0,00</td></tr>
+                                <tr class="bg-slate-50 dark:bg-slate-700/50"><td class="py-2 pl-2 font-bold text-slate-700 dark:text-white">Margem / kg</td><td class="py-2 pr-2 font-bold text-right" id="tabKgMargem">R$ 0,00</td></tr>
+                                <tr><td class="py-2 text-slate-500 dark:text-slate-400">Peso de Equilíbrio</td><td class="py-2 font-semibold text-right" id="tabPesoEquilibrio">0 kg</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="mt-12 text-center text-slate-400 text-xs md:text-sm">
+            <p>&copy; 2025 Prof. Ricardo C. Brumatti - FAMEZ/UFMS. Uso acadêmico e profissional.</p>
+        </footer>
+    </div>
+
+    <!-- MODAIS E OVERLAYS -->
+
+    <!-- Tour Overlay -->
+    <div id="tourOverlay" class="flex items-center justify-center">
+        <!-- O JS posicionará o tooltip dinamicamente -->
+        <div id="tourTooltip" class="hidden">
+            <h4 id="tourTitle" class="font-bold text-lg mb-2 text-slate-800"></h4>
+            <p id="tourText" class="text-sm text-slate-600 mb-4"></p>
+            <div class="flex justify-between">
+                <button onclick="endTour()" class="text-sm text-slate-400 hover:text-slate-600">Pular</button>
+                <button onclick="nextTourStep()" class="bg-blue-600 text-white px-4 py-1 rounded text-sm font-bold">Próximo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ajuda -->
+    <div id="modalHelp" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl m-4">
+            <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
+                <h3 class="font-bold text-xl text-slate-800 dark:text-white"><i class="fa-solid fa-circle-question text-blue-500 mr-2"></i>Guia do Simulador</h3>
+                <button onclick="toggleHelp()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="space-y-4 text-sm text-slate-600 dark:text-slate-300 overflow-y-auto max-h-[70vh]">
+                
+                <p><strong>Você deve informar os valores para:</strong></p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li><strong>Rebanho de Matrizes:</strong> Quantidade total de vacas, Valor de mercado da vaca (R$/cab) e Custo de manutenção mensal da vaca (R$/mês).</li>
+                    <li><strong>Reprodução:</strong> Custo estimado da estação de monta por matriz (R$/vaca).</li>
+                    <li><strong>Fase de Cria:</strong> Custo direto do bezerro ao pé (R$/mês) e Duração da fase (meses).</li>
+                    <li><strong>Índices Zootécnicos:</strong> Taxa de Prenhez (%), Mortalidade Pré-Parto (%) e Mortalidade Pós-Parto (%).</li>
+                    <li><strong>Comercialização & Fixos:</strong> Preço de Venda do Bezerro (R$/cab), Peso à Desmama (kg) e Custos Fixos da propriedade rateados (R$/vaca/ano).</li>
+                </ul>
+
+                <p><strong>O Simulador Calculará:</strong></p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li><strong>Produção Física:</strong> Quantidade de bezerros nascidos e efetivamente desmamados (produtividade).</li>
+                    <li><strong>Financeiro:</strong> Receita Total, Custo Total da Atividade (Custeio por Absorção), Lucro Total e Margem Líquida (%).</li>
+                    <li><strong>Indicadores de Eficiência:</strong>
+                        <ul class="list-[circle] pl-5 mt-1">
+                            <li><strong>Custo Unitário do Bezerro:</strong> O custo real de cada animal desmamado, absorvendo os custos das vacas vazias e das perdas.</li>
+                            <li><strong>ROI (%):</strong> Retorno sobre o Investimento realizado na safra.</li>
+                            <li><strong>Ponto de Equilíbrio (Break-even):</strong> Quantidade mínima de bezerros necessários para cobrir os custos.</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <p><strong>Os resultados serão apresentados graficamente:</strong></p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>Gráfico de Rosca: Composição percentual dos custos.</li>
+                    <li>Gráfico de Barras: Comparativo Receita vs Custos vs Lucro.</li>
+                    <li>Gráfico Tornado: Análise de Sensibilidade (Impacto da variação de Preço, Prenhez e Custos no Lucro).</li>
+                </ul>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Histórico -->
+    <div id="modalHistory" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl m-4">
+            <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
+                <h3 class="font-bold text-xl text-slate-800 dark:text-white"><i class="fa-solid fa-clock-rotate-left text-indigo-500 mr-2"></i>Histórico de Cenários</h3>
+                <button onclick="toggleHistory()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="scenarioName" placeholder="Nome do Cenário (ex: Cenário Otimista)" class="flex-1 p-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                <button onclick="saveScenario()" class="bg-indigo-600 text-white px-3 rounded hover:bg-indigo-700"><i class="fa-solid fa-save"></i></button>
+            </div>
+
+            <div id="historyList" class="space-y-2 max-h-[50vh] overflow-y-auto">
+                <!-- Lista injetada via JS -->
+                <p class="text-center text-slate-400 text-sm py-4">Nenhum cenário salvo.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Comparação -->
+    <div id="modalCompare" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-3xl shadow-2xl m-4">
+            <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
+                <h3 class="font-bold text-xl text-slate-800 dark:text-white"><i class="fa-solid fa-code-compare text-indigo-500 mr-2"></i>Comparativo de Cenários</h3>
+                <button onclick="closeCompare()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left dark:text-slate-300">
+                    <thead>
+                        <tr class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+                            <th class="p-3">Indicador</th>
+                            <th class="p-3 text-right">Atual</th>
+                            <th class="p-3 text-right text-indigo-600" id="compName">Salvo</th>
+                            <th class="p-3 text-right">Diferença</th>
+                        </tr>
+                    </thead>
+                    <tbody id="compareBody" class="divide-y divide-slate-100 dark:divide-slate-700">
+                        <!-- Linhas injetadas via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Calculadora Auxiliar -->
+    <div id="modalCalc" class="fixed inset-0 bg-black/50 hidden z-[100] flex justify-center items-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 w-80 shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
+                <h3 class="font-bold text-lg text-slate-800 dark:text-white">Calculadora R$/@</h3>
+                <button onclick="fecharCalculadoraAux()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div class="input-group">
+                    <label class="dark:text-slate-300">Valor da Arroba (R$/@)</label>
+                    <input type="number" id="calcArroba" placeholder="Ex: 300.00" oninput="converterArroba()" class="dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                </div>
+                <div class="p-3 bg-blue-50 dark:bg-slate-700 rounded-lg text-center">
+                    <p class="text-xs text-blue-500 dark:text-blue-300 uppercase font-bold">Equivalente em R$/kg</p>
+                    <p class="text-2xl font-bold text-blue-700 dark:text-blue-400" id="calcResKg">R$ 0,00</p>
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400 text-center">
+                    Fator: 1 @ = 30kg (Peso Vivo).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container Oculto PDF -->
+    <div id="printContainer">
+        <!-- PÁGINA 1 -->
+        <div id="pdfPage1" class="a4-page">
+            <div class="flex items-center gap-4 mb-8 border-b-2 border-slate-800 pb-4">
+                <i class="fa-solid fa-cow text-4xl text-blue-600"></i>
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-900">Cria Certa</h1>
+                    <p class="text-slate-500">Simulador de Custo Real do Bezerro Desmamado</p>
+                    <p class="text-[10px] text-slate-400 mt-1">Aplicação desenvolvida por Prof. Ricardo C. Brumatti - FAMEZ/UFMS</p>
+                </div>
+                <div class="ml-auto text-right text-sm text-slate-400">
+                    <p id="pdfDate">Data: </p>
+                    <p>Prof. Ricardo Brumatti</p>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+                <h2 class="text-lg font-bold text-slate-800 mb-4 uppercase tracking-wide border-b border-slate-200 pb-2">Resumo Executivo</h2>
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="p-4 bg-white rounded-lg border-l-4 border-emerald-500 shadow-sm"><p class="text-xs text-slate-500 font-bold">Lucro Total</p><p class="text-xl font-bold text-emerald-600" id="pdfLucro">R$ 0,00</p></div>
+                    <div class="p-4 bg-white rounded-lg border-l-4 border-blue-500 shadow-sm"><p class="text-xs text-slate-500 font-bold">ROI</p><p class="text-xl font-bold text-blue-600" id="pdfROI">0%</p></div>
+                    <div class="p-4 bg-white rounded-lg border-l-4 border-amber-500 shadow-sm"><p class="text-xs text-slate-500 font-bold">Custo Unitário</p><p class="text-xl font-bold text-amber-600" id="pdfCusto">R$ 0,00</p></div>
+                    <div class="p-4 bg-white rounded-lg border-l-4 border-purple-500 shadow-sm"><p class="text-xs text-slate-500 font-bold">Produção</p><p class="text-xl font-bold text-purple-600" id="pdfProd">0 cab</p></div>
+                </div>
+            </div>
+            <h2 class="text-lg font-bold text-slate-800 mb-4 uppercase tracking-wide border-b border-slate-200 pb-2">Parâmetros Utilizados</h2>
+            <div class="grid grid-cols-3 gap-6 text-sm">
+                <div class="space-y-4">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">1. Rebanho</p><div class="flex justify-between border-b py-1"><span>Vacas:</span><strong id="pdfInVacas"></strong></div><div class="flex justify-between border-b py-1"><span>Valor:</span><strong id="pdfInValorVaca"></strong></div><div class="flex justify-between py-1"><span>Manut:</span><strong id="pdfInManut"></strong></div></div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">2. Reprodução</p><div class="flex justify-between py-1"><span>Custo:</span><strong id="pdfInMonta"></strong></div></div>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">3. Cria</p><div class="flex justify-between border-b py-1"><span>Custo Bez:</span><strong id="pdfInCustoBez"></strong></div><div class="flex justify-between py-1"><span>Duração:</span><strong id="pdfInDuracao"></strong></div></div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">5. Comercial</p><div class="flex justify-between border-b py-1"><span>Venda:</span><strong id="pdfInPreco"></strong></div><div class="flex justify-between py-1"><span>Peso:</span><strong id="pdfInPeso"></strong></div></div>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">4. Índices</p><div class="flex justify-between border-b py-1"><span>Prenhez:</span><strong id="pdfInPrenhez"></strong></div><div class="flex justify-between border-b py-1"><span>M. Pré:</span><strong id="pdfInMortPre"></strong></div><div class="flex justify-between py-1"><span>M. Pós:</span><strong id="pdfInMortPos"></strong></div></div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">Outros</p><div class="flex justify-between py-1"><span>Fixos:</span><strong id="pdfInFixos"></strong></div></div>
+                </div>
+            </div>
+            <div class="mt-auto border-t border-slate-200 pt-4 text-center text-xs text-slate-400">Página 1 de 2 - Simulação Cria Certa | Prof. Ricardo Brumatti - FAMEZ/UFMS</div>
+        </div>
+        <!-- PÁGINA 2 -->
+        <div id="pdfPage2" class="a4-page">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-200 pb-2"><h2 class="text-xl font-bold text-slate-800">Análise Detalhada</h2><span class="text-sm text-slate-400">Resultados</span></div>
+            <div class="grid grid-cols-2 gap-8 mb-8 h-64">
+                <div class="flex flex-col items-center"><h3 class="text-sm font-bold text-slate-600 mb-2">Composição de Custos</h3><img id="pdfChartRosca" class="max-h-56 max-w-full object-contain"></div>
+                <div class="flex flex-col items-center"><h3 class="text-sm font-bold text-slate-600 mb-2">Fluxo Financeiro</h3><img id="pdfChartBarra" class="max-h-56 max-w-full object-contain"></div>
+            </div>
+            <div class="mb-8 h-48 flex flex-col items-center border-t border-slate-100 pt-4"><h3 class="text-sm font-bold text-slate-600 mb-2 w-full text-left">Sensibilidade do Lucro</h3><img id="pdfChartTornado" class="max-h-40 w-full object-contain"></div>
+            <div class="grid grid-cols-2 gap-8 mt-4 text-sm">
+                <div><h3 class="text-sm font-bold text-white bg-slate-600 p-2 rounded-t-lg">Por Cabeça</h3><table class="w-full border border-slate-200 text-sm pdf-table"><tr class="border-b"><td class="p-2">Venda</td><td class="p-2 text-right font-bold" id="pdfTabCabVenda"></td></tr><tr class="border-b"><td class="p-2">Custo Total</td><td class="p-2 text-right font-bold text-red-600" id="pdfTabCabCusto"></td></tr><tr class="bg-slate-100 border-b"><td class="p-2 font-bold">Lucro</td><td class="p-2 text-right font-bold" id="pdfTabCabLucro"></td></tr><tr><td class="p-2">Margem</td><td class="p-2 text-right" id="pdfTabCabMargem"></td></tr></table></div>
+                <div><h3 class="text-sm font-bold text-white bg-slate-600 p-2 rounded-t-lg">Por Peso (kg)</h3><table class="w-full border border-slate-200 text-sm pdf-table"><tr class="border-b"><td class="p-2">Venda/kg</td><td class="p-2 text-right font-bold" id="pdfTabKgVenda"></td></tr><tr class="border-b"><td class="p-2">Custo/kg</td><td class="p-2 text-right font-bold text-red-600" id="pdfTabKgCusto"></td></tr><tr class="bg-slate-100 border-b"><td class="p-2 font-bold">Margem/kg</td><td class="p-2 text-right font-bold" id="pdfTabKgMargem"></td></tr><tr><td class="p-2">Ponto Equil.</td><td class="p-2 text-right" id="pdfTabPesoEq"></td></tr></table></div>
+            </div>
+            <div class="mt-auto border-t border-slate-200 pt-4 text-center text-xs text-slate-400">Página 2 de 2 - Simulação Cria Certa | Prof. Ricardo Brumatti - FAMEZ/UFMS</div>
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBAL & INIT ---
+        let doughnutChart = null;
+        let barChart = null;
+        let tornadoChart = null;
+
+        const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const formatNum = (v, d = 2) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+        const formatPercent = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            calcularResultados();
+            loadHistoryList();
+            window.addEventListener('resize', adjustAllFonts);
+        });
+
+        // --- CORE LOGIC ---
+        function getInputs() {
+            return {
+                qtdVacas: parseFloat(document.getElementById('qtdVacas').value) || 0,
+                valorVaca: parseFloat(document.getElementById('valorVaca').value) || 0,
+                custoMesVaca: parseFloat(document.getElementById('custoMesVaca').value) || 0,
+                custoEstacaoMonta: parseFloat(document.getElementById('custoEstacaoMonta').value) || 0,
+                custoMesBezerro: parseFloat(document.getElementById('custoMesBezerro').value) || 0,
+                duracaoCria: parseFloat(document.getElementById('duracaoCria').value) || 0,
+                taxaPrenhez: parseFloat(document.getElementById('taxaPrenhez').value) || 0,
+                mortPre: parseFloat(document.getElementById('mortPreParto').value) || 0,
+                mortPos: parseFloat(document.getElementById('mortPosParto').value) || 0,
+                precoVenda: parseFloat(document.getElementById('precoVenda').value) || 0,
+                pesoDesmama: parseFloat(document.getElementById('pesoDesmama').value) || 0,
+                custosFixos: parseFloat(document.getElementById('custosFixos').value) || 0
+            };
+        }
+
+        function setInputs(data) {
+            for (const key in data) {
+                if(document.getElementById(key)) document.getElementById(key).value = data[key];
+            }
+            calcularResultados();
+        }
+
+        function runSimulation(data) {
+            const bezNascidos = data.qtdVacas * (data.taxaPrenhez / 100) * (1 - (data.mortPre / 100));
+            const bezDesmamados = bezNascidos * (1 - (data.mortPos / 100));
+
+            const custoAnualVacas = data.custoMesVaca * 12 * data.qtdVacas;
+            const custoReprodTotal = data.custoEstacaoMonta * data.qtdVacas;
+            const custosFixosTotal = data.custosFixos * data.qtdVacas;
+            const custoBezTotal = data.custoMesBezerro * data.duracaoCria * bezNascidos; 
+            
+            const custoTotal = custoAnualVacas + custoReprodTotal + custoBezTotal + custosFixosTotal;
+            const custoUnit = bezDesmamados > 0 ? custoTotal / bezDesmamados : 0;
+
+            const receita = bezDesmamados * data.precoVenda;
+            const lucro = receita - custoTotal;
+            const margem = receita > 0 ? (lucro / receita) * 100 : 0;
+            const roi = custoTotal > 0 ? (lucro / custoTotal) * 100 : 0;
+
+            const precoKg = data.pesoDesmama > 0 ? data.precoVenda / data.pesoDesmama : 0;
+            const custoKg = data.pesoDesmama > 0 ? custoUnit / data.pesoDesmama : 0;
+            const margemKg = precoKg - custoKg;
+            const pontoEq = data.precoVenda > 0 ? custoTotal / data.precoVenda : 0;
+
+            return { bezDesmamados, custoAnualVacas, custoReprodTotal, custoBezTotal, custosFixosTotal, custoTotal, custoUnit, receita, lucro, margem, roi, precoKg, custoKg, margemKg, pontoEq };
+        }
+
+        function calcularResultados() {
+            const inputs = getInputs();
+            const res = runSimulation(inputs);
+
+            // DOM Update
+            const setTxt = (id, val) => document.getElementById(id).innerText = val;
+            
+            setTxt('resLucroTotal', formatBRL(res.lucro));
+            document.getElementById('resLucroTotal').className = `text-2xl font-bold mt-1 kpi-value ${res.lucro >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`;
+            document.getElementById('cardLucro').className = `bg-white dark:bg-slate-800 p-4 rounded-xl shadow-md border-l-4 overflow-hidden ${res.lucro >= 0 ? 'border-emerald-500' : 'border-red-500'}`;
+
+            setTxt('resMargemLiq', formatPercent(res.margem));
+            setTxt('resRoi', formatPercent(res.roi));
+            setTxt('resCustoUnit', formatBRL(res.custoUnit));
+            setTxt('resBreakEven', Math.ceil(res.pontoEq));
+            setTxt('resBezerrosDesmamados', Math.floor(res.bezDesmamados));
+
+            setTxt('tabCabVenda', formatBRL(inputs.precoVenda));
+            setTxt('tabCabCusto', formatBRL(res.custoUnit));
+            setTxt('tabCabLucro', formatBRL(res.lucro / (res.bezDesmamados || 1)));
+            setTxt('tabCabMargem', formatPercent(res.margem));
+
+            setTxt('tabKgVenda', formatBRL(res.precoKg));
+            setTxt('tabKgCusto', formatBRL(res.custoKg));
+            setTxt('tabKgMargem', formatBRL(res.margemKg));
+            
+            const peKg = res.precoKg > 0 ? res.custoUnit / res.precoKg : 0;
+            setTxt('tabPesoEquilibrio', formatNum(peKg, 1) + ' kg');
+
+            updateCharts(inputs, res);
+            adjustAllFonts();
+        }
+
+        // --- CHARTS ---
+        function updateCharts(inputs, res) {
+            // Doughnut
+            const dData = [res.custoAnualVacas, res.custoReprodTotal, res.custoBezTotal, res.custosFixosTotal];
+            const dCtx = document.getElementById('doughnutChart').getContext('2d');
+            const isDark = document.documentElement.classList.contains('dark');
+            const tColor = isDark ? '#e2e8f0' : '#475569';
+            
+            if (doughnutChart) { doughnutChart.data.datasets[0].data = dData; doughnutChart.options.plugins.legend.labels.color = tColor; doughnutChart.update(); }
+            else {
+                doughnutChart = new Chart(dCtx, {
+                    type: 'doughnut',
+                    data: { labels: ['Matrizes', 'Reprodução', 'Bezerros', 'Fixos'], datasets: [{ data: dData, backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#64748b'], borderWidth: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, color: tColor } } } }
+                });
+            }
+
+            // Bar
+            const bData = [res.receita, res.custoTotal, res.lucro];
+            const bCtx = document.getElementById('barChart').getContext('2d');
+            if (barChart) { 
+                barChart.data.datasets[0].data = bData; 
+                barChart.data.datasets[0].backgroundColor = ['#10b981', '#ef4444', res.lucro >= 0 ? '#3b82f6' : '#b91c1c'];
+                barChart.options.scales.y.ticks.color = tColor;
+                barChart.options.scales.x.ticks.color = tColor;
+                barChart.update(); 
+            } else {
+                barChart = new Chart(bCtx, {
+                    type: 'bar',
+                    data: { labels: ['Receita', 'Custo', 'Lucro'], datasets: [{ label: 'R$', data: bData, backgroundColor: ['#10b981', '#ef4444', '#3b82f6'], borderRadius: 6 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: tColor, callback: v => (v/1000).toFixed(0)+'k' } }, x: { ticks: { color: tColor } } } }
+                });
+            }
+
+            // Tornado
+            const run = (inp) => runSimulation(inp).lucro;
+            let pDiff = run({...inputs, taxaPrenhez: Math.min(100, inputs.taxaPrenhez*1.1)}) - run({...inputs, taxaPrenhez: inputs.taxaPrenhez*0.9});
+            let cDiff = run({...inputs, custoMesVaca: inputs.custoMesVaca*0.9}) - run({...inputs, custoMesVaca: inputs.custoMesVaca*1.1}); // Inverso
+            let vDiff = run({...inputs, precoVenda: inputs.precoVenda*1.1}) - run({...inputs, precoVenda: inputs.precoVenda*0.9});
+
+            const tDataP = [vDiff/2, pDiff/2, cDiff/2];
+            const tDataN = [-vDiff/2, -pDiff/2, -cDiff/2];
+            const tCtx = document.getElementById('tornadoChart').getContext('2d');
+            if (tornadoChart) { 
+                tornadoChart.data.datasets[0].data = tDataP; tornadoChart.data.datasets[1].data = tDataN; 
+                tornadoChart.options.scales.x.ticks.color = tColor; tornadoChart.options.scales.y.ticks.color = tColor;
+                tornadoChart.options.plugins.legend.labels.color = tColor;
+                tornadoChart.update(); 
+            } else {
+                tornadoChart = new Chart(tCtx, {
+                    type: 'bar', indexAxis: 'y',
+                    data: { labels: ['Preço Venda', 'Prenhez', 'Custo Vaca'], datasets: [{ label: '+ Lucro', data: tDataP, backgroundColor: '#10b981' }, { label: '- Lucro', data: tDataN, backgroundColor: '#ef4444' }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: tColor, callback: v => (Math.abs(v)/1000).toFixed(0)+'k' } }, y: { ticks: { color: tColor } } }, plugins: { legend: { labels: { color: tColor } } } }
+                });
+            }
+        }
+
+        // --- FEATURES EXTRAS ---
+        
+        // 1. Dark Mode
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            calcularResultados(); // Redraw charts
+        }
+
+        // 2. High Contrast
+        function toggleHighContrast() {
+            document.body.classList.toggle('high-contrast');
+        }
+
+        // 3. Ajuda
+        function toggleHelp() {
+            const el = document.getElementById('modalHelp');
+            el.classList.toggle('hidden');
+        }
+
+        // 4. Exemplo
+        function carregarExemplo() {
+            // Cenário MT/MS Alta Tecnologia
+            document.getElementById('qtdVacas').value = 1500;
+            document.getElementById('valorVaca').value = 4200;
+            document.getElementById('custoMesVaca').value = 95; // Suplementação melhor
+            document.getElementById('custoEstacaoMonta').value = 140; // IATF
+            document.getElementById('taxaPrenhez').value = 86;
+            document.getElementById('precoVenda').value = 3100; // Bezerro pesado
+            document.getElementById('pesoDesmama').value = 230;
+            calcularResultados();
+            alert("Exemplo carregado: Cenário Tecnificado");
+        }
+
+        // 5. Histórico
+        function toggleHistory() {
+            const el = document.getElementById('modalHistory');
+            el.classList.toggle('hidden');
+            loadHistoryList();
+        }
+
+        function saveScenario() {
+            const name = document.getElementById('scenarioName').value;
+            if(!name) return alert("Digite um nome!");
+            const inputs = getInputs();
+            const history = JSON.parse(localStorage.getItem('criaCertaHistory') || '[]');
+            history.push({ id: Date.now(), name, inputs });
+            localStorage.setItem('criaCertaHistory', JSON.stringify(history));
+            document.getElementById('scenarioName').value = '';
+            loadHistoryList();
+        }
+
+        function loadHistoryList() {
+            const history = JSON.parse(localStorage.getItem('criaCertaHistory') || '[]');
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            if(history.length === 0) { list.innerHTML = '<p class="text-center text-slate-400 text-sm py-4">Nenhum cenário salvo.</p>'; return; }
+            
+            history.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center bg-slate-50 dark:bg-slate-700 p-2 rounded border border-slate-200 dark:border-slate-600';
+                div.innerHTML = `
+                    <span class="font-bold text-sm text-slate-700 dark:text-slate-200">${item.name}</span>
+                    <div class="flex gap-1">
+                        <button onclick='loadScenario(${JSON.stringify(item.inputs)})' class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200">Carregar</button>
+                        <button onclick='compareScenario(${JSON.stringify(item)})' class="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded hover:bg-indigo-200">Comparar</button>
+                        <button onclick="deleteScenario(${item.id})" class="text-xs text-red-400 hover:text-red-600 px-2"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function loadScenario(inputs) {
+            setInputs(inputs);
+            toggleHistory();
+        }
+
+        function deleteScenario(id) {
+            let history = JSON.parse(localStorage.getItem('criaCertaHistory') || '[]');
+            history = history.filter(x => x.id !== id);
+            localStorage.setItem('criaCertaHistory', JSON.stringify(history));
+            loadHistoryList();
+        }
+
+        // 6. Comparação
+        function compareScenario(savedItem) {
+            const currentInputs = getInputs();
+            const currentRes = runSimulation(currentInputs);
+            const savedRes = runSimulation(savedItem.inputs);
+            
+            document.getElementById('compName').innerText = savedItem.name;
+            const tbody = document.getElementById('compareBody');
+            tbody.innerHTML = '';
+
+            const addRow = (label, v1, v2, format) => {
+                const diff = v1 - v2;
+                const color = diff > 0 ? 'text-green-600' : (diff < 0 ? 'text-red-600' : 'text-slate-400');
+                // Lógica de cor inversa para custos
+                const isCost = label.includes('Custo');
+                const finalColor = isCost ? (diff < 0 ? 'text-green-600' : 'text-red-600') : color;
+                
+                tbody.innerHTML += `
+                    <tr class="dark:text-slate-300">
+                        <td class="p-3 font-medium">${label}</td>
+                        <td class="p-3 text-right text-slate-600 dark:text-slate-400">${format(v1)}</td>
+                        <td class="p-3 text-right text-indigo-600 dark:text-indigo-400 font-bold">${format(v2)}</td>
+                        <td class="p-3 text-right font-bold ${finalColor}">${diff > 0 ? '+' : ''}${format(diff)}</td>
+                    </tr>
+                `;
+            };
+
+            addRow('Lucro Total', currentRes.lucro, savedRes.lucro, formatBRL);
+            addRow('ROI (%)', currentRes.roi, savedRes.roi, formatNum);
+            addRow('Custo Unitário', currentRes.custoUnit, savedRes.custoUnit, formatBRL);
+            addRow('Prod. (Bez)', currentRes.bezDesmamados, savedRes.bezDesmamados, (v)=>formatNum(v,0));
+
+            document.getElementById('modalHistory').classList.add('hidden');
+            document.getElementById('modalCompare').classList.remove('hidden');
+        }
+
+        function closeCompare() { document.getElementById('modalCompare').classList.add('hidden'); }
+
+        // 7. Tour Guiado Simples
+        const tourSteps = [
+            { id: 'inputSection', title: '1. Parâmetros', text: 'Insira aqui os dados zootécnicos e econômicos da sua fazenda. O sistema recalcula tudo automaticamente.' },
+            { id: 'kpiBlock', title: '2. Indicadores', text: 'Acompanhe aqui o Lucro, ROI e Custo Unitário em tempo real.' },
+            { id: 'resultsSection', title: '3. Análise Visual', text: 'Gráficos de custos e sensibilidade ajudam a tomar decisões rápidas.' }
+        ];
+        let currentStep = 0;
+
+        function toggleTour() {
+            const overlay = document.getElementById('tourOverlay');
+            overlay.style.display = 'flex';
+            currentStep = 0;
+            showStep();
+        }
+
+        function showStep() {
+            // Limpa highlights anteriores
+            document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+            
+            if (currentStep >= tourSteps.length) { endTour(); return; }
+            
+            const step = tourSteps[currentStep];
+            const el = document.getElementById(step.id);
+            const tooltip = document.getElementById('tourTooltip');
+            
+            // Highlight
+            el.classList.add('tour-highlight');
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Tooltip Content
+            document.getElementById('tourTitle').innerText = step.title;
+            document.getElementById('tourText').innerText = step.text;
+            tooltip.classList.remove('hidden');
+
+            // Posicionamento simples (pode ser melhorado com Popper.js, mas mantendo zero dependência extra)
+            // Aqui apenas centralizamos no overlay fixed, mas o highlight cria o foco visual.
+        }
+
+        function nextTourStep() { currentStep++; showStep(); }
+        function endTour() {
+            document.getElementById('tourOverlay').style.display = 'none';
+            document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+        }
+
+        // Utils UI
+        function adjustAllFonts() { ['resLucroTotal','resRoi','resCustoUnit'].forEach(fitText); }
+        function fitText(id) {
+            const el = document.getElementById(id);
+            if(!el) return;
+            let s = 24; el.style.fontSize = s+'px';
+            while(el.scrollWidth > el.offsetWidth && s>12) { s--; el.style.fontSize = s+'px'; }
+        }
+        function abrirCalculadoraAux() { document.getElementById('modalCalc').classList.remove('hidden'); }
+        function fecharCalculadoraAux() { document.getElementById('modalCalc').classList.add('hidden'); }
+        function converterArroba() {
+            const val = parseFloat(document.getElementById('calcArroba').value)||0;
+            document.getElementById('calcResKg').innerText = formatBRL(val/30) + " / kg PV";
+        }
+
+        // PDF Generation
+        async function gerarPDF() {
+            const btn = document.getElementById('btnPDF');
+            const txt = btn.innerHTML;
+            btn.innerHTML = '<span class="loader"></span> Gerando...';
+            btn.disabled = true;
+
+            const inputs = getInputs();
+            const res = runSimulation(inputs);
+            const hoje = new Date().toLocaleDateString('pt-BR');
+
+            // Popula PDF Oculto
+            document.getElementById('pdfDate').innerText = 'Data: ' + hoje;
+            document.getElementById('pdfLucro').innerText = formatBRL(res.lucro);
+            document.getElementById('pdfLucro').className = `text-xl font-bold ${res.lucro >= 0 ? 'text-emerald-600' : 'text-red-600'}`;
+            document.getElementById('pdfROI').innerText = formatPercent(res.roi);
+            document.getElementById('pdfCusto').innerText = formatBRL(res.custoUnit);
+            document.getElementById('pdfProd').innerText = Math.floor(res.bezDesmamados) + ' cab';
+
+            const fields = [
+                ['pdfInVacas', inputs.qtdVacas], ['pdfInValorVaca', formatBRL(inputs.valorVaca)], ['pdfInManut', formatBRL(inputs.custoMesVaca)],
+                ['pdfInMonta', formatBRL(inputs.custoEstacaoMonta)], ['pdfInCustoBez', formatBRL(inputs.custoMesBezerro)], ['pdfInDuracao', inputs.duracaoCria],
+                ['pdfInPreco', formatBRL(inputs.precoVenda)], ['pdfInPeso', inputs.pesoDesmama], ['pdfInPrenhez', inputs.taxaPrenhez],
+                ['pdfInMortPre', inputs.mortPre], ['pdfInMortPos', inputs.mortPos], ['pdfInFixos', formatBRL(inputs.custosFixos)]
+            ];
+            fields.forEach(([id, val]) => document.getElementById(id).innerText = val);
+
+            if(doughnutChart) document.getElementById('pdfChartRosca').src = doughnutChart.toBase64Image();
+            if(barChart) document.getElementById('pdfChartBarra').src = barChart.toBase64Image();
+            if(tornadoChart) document.getElementById('pdfChartTornado').src = tornadoChart.toBase64Image();
+
+            document.getElementById('pdfTabCabVenda').innerText = formatBRL(inputs.precoVenda);
+            document.getElementById('pdfTabCabCusto').innerText = formatBRL(res.custoUnit);
+            document.getElementById('pdfTabCabLucro').innerText = formatBRL(res.lucro / (res.bezDesmamados || 1));
+            document.getElementById('pdfTabCabMargem').innerText = formatPercent(res.margem);
+            document.getElementById('pdfTabKgVenda').innerText = formatBRL(res.precoKg);
+            document.getElementById('pdfTabKgCusto').innerText = formatBRL(res.custoKg);
+            document.getElementById('pdfTabKgMargem').innerText = formatBRL(res.margemKg);
+            document.getElementById('pdfTabPesoEq').innerText = formatNum(res.precoKg > 0 ? res.custoUnit/res.precoKg : 0, 1) + ' kg';
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const opt = { scale: 2, backgroundColor: '#ffffff' };
+
+                const p1 = await html2canvas(document.getElementById('pdfPage1'), opt);
+                pdf.addImage(p1.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
+                
+                pdf.addPage();
+                const p2 = await html2canvas(document.getElementById('pdfPage2'), opt);
+                pdf.addImage(p2.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
+
+                pdf.save(`Relatorio_CriaCerta_${hoje.replace(/\//g,'-')}.pdf`);
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao gerar PDF');
+            } finally {
+                btn.innerHTML = txt;
+                btn.disabled = false;
+            }
+        }
+    </script>
+
+    <!-- Rodapé Acadêmico/Profissional -->
+    <footer class="no-print mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
+        <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color: #0d9488; text-decoration: none;">ricardobrumatti.pro.br</a> | &copy; 2026</p>
+    </footer>
+</body>
+</html>

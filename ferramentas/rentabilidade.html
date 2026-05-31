@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador gratuito: Simulador de Rentabilidade da Pecuária (Avançado). Desenvolvido pelo Prof. Ricardo C. Brumatti (FAMEZ/UFMS) para análise econômica e pecuária de corte.">
+    <title>Simulador de Rentabilidade da Pecuária (Avançado)</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration (Image 2 Colors) -->
+    <script id="tailwind-theme-config">
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            emerald: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c', // Overridden to darker deep teal
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            blue: {
+                                50: '#f8fafc',
+                                100: '#f1f5f9',
+                                200: '#e2e8f0',
+                                300: '#cbd5e1',
+                                400: '#94a3b8',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            teal: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            green: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+    <!-- jsPDF & html2canvas for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5; /* Lighter gray for a modern look */
+            color: #334155; /* Slate 700 */
+            overflow-x: hidden;
+        }
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; -webkit-appearance: none; -moz-appearance: none; appearance: none;
+        }
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0; /* Slate 200 */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+            transition: all 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .btn {
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #16a34a, #15803d);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(22, 163, 74, 0.39);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(22, 163, 74, 0.45);
+        }
+        .btn-primary:disabled {
+            background: #94a3b8; /* Slate 400 */
+            cursor: not-allowed;
+            box-shadow: none; transform: none;
+        }
+        .btn-secondary {
+            background-color: #475569; color: white;
+            box-shadow: 0 4px 14px 0 rgba(71, 85, 105, 0.3);
+        }
+        .btn-secondary:hover {
+            background-color: #334155; transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(71, 85, 105, 0.35);
+        }
+        .loader { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #ffffff; width: 18px; height: 18px; animation: spin 1s linear infinite; margin-right: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Tab Styles */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s ease-out forwards; }
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            color: #475569; /* slate-600 */
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+        }
+        .tab-btn:hover {
+            background-color: #e2e8f0; /* slate-200 */
+        }
+        .tab-btn.active {
+            background-color: #1e3a8a; /* dark blue */
+            color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .tab-btn.active:hover {
+            background-color: #1e3a8a;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0, 0, 0, 0.5);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
+        }
+        .modal.show { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: #fefefe; padding: 2rem; border-radius: 1rem;
+            width: 90%; max-width: 500px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+            transform: scale(0.95); transition: transform 0.3s;
+        }
+        .modal.show .modal-content { transform: scale(1); }
+        .close-button {
+            position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem;
+            color: #9ca3af; cursor: pointer; line-height: 1;
+        }
+        .close-button:hover { color: #334155; }
+    </style>
+
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+<body>
+    <script>
+        if (window.self !== window.top) {
+            document.write('<style>.back-btn-container { display: none !important; }</style>');
+        }
+    </script>
+    <div class="back-btn-container no-print" style="padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; width: 100%;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#0d9488'" onmouseout="this.style.color='#64748b'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar ao site
+        </a>
+        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">ricardobrumatti.pro.br</span>
+    </div>
+
+    <header class="bg-slate-800 shadow-md">
+        <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+            <h1 class="text-xl sm:text-2xl font-bold text-white text-center tracking-wide">Simulador de Rentabilidade Pecuária - Versão Avançada</h1>
+        </div>
+    </header>
+
+    <main id="main-content" class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-slate-800">Uma ferramenta de decisão para a pecuária de corte</h2>
+            <p class="text-sm text-slate-500 mt-2 italic">*Aplicação desenvolvida por Prof. Ricardo C. Brumatti - FAMEZ/UFMS - Campo Grande, MS, uso gratuito, sem fins comerciais.*</p>
+            <div class="flex justify-center mt-4 space-x-4">
+                 <button id="tourBtn" class="btn bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 shadow-sm transition-colors"><i class="fas fa-route mr-2"></i>Tour Guiado</button>
+                <button id="exampleBtn" class="btn bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 shadow-sm transition-colors"><i class="fas fa-lightbulb mr-2"></i>Ver Exemplo</button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mb-6 flex justify-center">
+             <div class="bg-slate-200 p-1 rounded-lg flex space-x-1" role="tablist" aria-orientation="horizontal">
+                <button class="tab-btn active" data-tab="simulation" role="tab" aria-selected="true">
+                    <i class="fas fa-calculator mr-2"></i>Simulação
+                </button>
+                <button class="tab-btn" data-tab="history" role="tab" aria-selected="false">
+                    <i class="fas fa-history mr-2"></i>Histórico
+                </button>
+                <button class="tab-btn" data-tab="comparison" role="tab" aria-selected="false">
+                    <i class="fas fa-balance-scale mr-2"></i>Comparação
+                </button>
+            </div>
+        </div>
+
+        <!-- Simulation Tab -->
+        <div id="simulation" class="tab-content active">
+             <div class="w-full flex flex-col items-center">
+                <div class="w-full max-w-4xl mb-12">
+                    <div class="card p-6 sm:p-8">
+                        <fieldset>
+                             <legend class="text-xl font-semibold text-slate-800 w-full border-b border-slate-200 pb-3 mb-6">1. Informe os Dados</legend>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+                                <div>
+                                    <label for="fazenda" class="block text-sm font-medium text-slate-600 mb-1">Nome da Fazenda</label>
+                                    <input type="text" id="fazenda" placeholder="Ex: Simulação Alpha" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm">
+                                </div>
+                                <div>
+                                    <label for="tecnico" class="block text-sm font-medium text-slate-600 mb-1">Nome do Técnico</label>
+                                    <input type="text" id="tecnico" placeholder="Ex: João da Silva" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label for="localidade" class="block text-sm font-medium text-slate-600 mb-1">Localidade</label>
+                                    <input type="text" id="localidade" placeholder="Ex: Campo Grande - MS" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm">
+                                </div>
+                            </div>
+                            <hr class="border-slate-200 my-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                                <div>
+                                    <label for="estado" class="block text-sm font-medium text-slate-600 mb-1">Estado Brasileiro</label>
+                                    <select id="estado" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm"></select>
+                                </div>
+                                <div>
+                                    <label for="sistema" class="block text-sm font-medium text-slate-600 mb-1">Sistema Produtivo</label>
+                                    <select id="sistema" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm"></select>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 mt-4">
+                                <div>
+                                    <label for="investimentoUsuario" class="block text-sm font-medium text-slate-600 mb-1">Seu Investimento (R$/ha)</label>
+                                    <input type="text" id="investimentoUsuario" value="20000" inputmode="decimal" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm">
+                                </div>
+                                <div>
+                                    <label for="receitaUsuario" class="block text-sm font-medium text-slate-600 mb-1">Sua Receita (R$/@)</label>
+                                    <input type="text" id="receitaUsuario" value="325" inputmode="decimal" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm">
+                                </div>
+                                <div>
+                                    <label for="custoUsuario" class="block text-sm font-medium text-slate-600 mb-1">Seu Custo (R$/@)</label>
+                                    <input type="text" id="custoUsuario" value="270" inputmode="decimal" class="block w-full rounded-md border-slate-300 shadow-sm focus:border-green-500 focus:ring-green-500 text-sm">
+                                </div>
+                            </div>
+                             <div class="mt-8">
+                                <button id="calculate-btn" class="btn btn-primary w-full !py-3 text-base">
+                                    <span id="btn-loader" class="hidden loader"></span>
+                                    <span id="btn-text"><i class="fas fa-calculator mr-2"></i>Analisar Rentabilidade</span>
+                                </button>
+                            </div>
+                             <div id="status-message" class="text-xs text-slate-500 text-center mt-3 h-4" role="status" aria-live="polite"></div>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <div id="results-section" class="w-full max-w-5xl space-y-8" style="display: none;">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <h2 class="text-xl font-semibold text-slate-800 mb-3 sm:mb-0">2. Analise os Resultados</h2>
+                        <div class="flex space-x-2">
+                            <button id="saveBtn" class="btn btn-secondary !w-auto text-sm py-2 px-4"><i class="fas fa-save mr-2"></i>Salvar</button>
+                            <button id="exportExcelBtn" class="btn btn-secondary !w-auto text-sm py-2 px-4"><i class="fas fa-file-excel mr-2"></i>Excel</button>
+                            <button id="print-btn" class="btn btn-secondary !w-auto text-sm py-2 px-4"><i class="fas fa-file-pdf mr-2"></i>Relatório PDF</button>
+                        </div>
+                    </div>
+                    <div id="table-container-1" class="card p-6"></div>
+                    <div id="table-container-2" class="card p-6"></div>
+                    <div id="table-container-3" class="card p-6"></div>
+                    <div class="card p-6">
+                        <h2 class="text-lg font-semibold text-slate-700 mb-3">Análise Comparativa de Rentabilidade</h2>
+                        <div class="relative h-96 w-full"><canvas id="rentabilidadeComparativaChart"></canvas></div>
+                    </div>
+                    <div class="card p-6">
+                        <h2 class="text-lg font-semibold text-slate-700 mb-3">Análise de Desempenho vs. Faixa de Mercado</h2>
+                        <div class="relative h-96 w-full"><canvas id="rentabilidadeFaixaChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold text-slate-800 mb-6"><i class="fas fa-history mr-2"></i>Histórico de Simulações</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50">
+                                <th class="p-3 text-left text-sm font-semibold text-slate-600">Data</th>
+                                <th class="p-3 text-left text-sm font-semibold text-slate-600">Fazenda</th>
+                                <th class="p-3 text-left text-sm font-semibold text-slate-600">Sistema</th>
+                                <th class="p-3 text-left text-sm font-semibold text-slate-600">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body">
+                            <tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhuma simulação salva.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Tab -->
+        <div id="comparison" class="tab-content">
+            <div class="card p-6">
+                <h3 class="text-2xl font-bold text-slate-800 mb-6"><i class="fas fa-balance-scale mr-2"></i>Comparar Simulações</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-blue-800 mb-3">Simulação 1</h4>
+                        <select id="compare-sim1" class="block w-full rounded-md border-slate-300 shadow-sm text-sm"><option value="">Selecione...</option></select>
+                        <div id="sim1-details" class="mt-3 text-sm text-slate-700"></div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-green-800 mb-3">Simulação 2</h4>
+                        <select id="compare-sim2" class="block w-full rounded-md border-slate-300 shadow-sm text-sm"><option value="">Selecione...</option></select>
+                        <div id="sim2-details" class="mt-3 text-sm text-slate-700"></div>
+                    </div>
+                </div>
+                <div id="comparison-results" class="hidden">
+                    <h4 class="text-xl font-bold mb-4 text-center text-slate-700">Resultado da Comparação</h4>
+                    <div id="comparison-charts-grid" class="grid grid-cols-1 gap-8">
+                        <div class="bg-white rounded-xl shadow-lg p-4"><canvas id="comparisonChart1"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center text-xs text-slate-500 p-4 bg-slate-100 rounded-lg border border-slate-200">
+            <p>* Este aplicativo oferece análise econômica com base nos dados informados pelo usuário e dados públicos adaptados do Cepea Esalq e BeefReport Abiec . Os resultados são apenas uma referência, sendo o uso das informações de inteira responsabilidade do usuário.</p>
+        </div>
+    </main>
+    
+    <!-- Modals -->
+    <div id="tourModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="tour-content"></div>
+            <div class="flex justify-between mt-6">
+                <button id="prev-step" class="btn btn-light">Anterior</button>
+                <span id="tour-step-indicator" class="text-sm text-slate-500 self-center"></span>
+                <button id="next-step" class="btn btn-secondary">Próximo</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="alertModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="alertTitle" class="text-xl font-bold text-slate-800 mb-4"></h2>
+            <div id="alertContent" class="text-slate-700"></div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal">
+        <div class="modal-content max-w-md">
+            <h2 id="confirmTitle" class="text-xl font-bold text-slate-800 mb-4"></h2>
+            <div id="confirmContent" class="text-slate-700 mb-6"></div>
+            <div class="flex justify-end space-x-4">
+                <button id="confirmCancel" class="btn btn-light">Cancelar</button>
+                <button id="confirmOk" class="btn btn-primary">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <footer class="text-center p-5 mt-auto bg-slate-800 text-white">
+        <p class="text-xs">
+            Desenvolvido por Prof. Ricardo C. Brumatti - FAMEZ/UFMS
+        </p>
+    </footer>
+
+    <script>
+    const App = (function() {
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3ViRzHNOwF9-QxmSgZNsR-xAjI_1L_I85XNV4Jt_x0pCSK8stRrC8yTjuh4J3piYW/exec';
+
+        // State
+        let state = {
+            currentSimulation: null,
+            savedSimulations: [],
+            chartInstances: {},
+            tourStep: 0,
+        };
+
+        // DOM Elements
+        const dom = {
+            calculateBtn: document.getElementById('calculate-btn'),
+            printBtn: document.getElementById('print-btn'),
+            saveBtn: document.getElementById('saveBtn'),
+            exportExcelBtn: document.getElementById('exportExcelBtn'),
+            tourBtn: document.getElementById('tourBtn'),
+            exampleBtn: document.getElementById('exampleBtn'),
+            resultsSection: document.getElementById('results-section'),
+            statusMessage: document.getElementById('status-message'),
+            tabs: document.querySelectorAll('.tab-btn'),
+            tabContents: document.querySelectorAll('.tab-content'),
+            alertModal: document.getElementById('alertModal'),
+            alertTitle: document.getElementById('alertTitle'),
+            alertContent: document.getElementById('alertContent'),
+        };
+
+        // --- Core Functions ---
+        function init() {
+            populateSelects();
+            addEventListeners();
+            loadSimulationsFromStorage();
+            formatInitialCurrencyValues();
+        }
+
+        function addEventListeners() {
+            dom.calculateBtn.addEventListener('click', handleCalculateClick);
+            dom.printBtn.addEventListener('click', generatePdfReport);
+            dom.saveBtn.addEventListener('click', saveSimulation);
+            dom.exportExcelBtn.addEventListener('click', exportToExcel);
+            dom.tourBtn.addEventListener('click', startTour);
+            dom.exampleBtn.addEventListener('click', loadExample);
+
+            ['investimentoUsuario', 'receitaUsuario', 'custoUsuario'].forEach(id => {
+                document.getElementById(id).addEventListener('input', (e) => e.target.value = formatAsCurrency(e.target.value));
+            });
+            
+            dom.tabs.forEach(tab => tab.addEventListener('click', switchTab));
+
+            // Modals
+            document.querySelectorAll('.modal .close-button').forEach(btn => btn.addEventListener('click', () => btn.closest('.modal').classList.remove('show')));
+            document.getElementById('confirmCancel').addEventListener('click', () => document.getElementById('confirmModal').classList.remove('show'));
+            document.getElementById('next-step').addEventListener('click', nextTourStep);
+            document.getElementById('prev-step').addEventListener('click', prevTourStep);
+
+            // Comparison
+            document.getElementById('compare-sim1').addEventListener('change', updateComparison);
+            document.getElementById('compare-sim2').addEventListener('change', updateComparison);
+        }
+
+        function populateSelects() {
+             const estados = ['Mato Grosso do Sul (MS)', 'Mato Grosso (MT)', 'Goiás (GO)', 'São Paulo (SP)', 'Paraná (PR)', 'Minas Gerais (MG)', 'Pará (PA)', 'Tocantins (TO)', 'Rondônia (RO)'];
+             const sistemas = ['Extrativista', 'Baixa Tec', 'Média Tec', 'Adequada', 'Alta Tec', 'Intensivo'];
+             const estadoSelect = document.getElementById('estado');
+             estadoSelect.innerHTML = estados.map(e => `<option value="${e}">${e}</option>`).join('');
+             const sistemaSelect = document.getElementById('sistema');
+             sistemaSelect.innerHTML = sistemas.map(s => `<option value="${s}">${s}</option>`).join('');
+             if (estados.includes('Mato Grosso do Sul (MS)')) estadoSelect.value = 'Mato Grosso do Sul (MS)';
+             if (sistemas.includes('Alta Tec')) sistemaSelect.value = 'Alta Tec';
+        }
+
+        async function handleCalculateClick() {
+            const btnLoader = document.getElementById('btn-loader');
+            const btnText = document.getElementById('btn-text');
+            
+            dom.calculateBtn.disabled = true;
+            btnLoader.classList.remove('hidden');
+            btnText.innerHTML = 'Analisando...';
+            dom.statusMessage.textContent = 'Enviando dados...';
+            dom.resultsSection.style.display = 'none';
+
+            try {
+                const userInputs = {
+                    investimento: unformatCurrency(document.getElementById('investimentoUsuario').value),
+                    receita: unformatCurrency(document.getElementById('receitaUsuario').value),
+                    custo: unformatCurrency(document.getElementById('custoUsuario').value),
+                    estado: document.getElementById('estado').value,
+                    sistema: document.getElementById('sistema').value,
+                    fazenda: document.getElementById('fazenda').value || `Simulação ${new Date().toLocaleString('pt-BR')}`,
+                    tecnico: document.getElementById('tecnico').value,
+                    localidade: document.getElementById('localidade').value,
+                };
+                
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: JSON.stringify(userInputs),
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }
+                });
+                
+                dom.statusMessage.textContent = 'Aguardando cálculos...';
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    dom.statusMessage.textContent = 'Exibindo resultados...';
+                    state.currentSimulation = { inputs: userInputs, results: result.data, timestamp: Date.now() };
+                    displayResults(result.data);
+                    displayCharts(result.data);
+                    dom.resultsSection.style.display = 'block';
+                    dom.resultsSection.classList.add('active');
+                    setTimeout(() => dom.statusMessage.textContent = '', 2000);
+                } else { throw new Error(result.message || 'Erro no script.'); }
+            } catch (error) {
+                console.error('Erro na Simulação:', error);
+                dom.statusMessage.textContent = `Erro: ${error.message}`;
+            } finally {
+                dom.calculateBtn.disabled = false;
+                btnLoader.classList.add('hidden');
+                btnText.innerHTML = '<i class="fas fa-calculator mr-2"></i>Analisar Rentabilidade';
+            }
+        }
+        
+        // --- Display Functions (largely unchanged) ---
+        function displayResults(data) {
+            document.getElementById('table-container-1').innerHTML = createTableHTML(findBlock(data, 'Rentabilidade', 5, 5), 'Análise de Rentabilidade');
+            document.getElementById('table-container-2').innerHTML = createTableHTML(findBlock(data, 'Itens', 6, 3), 'Análise Financeira');
+            document.getElementById('table-container-3').innerHTML = createTableHTML(findBlock(data, 'Comparação', 5, 2), 'Análise Comparativa');
+        }
+
+        function displayCharts(data) {
+            const chartData = findChartData(data);
+            if (!chartData) return;
+            createOrUpdateChart('rentabilidadeComparativaChart', getComparativaChartConfig(chartData));
+            createOrUpdateChart('rentabilidadeFaixaChart', getFaixaChartConfig(chartData));
+        }
+
+        // --- New Feature Functions ---
+
+        function saveSimulation() {
+            if (!state.currentSimulation) {
+                showAlert("Atenção", "Calcule uma simulação antes de salvar.");
+                return;
+            }
+            state.savedSimulations.unshift(state.currentSimulation);
+            localStorage.setItem('pecuariaSimulations', JSON.stringify(state.savedSimulations));
+            renderHistory();
+            showAlert("Sucesso", "Simulação salva com sucesso! Você pode acessá-la na aba 'Histórico'.<br><br><small class='text-yellow-700'><b>Atenção:</b> As simulações são salvas localmente e serão apagadas se o histórico do seu navegador for limpo.</small>");
+        }
+
+        function loadSimulationsFromStorage() {
+            const storedSims = localStorage.getItem('pecuariaSimulations');
+            if (storedSims) {
+                state.savedSimulations = JSON.parse(storedSims);
+                renderHistory();
+            }
+        }
+        
+        function renderHistory() {
+            const historyBody = document.getElementById('history-body');
+            const compareSim1 = document.getElementById('compare-sim1');
+            const compareSim2 = document.getElementById('compare-sim2');
+
+            historyBody.innerHTML = '';
+            compareSim1.innerHTML = '<option value="">Selecione...</option>';
+            compareSim2.innerHTML = '<option value="">Selecione...</option>';
+
+            if (state.savedSimulations.length === 0) {
+                historyBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-500">Nenhuma simulação salva.</td></tr>';
+                return;
+            }
+
+            state.savedSimulations.forEach((sim, index) => {
+                const date = new Date(sim.timestamp).toLocaleDateString('pt-BR');
+                const row = `
+                    <tr>
+                        <td class="p-3">${date}</td>
+                        <td class="p-3">${sim.inputs.fazenda}</td>
+                        <td class="p-3">${sim.inputs.sistema}</td>
+                        <td class="p-3">
+                            <button class="view-sim-btn text-blue-600 hover:text-blue-800 mr-2" data-index="${index}"><i class="fas fa-eye"></i></button>
+                            <button class="delete-sim-btn text-red-600 hover:text-red-800" data-index="${index}"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+                historyBody.innerHTML += row;
+
+                const option = `<option value="${index}">${date} - ${sim.inputs.fazenda}</option>`;
+                compareSim1.innerHTML += option;
+                compareSim2.innerHTML += option;
+            });
+            
+            document.querySelectorAll('.view-sim-btn').forEach(b => b.addEventListener('click', (e) => viewSimulation(e.currentTarget.dataset.index)));
+            document.querySelectorAll('.delete-sim-btn').forEach(b => b.addEventListener('click', (e) => confirmDelete(e.currentTarget.dataset.index)));
+        }
+        
+        function viewSimulation(index) {
+            const sim = state.savedSimulations[index];
+            if (!sim) return;
+            
+            Object.keys(sim.inputs).forEach(key => {
+                 const inputEl = document.getElementById(key);
+                 if (inputEl) {
+                     if (['investimentoUsuario', 'receitaUsuario', 'custoUsuario'].includes(key)) {
+                        inputEl.value = formatAsCurrency(sim.inputs[key] * 100);
+                     } else {
+                        inputEl.value = sim.inputs[key];
+                     }
+                 }
+            });
+            
+            state.currentSimulation = sim;
+            displayResults(sim.results);
+            displayCharts(sim.results);
+            dom.resultsSection.style.display = 'block';
+            switchTab(null, 'simulation');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function confirmDelete(index) {
+            const sim = state.savedSimulations[index];
+            showConfirmModal(
+                'Confirmar Exclusão',
+                `Tem certeza que deseja excluir a simulação "${sim.inputs.fazenda}"? Esta ação não pode ser desfeita.`,
+                () => deleteSimulation(index)
+            );
+        }
+
+        function deleteSimulation(index) {
+            state.savedSimulations.splice(index, 1);
+            localStorage.setItem('pecuariaSimulations', JSON.stringify(state.savedSimulations));
+            renderHistory();
+            document.getElementById('confirmModal').classList.remove('show');
+        }
+
+        function updateComparison() {
+            const sim1Index = document.getElementById('compare-sim1').value;
+            const sim2Index = document.getElementById('compare-sim2').value;
+            const resultsDiv = document.getElementById('comparison-results');
+            const sim1Details = document.getElementById('sim1-details');
+            const sim2Details = document.getElementById('sim2-details');
+
+            sim1Details.innerHTML = sim1Index !== '' ? getSimDetailsHTML(state.savedSimulations[sim1Index]) : '';
+            sim2Details.innerHTML = sim2Index !== '' ? getSimDetailsHTML(state.savedSimulations[sim2Index]) : '';
+
+            if (sim1Index !== '' && sim2Index !== '' && sim1Index !== sim2Index) {
+                const sim1 = state.savedSimulations[sim1Index];
+                const sim2 = state.savedSimulations[sim2Index];
+                renderComparisonCharts(sim1, sim2);
+                resultsDiv.classList.remove('hidden');
+            } else {
+                resultsDiv.classList.add('hidden');
+            }
+        }
+        
+        function getSimDetailsHTML(sim) {
+            const itensBlock = findBlock(sim.results, 'Itens', 6, 3);
+            const userRentabilityRow = itensBlock ? itensBlock.find(row => row[0].includes('Rentabilidade Estimada')) : null;
+            
+            let rentabilityFormatted = 'N/A';
+            if (userRentabilityRow && userRentabilityRow[2]) {
+                rentabilityFormatted = userRentabilityRow[2];
+            }
+
+            const investimentoFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sim.inputs.investimento);
+
+            return `<p><strong>Investimento:</strong> ${investimentoFormatted}/ha</p>
+                    <p><strong>Rentabilidade:</strong> ${rentabilityFormatted}</p>`;
+        }
+
+        function renderComparisonCharts(sim1, sim2) {
+            const data1 = findChartData(sim1.results);
+            const data2 = findChartData(sim2.results);
+            const userRentab1 = data1.map(d => d.avgRentabilidadeUsuario);
+            const userRentab2 = data2.map(d => d.avgRentabilidadeUsuario);
+
+            createOrUpdateChart('comparisonChart1', {
+                type: 'bar',
+                data: {
+                    labels: data1.map(d => d.sistema),
+                    datasets: [
+                        { label: sim1.inputs.fazenda, data: userRentab1, backgroundColor: 'rgba(54, 162, 235, 0.7)'},
+                        { label: sim2.inputs.fazenda, data: userRentab2, backgroundColor: 'rgba(75, 192, 192, 0.7)'}
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: 'Rentabilidade do Usuário (%)' } },
+                    scales: { y: { ticks: { callback: v => `${v.toFixed(2)}%` } } }
+                }
+            });
+        }
+        
+        function exportToExcel() {
+             if (!state.currentSimulation) { showAlert("Atenção", "Calcule uma simulação primeiro."); return; }
+             const { inputs, results } = state.currentSimulation;
+             const data = [];
+             
+             data.push(['Parâmetros da Simulação']);
+             Object.entries(inputs).forEach(([key, value]) => data.push([key, value]));
+             data.push([]); 
+             
+             ['Rentabilidade', 'Itens', 'Comparação'].forEach(label => {
+                const block = findBlock(results, label, 10, 5);
+                if (block) {
+                    data.push([`Tabela: ${label}`]);
+                    block.forEach(row => data.push(row));
+                    data.push([]);
+                }
+             });
+
+             const csvContent = "data:text/csv;charset=utf-8," + data.map(e => e.join(",")).join("\n");
+             const link = document.createElement("a");
+             link.setAttribute("href", encodeURI(csvContent));
+             link.setAttribute("download", `simulacao_${inputs.fazenda.replace(/ /g, "_")}.csv`);
+             document.body.appendChild(link);
+             link.click();
+             document.body.removeChild(link);
+        }
+
+        async function generatePdfReport() {
+            if (!state.currentSimulation) { showAlert("Atenção", "Calcule uma simulação primeiro."); return; }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4');
+            const margin = 40;
+            const docWidth = doc.internal.pageSize.getWidth();
+            let y = margin;
+
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Relatório de Simulação de Rentabilidade', docWidth / 2, y, { align: 'center' });
+            y += 30;
+
+            doc.setFontSize(12);
+            doc.text('Parâmetros da Simulação', margin, y);
+            y += 20;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Fazenda: ${state.currentSimulation.inputs.fazenda}`, margin, y);
+            doc.text(`Sistema: ${state.currentSimulation.inputs.sistema}`, docWidth / 2, y);
+            y += 15;
+            doc.text(`Investimento: ${formatAsCurrency(state.currentSimulation.inputs.investimento*100)}/ha`, margin, y);
+            doc.text(`Receita: ${formatAsCurrency(state.currentSimulation.inputs.receita*100)}/@`, docWidth / 2, y);
+            y += 25;
+
+            const tables = document.querySelectorAll('#results-section [id^="table-container"]');
+            for (const tableContainer of tables) {
+                 const canvas = await html2canvas(tableContainer);
+                 const imgData = canvas.toDataURL('image/png');
+                 const imgProps = doc.getImageProperties(imgData);
+                 const pdfWidth = docWidth - 2 * margin;
+                 const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                 if (y + pdfHeight > doc.internal.pageSize.getHeight() - margin) {
+                     doc.addPage();
+                     y = margin;
+                 }
+                 doc.addImage(imgData, 'PNG', margin, y, pdfWidth, pdfHeight);
+                 y += pdfHeight + 20;
+            }
+            
+            doc.addPage();
+            y = margin;
+            const charts = ['rentabilidadeComparativaChart', 'rentabilidadeFaixaChart'];
+            for (const chartId of charts) {
+                const chartCanvas = document.getElementById(chartId);
+                const imgData = chartCanvas.toDataURL('image/png');
+                const imgProps = doc.getImageProperties(imgData);
+                const pdfWidth = docWidth - 2 * margin;
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                 if (y + pdfHeight > doc.internal.pageSize.getHeight() - margin) {
+                     doc.addPage();
+                     y = margin;
+                 }
+                doc.addImage(imgData, 'PNG', margin, y, pdfWidth, pdfHeight);
+                y += pdfHeight + 20;
+            }
+            
+            doc.save(`Relatorio_${state.currentSimulation.inputs.fazenda.replace(/ /g, "_")}.pdf`);
+        }
+
+        function startTour() {
+            state.tourStep = 0;
+            updateTourContent();
+            document.getElementById('tourModal').classList.add('show');
+        }
+
+        function updateTourContent() {
+             const steps = [
+                { title: "Bem-vindo!", content: "Este tour rápido mostrará as novas funcionalidades do simulador." },
+                { title: "1. Simulação", content: "Preencha os dados e clique em 'Analisar Rentabilidade'. Os resultados e gráficos aparecerão aqui mesmo." },
+                { title: "2. Salvar e Exportar", content: "Após uma análise, use os botões no topo dos resultados para Salvar a simulação, exportar para Excel (CSV) ou gerar um Relatório em PDF." },
+                { title: "3. Histórico", content: "Na aba 'Histórico', você pode ver todas as suas simulações salvas, recarregá-las no simulador ou excluí-las." },
+                { title: "4. Comparação", content: "A aba 'Comparação' permite que você selecione duas simulações salvas para comparar seus indicadores lado a lado." },
+                { title: "Fim do Tour", content: "Pronto! Agora você pode aproveitar ao máximo a ferramenta." }
+            ];
+            const currentStep = steps[state.tourStep];
+            document.getElementById('tour-content').innerHTML = `<h3 class="text-lg font-bold mb-2">${currentStep.title}</h3><p>${currentStep.content}</p>`;
+            document.getElementById('prev-step').style.visibility = state.tourStep === 0 ? 'hidden' : 'visible';
+            document.getElementById('next-step').textContent = state.tourStep === steps.length - 1 ? 'Concluir' : 'Próximo';
+            document.getElementById('tour-step-indicator').textContent = `Passo ${state.tourStep + 1} de ${steps.length}`;
+        }
+        
+        function nextTourStep() {
+            const totalSteps = 6;
+            if (state.tourStep < totalSteps - 1) {
+                state.tourStep++;
+                updateTourContent();
+            } else {
+                document.getElementById('tourModal').classList.remove('show');
+            }
+        }
+        
+        function prevTourStep() {
+            if (state.tourStep > 0) {
+                state.tourStep--;
+                updateTourContent();
+            }
+        }
+
+        function loadExample() {
+            document.getElementById('fazenda').value = "Fazenda Exemplo";
+            document.getElementById('tecnico').value = "Ricardo Brumatti";
+            document.getElementById('localidade').value = "Campo Grande - MS";
+            document.getElementById('estado').value = "Mato Grosso do Sul (MS)";
+            document.getElementById('sistema').value = "Alta Tec";
+            document.getElementById('investimentoUsuario').value = formatAsCurrency("2500000");
+            document.getElementById('receitaUsuario').value = formatAsCurrency("31500");
+            document.getElementById('custoUsuario').value = formatAsCurrency("26000");
+            showAlert("Exemplo Carregado", "Os campos foram preenchidos com valores de exemplo. Agora você pode clicar em 'Calcular Desempenho' para ver os resultados.");
+        }
+
+        // --- Helper Functions ---
+        
+        function switchTab(event, tabId = null) {
+            if (event) {
+                tabId = event.currentTarget.dataset.tab;
+            }
+            
+            dom.tabs.forEach(tab => {
+                const isCurrentTab = tab.dataset.tab === tabId;
+                tab.classList.toggle('active', isCurrentTab);
+                tab.setAttribute('aria-selected', isCurrentTab);
+            });
+            dom.tabContents.forEach(content => {
+                content.classList.toggle('active', content.id === tabId);
+            });
+        }
+        
+        function createOrUpdateChart(canvasId, config) {
+            if (state.chartInstances[canvasId]) {
+                state.chartInstances[canvasId].destroy();
+            }
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            state.chartInstances[canvasId] = new Chart(ctx, config);
+        }
+
+        function showAlert(title, content) {
+            dom.alertTitle.textContent = title;
+            dom.alertContent.innerHTML = content;
+            dom.alertModal.classList.add('show');
+        }
+
+        function showConfirmModal(title, content, onConfirm) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmContent').textContent = content;
+            document.getElementById('confirmModal').classList.add('show');
+            const confirmOkBtn = document.getElementById('confirmOk');
+            const newOkBtn = confirmOkBtn.cloneNode(true);
+            confirmOkBtn.parentNode.replaceChild(newOkBtn, confirmOkBtn);
+            newOkBtn.addEventListener('click', onConfirm);
+        }
+
+        function formatInitialCurrencyValues() {
+             document.getElementById('investimentoUsuario').value = formatAsCurrency('2000000');
+             document.getElementById('receitaUsuario').value = formatAsCurrency('32500');
+             document.getElementById('custoUsuario').value = formatAsCurrency('27000');
+        }
+        function formatAsCurrency(value) {
+            let number = String(value).replace(/\D/g, '');
+            if (number === '') return '';
+            number = (parseInt(number, 10) / 100);
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(number);
+        }
+        function unformatCurrency(value) { return Number(String(value).replace(/\D/g, '')) / 100 || 0; }
+        
+        function findBlock(data, startLabel, endRowOffset, endColOffset) {
+             let startRowIndex = -1, startColIndex = -1;
+             const trimmedStartLabel = startLabel.trim().toLowerCase();
+             for(let r=0; r<data.length; r++) {
+                 if(Array.isArray(data[r])) {
+                     const c = data[r].findIndex(cell => cell != null && String(cell).trim().toLowerCase() === trimmedStartLabel);
+                     if (c > -1) { startRowIndex = r; startColIndex = c; break; }
+                 }
+             }
+             if (startRowIndex === -1) return null;
+             const block = [];
+             for (let r = startRowIndex; r < startRowIndex + endRowOffset; r++) {
+                 if (data[r] && Array.isArray(data[r])) {
+                     block.push(data[r].slice(startColIndex, startColIndex + endColOffset));
+                 } else { break; }
+             }
+             return block;
+        }
+
+        function createTableHTML(blockData, title) {
+             if (!blockData || blockData.length < 2) return '';
+             let tableHTML = `<h2 class="text-lg font-semibold text-slate-700 mb-3">${title}</h2><div class="overflow-x-auto"><table class="w-full"><thead><tr>`;
+             const headers = blockData[0];
+             headers.forEach(header => { tableHTML += `<th class="p-2 text-left text-sm font-semibold text-slate-600 bg-slate-50">${header}</th>`; });
+             tableHTML += `</tr></thead><tbody>`;
+             for (let i = 1; i < blockData.length; i++) {
+                 tableHTML += `<tr class="border-b">`;
+                 blockData[i].forEach((cell, cellIndex) => {
+                    let cellClass = cellIndex === 0 ? 'p-2 font-medium' : 'p-2';
+                    if (String(cell).includes('%')) {
+                        cellClass += String(cell).includes('-') ? ' text-red-600' : ' text-green-600';
+                    }
+                    tableHTML += `<td class="${cellClass}">${cell}</td>`;
+                 });
+                 tableHTML += `</tr>`;
+             }
+             tableHTML += `</tbody></table></div>`;
+             return tableHTML;
+        }
+
+        function findChartData(data) {
+             const chartBlock = findBlock(data, 'Sistema Produtivo - LB', 100, 12);
+             if (!chartBlock || chartBlock.length < 2) return null;
+             const parseFloatOrZero = (val) => {
+                 if (val === null || val === undefined || val === '') return 0;
+                 let cleanVal = String(val).replace('%', '').replace(/\./g, '').replace(',', '.');
+                 return parseFloat(cleanVal) || 0;
+             };
+             const groupedData = {};
+             for (let i = 1; i < chartBlock.length; i++) {
+                 const row = chartBlock[i];
+                 const sistema = row[0];
+                 if (!sistema) continue;
+                 if (!groupedData[sistema]) {
+                     groupedData[sistema] = { rBaixa: [], rMedia: [], rAlta: [], rUsuario: [] };
+                 }
+                 groupedData[sistema].rBaixa.push(parseFloatOrZero(row[5]));
+                 groupedData[sistema].rMedia.push(parseFloatOrZero(row[6]));
+                 groupedData[sistema].rAlta.push(parseFloatOrZero(row[7]));
+                 groupedData[sistema].rUsuario.push(parseFloatOrZero(row[11]));
+             }
+             const averagedData = Object.entries(groupedData).map(([sistema, data]) => {
+                 const sum = arr => arr.reduce((a, b) => a + b, 0);
+                 const count = data.rUsuario.length;
+                 return {
+                     sistema,
+                     avgRentabilidadeBaixa: sum(data.rBaixa) / count,
+                     avgRentabilidadeMedia: sum(data.rMedia) / count,
+                     avgRentabilidadeAlta: sum(data.rAlta) / count,
+                     avgRentabilidadeUsuario: sum(data.rUsuario) / count
+                 };
+             });
+             return averagedData.length > 0 ? averagedData : null;
+        }
+
+        function getComparativaChartConfig(chartData) {
+            const pastelColors = [
+                { bg: 'rgba(179, 229, 252, 0.7)', border: 'rgb(179, 229, 252)' },
+                { bg: 'rgba(255, 204, 170, 0.7)', border: 'rgb(255, 204, 170)' },
+                { bg: 'rgba(255, 179, 186, 0.7)', border: 'rgb(255, 179, 186)' },
+                { bg: 'rgba(167, 223, 195, 0.7)', border: 'rgb(167, 223, 195)' }
+            ];
+            return {
+                type: 'bar',
+                data: {
+                    labels: chartData.map(d => d.sistema),
+                    datasets: [
+                        { label: 'Sua Rentab. (%)', data: chartData.map(d => d.avgRentabilidadeUsuario), backgroundColor: pastelColors[0].bg, borderColor: pastelColors[0].border, borderWidth: 2, borderRadius: 5, borderSkipped: false },
+                        { label: 'Média Hist. (%)', data: chartData.map(d => d.avgRentabilidadeMedia), backgroundColor: pastelColors[1].bg, borderColor: pastelColors[1].border, borderWidth: 2, borderRadius: 5, borderSkipped: false },
+                        { label: 'Baixa Hist. (%)', data: chartData.map(d => d.avgRentabilidadeBaixa), backgroundColor: pastelColors[2].bg, borderColor: pastelColors[2].border, borderWidth: 2, borderRadius: 5, borderSkipped: false },
+                        { label: 'Alta Hist. (%)', data: chartData.map(d => d.avgRentabilidadeAlta), backgroundColor: pastelColors[3].bg, borderColor: pastelColors[3].border, borderWidth: 2, borderRadius: 5, borderSkipped: false }
+                    ]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { 
+                            ticks: { callback: v => `${v.toFixed(2)}%` } 
+                        } 
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) { label += `${context.parsed.y.toFixed(2)}%`; }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        function getFaixaChartConfig(chartData) {
+            const pastelColors = {
+                user: { line: 'rgb(179, 229, 252)', point: 'rgb(179, 229, 252)', pointHover: 'white' },
+                average: { line: 'rgb(255, 204, 170)' },
+                range: { fill: 'rgba(167, 223, 195, 0.3)', border: 'rgba(167, 223, 195, 0.5)' }
+            };
+             return {
+                type: 'line',
+                data: {
+                    labels: chartData.map(d => d.sistema),
+                    datasets: [
+                        { 
+                            label: 'Sua Rentabilidade', 
+                            data: chartData.map(d => d.avgRentabilidadeUsuario), 
+                            borderColor: pastelColors.user.line,
+                            backgroundColor: pastelColors.user.point,
+                            borderWidth: 4, 
+                            tension: 0.4, 
+                            pointRadius: 5,
+                            pointHoverRadius: 8,
+                            pointHoverBorderWidth: 2,
+                            pointHoverBackgroundColor: pastelColors.user.pointHover
+                        },
+                        { 
+                            label: 'Rentabilidade Média de Mercado', 
+                            data: chartData.map(d => d.avgRentabilidadeMedia), 
+                            borderColor: pastelColors.average.line, 
+                            borderDash: [5, 5],
+                            borderWidth: 2, 
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.4
+                        },
+                        { 
+                            label: 'Rentabilidade Baixa', // Hidden from legend
+                            data: chartData.map(d => d.avgRentabilidadeBaixa), 
+                            borderColor: 'transparent',
+                            backgroundColor: 'transparent',
+                            pointRadius: 0, 
+                            fill: false
+                        },
+                        { 
+                            label: 'Faixa de Mercado', 
+                            data: chartData.map(d => d.avgRentabilidadeAlta), 
+                            fill: '-1', 
+                            backgroundColor: pastelColors.range.fill, 
+                            borderColor: pastelColors.range.border,
+                            borderWidth: 1,
+                            pointRadius: 0, 
+                            tension: 0.4,
+                        }
+                    ]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { y: { ticks: { callback: v => `${v.toFixed(2)}%` } } },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                filter: item => item.text !== 'Rentabilidade Baixa'
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                             callbacks: {
+                                filter: item => item.dataset.label !== 'Rentabilidade Baixa',
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) { label += `${context.parsed.y.toFixed(2)}%`; }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        // Public methods
+        return {
+            init: init,
+        };
+    })();
+
+    document.addEventListener('DOMContentLoaded', App.init);
+    </script>
+
+    <!-- Rodapé Acadêmico/Profissional -->
+    <footer class="no-print mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
+        <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color: #0d9488; text-decoration: none;">ricardobrumatti.pro.br</a> | &copy; 2026</p>
+    </footer>
+</body>
+</html>

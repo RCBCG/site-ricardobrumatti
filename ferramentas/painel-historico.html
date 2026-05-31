@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Histórico de Cotações — Prof. Ricardo C. Brumatti</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <meta name="description" content="Painel histórico de cotações agropecuárias de gado de corte, boi gordo e outros indicadores econômicos do setor de corte.">
+  <style>
+    :root {
+      --bg:        #faf9f7;
+      --bg2:       #f4f2ee;
+      --bg3:       #edeae4;
+      --white:     #ffffff;
+      --border:    #e2ddd6;
+      --text:      #1c1917;
+      --muted:     #78716c;
+      --green:     #1b5e20;
+      --green-mid: #2e7d32;
+      --sans:      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --serif:     Georgia, serif;
+      --radius:    12px;
+      --shadow:    0 1px 3px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.03);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.9);
+    }
+    
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .back-btn:hover {
+      color: var(--green);
+    }
+
+    .site-title {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .site-title span {
+      color: var(--green);
+    }
+
+    main {
+      flex-grow: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .dashboard-header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .dashboard-title {
+      font-family: var(--serif);
+      font-size: 2rem;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .dashboard-desc {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .iframe-wrapper {
+      position: relative;
+      width: 100%;
+      height: 1200px; /* Base height for standard screens */
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .iframe-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    footer {
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 2rem;
+    }
+    footer p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    footer .footer-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-title {
+        font-size: 1.6rem;
+      }
+      .iframe-wrapper {
+        height: 800px; /* slightly smaller on mobile */
+      }
+    }
+  </style>
+
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+<body>
+
+<header>
+  <div class="nav-container">
+    <a href="../index.html" class="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Voltar ao site
+    </a>
+    <a href="../index.html" class="site-title">Ricardo <span>C. Brumatti</span></a>
+  </div>
+</header>
+
+<main>
+  <div class="dashboard-header">
+    <h1 class="dashboard-title">Painel Histórico de Cotações</h1>
+    <p class="dashboard-desc">Séries de dados e análises de mercado consolidadas para a pecuária brasileira.</p>
+  </div>
+
+  <div class="iframe-wrapper">
+    <iframe src="https://lookerstudio.google.com/embed/reporting/b69e33c5-5441-4226-b049-ae6939f02af5/page/kVoiE" frameborder="0" style="border:0" allowfullscreen sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+  </div>
+</main>
+
+<footer>
+  <p>Prof. Ricardo C. Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color:var(--green);text-decoration:none">ricardobrumatti.pro.br</a></p>
+  <p class="footer-sub">&copy; 2026 Todos os direitos reservados. Painel de apoio técnico e acadêmico.</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador gratuito: Painel Mercadológico — Preços & Mercado Futuro. Desenvolvido pelo Prof. Ricardo C. Brumatti (FAMEZ/UFMS) para análise econômica e pecuária de corte.">
+    <title>Painel Mercadológico — Preços & Mercado Futuro</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <!-- Inclusão do Tailwind CSS para um design moderno e responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration (Image 2 Colors) -->
+    <script id="tailwind-theme-config">
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            emerald: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c', // Overridden to darker deep teal
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            blue: {
+                                50: '#f8fafc',
+                                100: '#f1f5f9',
+                                200: '#e2e8f0',
+                                300: '#cbd5e1',
+                                400: '#94a3b8',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            teal: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            green: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+    <!-- Inclusão de uma fonte moderna para o corpo da página -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #052e3b !important;
+            overflow-x: hidden;
+        }
+        /* A tabela gerada pelo script do Cepea pode não ser totalmente responsiva por padrão.
+           Este CSS ajuda a forçar um comportamento mais adaptável em telas menores. */
+        #cepea-widget-container table {
+            width: 100% !important;
+            max-width: 100% !important;
+            color: #ffffff !important;
+        }
+        #cepea-widget-container td, #cepea-widget-container th {
+            padding: 8px 12px !important;
+        }
+        /* Custom scrollbar para tabelas responsivas */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+<body class="text-white min-h-screen p-4 sm:p-6 lg:p-8">
+    <script>
+        if (window.self !== window.top) {
+            document.write('<style>.back-btn-container { display: none !important; }</style>');
+        }
+    </script>
+    <div class="back-btn-container no-print" style="padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; width: 100%;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#0d9488'" onmouseout="this.style.color='#64748b'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar ao site
+        </a>
+        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">ricardobrumatti.pro.br</span>
+    </div>
+
+
+    <div class="container mx-auto max-w-7xl space-y-8">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold mb-2 tracking-tight text-white">Preços & Mercado Futuro</h1>
+            <p class="text-lg text-gray-300">Cotações B3, CEPEA e indicadores do mercado agropecuário</p>
+            <p class="text-xs text-gray-400 mt-1 italic">Uso acadêmico e profissional gratuito — Prof. Ricardo C. Brumatti — FAMEZ/UFMS</p>
+        </header>
+
+        <!-- 1. Ticker Tape Widget (Linha de Cotações Superior) -->
+        <div class="bg-white/5 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-lg">
+            <!-- TradingView Widget BEGIN -->
+            <div class="tradingview-widget-container">
+              <div class="tradingview-widget-container__widget"></div>
+              <div class="tradingview-widget-copyright"><a href="https://br.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+              {
+              "symbols": [
+                {
+                  "proName": "FOREXCOM:SPXUSD",
+                  "title": "S&P 500 Index"
+                },
+                {
+                  "proName": "FX_IDC:EURUSD",
+                  "title": "EUR to USD"
+                },
+                {
+                  "proName": "BMFBOVESPA:IBOV",
+                  "title": "Ibovespa B3"
+                },
+                {
+                  "proName": "BMFBOVESPA:DOL1!",
+                  "title": "Dólar B3"
+                },
+                {
+                  "proName": "BMFBOVESPA:BGI1!",
+                  "title": "Boi Gordo"
+                },
+                {
+                  "proName": "BMFBOVESPA:CCM1!",
+                  "title": "Milho B3"
+                }
+              ],
+              "colorTheme": "dark",
+              "locale": "br",
+              "largeChartUrl": "",
+              "isTransparent": true,
+              "showSymbolLogo": true,
+              "displayMode": "adaptive"
+            }
+              </script>
+            </div>
+            <!-- TradingView Widget END -->
+        </div>
+
+        <!-- 2. Bloco Principal do Boi Gordo (Gráfico Avançado + Análise Técnica) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Gráfico Avançado do Boi Gordo -->
+            <div class="lg:col-span-2 bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[500px]">
+                <h3 class="text-lg font-semibold mb-3 flex items-center gap-2 text-white">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                    Gráfico Histórico — Boi Gordo B3 (BGI1!)
+                </h3>
+                <div class="flex-grow relative w-full h-full rounded-lg overflow-hidden bg-black/40">
+                    <!-- TradingView Widget BEGIN -->
+                    <div class="tradingview-widget-container" style="height:100%;width:100%">
+                      <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+                      <div class="tradingview-widget-copyright"><a href="https://br.tradingview.com/symbols/BMFBOVESPA-BGI1!/?exchange=BMFBOVESPA" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+                      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                      {
+                      "allow_symbol_change": true,
+                      "calendar": false,
+                      "details": true,
+                      "hide_side_toolbar": false,
+                      "hide_top_toolbar": false,
+                      "hide_legend": false,
+                      "hide_volume": false,
+                      "hotlist": true,
+                      "interval": "D",
+                      "locale": "br",
+                      "save_image": true,
+                      "style": "2",
+                      "symbol": "BMFBOVESPA:BGI1!",
+                      "theme": "dark",
+                      "timezone": "Etc/UTC",
+                      "backgroundColor": "rgba(0, 0, 0, 1)",
+                      "gridColor": "rgba(255, 255, 255, 0.06)",
+                      "watchlist": [],
+                      "withdateranges": true,
+                      "range": "6M",
+                      "compareSymbols": [],
+                      "studies": [],
+                      "autosize": true
+                    }
+                      </script>
+                    </div>
+                    <!-- TradingView Widget END -->
+                </div>
+            </div>
+
+            <!-- Análise Técnica do Boi Gordo -->
+            <div class="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[500px]">
+                <h3 class="text-lg font-semibold mb-3 flex items-center gap-2 text-white">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    Indicadores de Análise Técnica
+                </h3>
+                <div class="flex-grow w-full h-full rounded-lg overflow-hidden bg-black/20">
+                    <!-- TradingView Widget BEGIN -->
+                    <div class="tradingview-widget-container" style="height: 100%; width: 100%">
+                      <div class="tradingview-widget-container__widget"></div>
+                      <div class="tradingview-widget-copyright"><a href="https://br.tradingview.com/symbols/BMFBOVESPA-BGI1!/technicals/?exchange=BMFBOVESPA" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+                      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+                      {
+                      "colorTheme": "dark",
+                      "displayMode": "multiple",
+                      "isTransparent": true,
+                      "locale": "br",
+                      "interval": "1D",
+                      "disableInterval": true,
+                      "width": "100%",
+                      "height": "100%",
+                      "symbol": "BMFBOVESPA:BGI1!",
+                      "showIntervalTabs": true
+                    }
+                      </script>
+                    </div>
+                    <!-- TradingView Widget END -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Bloco do Meio (Tabela CEPEA + Gráficos Secundários Dólar e IBOV) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Tabela CEPEA -->
+            <div class="lg:col-span-2 bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col">
+                <header class="mb-4">
+                    <h2 class="text-2xl font-bold tracking-tight text-white">Cotações do Mercado Agro — CEPEA</h2>
+                    <p class="text-sm text-gray-300">Valores e indicadores atualizados pelo CEPEA/ESALQ/USP</p>
+                </header>
+                <div id="cepea-widget-container" class="overflow-x-auto custom-scrollbar bg-black/20 rounded-xl p-4 border border-white/5">
+                    <script type="text/javascript" src="https://www.cepea.org.br/br/widgetproduto.js.php?fonte=tahoma&tamanho=12&largura=100%25&corfundo=00000000&cortexto=ffffff&corlinha=4a5568&id_indicador%5B%5D=2&id_indicador%5B%5D=8&id_indicador%5B%5D=3&id_indicador%5B%5D=leitep&id_indicador%5B%5D=77&id_indicador%5B%5D=12&id_indicador%5B%5D=92&id_indicador%5B%5D=181&id_indicador%5B%5D=130&id_indicador%5B%5D=129-1&id_indicador%5B%5D=124&id_indicador%5B%5D=349-NP&id_indicador%5B%5D=305-MS&id_indicador%5B%5D=305-SP&id_indicador%5B%5D=305-BA&id_indicador%5B%5D=305-CE&id_indicador%5B%5D=305-MT&id_indicador%5B%5D=305-PR&id_indicador%5B%5D=305-RS&id_indicador%5B%5D=159-Bastos+(SP)+-+FOB-vermelho&id_indicador%5B%5D=159-Bastos+(SP)+-+FOB-branco&id_indicador%5B%5D=159-Grande+SP+(SP)+-+CIF-branco&id_indicador%5B%5D=159-Grande+SP+(SP)+-+CIF-vermelho"></script>
+                </div>
+                <footer class="mt-4">
+                    <p class="text-xs text-center text-gray-400">
+                        Os dados do indicador acima são obtidos em tempo real. Visite o <a href="http://www.cepea.esalq.usp.br/br" target="_blank" rel="noopener noreferrer" class="underline hover:text-blue-300">site oficial do CEPEA</a>.
+                    </p>
+                </footer>
+            </div>
+
+            <!-- Gráficos Rápidos (Dólar B3 + Ibovespa) -->
+            <div class="flex flex-col gap-6 lg:col-span-1">
+                <!-- Dólar Comercial B3 -->
+                <div class="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[250px]">
+                    <h3 class="text-md font-semibold mb-2 text-white flex items-center gap-1.5">
+                        <span class="inline-block w-2 h-2 rounded-full bg-yellow-500"></span>
+                        Dólar B3 (DOL1!)
+                    </h3>
+                    <div class="flex-grow w-full h-full rounded-lg overflow-hidden bg-black/40">
+                        <!-- TradingView Widget BEGIN -->
+                        <div class="tradingview-widget-container" style="height:100%;width:100%">
+                          <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+                          <div class="tradingview-widget-copyright"><a href="https://br.tradingview.com/symbols/BMFBOVESPA-DOL1!/?exchange=BMFBOVESPA" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+                          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                          {
+                          "allow_symbol_change": true,
+                          "calendar": false,
+                          "details": false,
+                          "hide_side_toolbar": true,
+                          "hide_top_toolbar": true,
+                          "hide_legend": true,
+                          "hide_volume": true,
+                          "hotlist": false,
+                          "interval": "D",
+                          "locale": "br",
+                          "save_image": false,
+                          "style": "2",
+                          "symbol": "BMFBOVESPA:DOL1!",
+                          "theme": "dark",
+                          "timezone": "Etc/UTC",
+                          "backgroundColor": "rgba(0, 0, 0, 1)",
+                          "gridColor": "rgba(255, 255, 255, 0.06)",
+                          "watchlist": [],
+                          "withdateranges": true,
+                          "range": "6M",
+                          "compareSymbols": [],
+                          "studies": [],
+                          "autosize": true
+                        }
+                          </script>
+                        </div>
+                        <!-- TradingView Widget END -->
+                    </div>
+                </div>
+
+                <!-- Ibovespa B3 -->
+                <div class="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[250px]">
+                    <h3 class="text-md font-semibold mb-2 text-white flex items-center gap-1.5">
+                        <span class="inline-block w-2 h-2 rounded-full bg-blue-400"></span>
+                        Bolsa de Valores — IBOVESPA (IBOV)
+                    </h3>
+                    <div class="flex-grow w-full h-full rounded-lg overflow-hidden bg-black/40">
+                        <!-- TradingView Widget BEGIN -->
+                        <div class="tradingview-widget-container" style="height:100%;width:100%">
+                          <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+                          <div class="tradingview-widget-copyright"><a href="https://br.tradingview.com/symbols/BMFBOVESPA-IBOV/?exchange=BMFBOVESPA" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+                          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                          {
+                          "allow_symbol_change": true,
+                          "calendar": false,
+                          "details": false,
+                          "hide_side_toolbar": true,
+                          "hide_top_toolbar": true,
+                          "hide_legend": true,
+                          "hide_volume": true,
+                          "hotlist": false,
+                          "interval": "D",
+                          "locale": "br",
+                          "save_image": false,
+                          "style": "2",
+                          "symbol": "BMFBOVESPA:IBOV",
+                          "theme": "dark",
+                          "timezone": "Etc/UTC",
+                          "backgroundColor": "rgba(0, 0, 0, 1)",
+                          "gridColor": "rgba(255, 255, 255, 0.06)",
+                          "watchlist": [],
+                          "withdateranges": true,
+                          "range": "6M",
+                          "compareSymbols": [],
+                          "studies": [],
+                          "autosize": true
+                        }
+                          </script>
+                        </div>
+                        <!-- TradingView Widget END -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Bloco Inferior (Heatmap de Mercado + Screener de Ações Brasileiras) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Heatmap de Ações -->
+            <div class="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[450px]">
+                <h3 class="text-lg font-semibold mb-3 flex items-center gap-2 text-white">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                    Mapa de Ações Brasileiras (Heatmap IBOV)
+                </h3>
+                <div class="flex-grow w-full h-full rounded-lg overflow-hidden bg-black/20">
+                    <!-- TradingView Widget BEGIN -->
+                    <div class="tradingview-widget-container" style="height:100%;width:100%">
+                      <div class="tradingview-widget-container__widget"></div>
+                      <div class="tradingview-widget-copyright"><a href="https://br.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+                      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+                      {
+                      "dataSource": "IBOV",
+                      "blockSize": "market_cap_basic",
+                      "blockColor": "change",
+                      "grouping": "sector",
+                      "locale": "br",
+                      "symbolUrl": "",
+                      "colorTheme": "dark",
+                      "exchanges": [],
+                      "hasTopBar": true,
+                      "isDataSetEnabled": true,
+                      "isZoomEnabled": true,
+                      "hasSymbolTooltip": true,
+                      "isMonoSize": false,
+                      "width": "100%",
+                      "height": "100%"
+                    }
+                      </script>
+                    </div>
+                    <!-- TradingView Widget END -->
+                </div>
+            </div>
+
+            <!-- Screener de Ações Brasileiras -->
+            <div class="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[450px]">
+                <h3 class="text-lg font-semibold mb-3 flex items-center gap-2 text-white">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+                    Filtro Dinâmico de Mercado (Screener)
+                </h3>
+                <div class="flex-grow w-full h-full rounded-lg overflow-hidden bg-black/20">
+                    <!-- TradingView Widget BEGIN -->
+                    <div class="tradingview-widget-container" style="height:100%;width:100%">
+                      <div class="tradingview-widget-container__widget"></div>
+                      <div class="tradingview-widget-copyright"><a href="https://br.tradingview.com/screener/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+                      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>
+                      {
+                      "market": "brazil",
+                      "showToolbar": true,
+                      "defaultColumn": "overview",
+                      "defaultScreen": "most_capitalized",
+                      "isTransparent": true,
+                      "locale": "br",
+                      "colorTheme": "dark",
+                      "width": "100%",
+                      "height": "100%"
+                    }
+                      </script>
+                    </div>
+                    <!-- TradingView Widget END -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Rodapé Acadêmico/Profissional -->
+    <footer class="no-print mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
+        <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color: #0d9488; text-decoration: none;">ricardobrumatti.pro.br</a> | &copy; 2026</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador gratuito: Simulador Avançado: Recria a Pasto + Confinamento. Desenvolvido pelo Prof. Ricardo C. Brumatti (FAMEZ/UFMS) para análise econômica e pecuária de corte.">
+    <title>Simulador Avançado: Recria a Pasto + Confinamento</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    
+    <!-- CDNs de Estilos e Scripts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration (Image 2 Colors) -->
+    <script id="tailwind-theme-config">
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            emerald: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c', // Overridden to darker deep teal
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            blue: {
+                                50: '#f8fafc',
+                                100: '#f1f5f9',
+                                200: '#e2e8f0',
+                                300: '#cbd5e1',
+                                400: '#94a3b8',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            teal: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            green: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #3b82f6;
+            --light: #f8fafc;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            overflow-x: hidden;
+        }
+        /* Animações e Efeitos */
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-hover { transition: all 0.3s ease; }
+        .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+        
+        /* Componentes */
+        .tab-btn.active { background-color: var(--primary); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s ease-out; }
+
+        /* Modal */
+        .modal {
+            position: fixed; z-index: 100; left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal.hidden {
+            display: none !important;
+        }
+        .modal-content {
+            background-color: #fff; padding: 2rem; border-radius: 0.75rem;
+            width: 90%; max-width: 600px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .close-button { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
+
+        /* Tooltip */
+        .tooltip { position: relative; display: inline-block; cursor: help; }
+        .tooltip .tooltiptext {
+            visibility: hidden; width: 220px; background-color: #333; color: #fff;
+            text-align: center; border-radius: 6px; padding: 8px;
+            position: absolute; z-index: 1; bottom: 125%; left: 50%;
+            transform: translateX(-50%); opacity: 0; transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+
+        /* Impressão */
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: #fff; font-size: 9pt; }
+            @page { size: A4 portrait; margin: 1.5cm; }
+            .print-card { page-break-inside: avoid; border: 1px solid #e5e7eb; padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; }
+            .print-section-title { font-size: 14pt; font-weight: bold; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+            .page-break-before { page-break-before: always; }
+        }
+    </style>
+
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <script>
+        if (window.self !== window.top) {
+            document.write('<style>.back-btn-container { display: none !important; }</style>');
+        }
+    </script>
+    <div class="back-btn-container no-print" style="padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; width: 100%;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#0d9488'" onmouseout="this.style.color='#64748b'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar ao site
+        </a>
+        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">ricardobrumatti.pro.br</span>
+    </div>
+
+    <!-- Cabeçalho Principal -->
+    <header class="bg-slate-800 shadow-lg no-print">
+        <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+            <h1 class="text-2xl sm:text-3xl font-bold text-white text-center tracking-wide">Simulação Econômica da Recria a Pasto + Engorda em Confinamento</h1>
+        </div>
+    </header>
+
+    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Seção de Apresentação -->
+        <div class="text-center my-8 fade-in no-print">
+            <h2 class="text-2xl sm:text-3xl font-bold text-slate-700">O poder da análise integrada na palma da sua mão</h2>
+            <p class="text-md text-slate-500 mt-2">Prof. Ricardo C. Brumatti - FAMEZ/UFMS, Campo Grande, MS</p>
+            <p class="text-sm text-slate-400 mt-1 italic">*Aplicação desenvolvida para uso gratuito, sem fins comerciais.*</p>
+            <div class="flex justify-center mt-6 space-x-4">
+                <button id="tourBtn" class="btn-hover px-4 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium flex items-center">
+                    <i class="fas fa-route mr-2"></i>Tour Guiado
+                </button>
+                <button id="exampleBtn" class="btn-hover px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-medium flex items-center">
+                    <i class="fas fa-lightbulb mr-2"></i>Carregar Exemplo
+                </button>
+            </div>
+        </div>
+
+        <!-- Abas de Navegação -->
+        <div class="mb-6 bg-white p-2 rounded-lg shadow-md no-print">
+            <div class="flex border-b">
+                <button class="tab-btn active flex-1 py-2 px-4 font-medium rounded-t-lg" data-tab="simulation">
+                    <i class="fas fa-calculator mr-2"></i>Simulação
+                </button>
+                <button class="tab-btn flex-1 py-2 px-4 font-medium rounded-t-lg" data-tab="history">
+                    <i class="fas fa-history mr-2"></i>Histórico
+                </button>
+                <button class="tab-btn flex-1 py-2 px-4 font-medium rounded-t-lg" data-tab="comparison">
+                    <i class="fas fa-balance-scale mr-2"></i>Comparação
+                </button>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Aba de Simulação -->
+        <div id="simulation" class="tab-content active">
+            <div class="bg-white shadow-xl rounded-2xl p-6 sm:p-8 mb-8 fade-in border border-slate-200 no-print">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Parâmetros de Simulação</h2>
+                </div>
+                <form id="simulationForm" class="space-y-8">
+                    <!-- Grupos de Campos (Fieldsets) -->
+                    <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
+                        <legend class="text-lg font-semibold text-slate-700 px-2 flex items-center"><i class="fas fa-file-alt mr-2"></i>Informações do Relatório</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 mt-4">
+                            <div>
+                                <label for="simulationName" class="block text-sm font-medium text-slate-600">Nome da Simulação <span class="text-red-500">*</span></label>
+                                <input type="text" id="simulationName" placeholder="Ex: Cenário Otimista Safra 25/26" required class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="farmName" class="block text-sm font-medium text-slate-600">Fazenda</label>
+                                <input type="text" id="farmName" placeholder="Nome da Fazenda" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="techName" class="block text-sm font-medium text-slate-600">Técnico Responsável</label>
+                                <input type="text" id="techName" placeholder="Nome do Técnico" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="location" class="block text-sm font-medium text-slate-600">Localidade</label>
+                                <input type="text" id="location" placeholder="Cidade / Estado" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="breed" class="block text-sm font-medium text-slate-600">Raça</label>
+                                <input type="text" id="breed" placeholder="Ex: Nelore" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="sex" class="block text-sm font-medium text-slate-600">Sexo</label>
+                                <input type="text" id="sex" placeholder="Ex: Machos Inteiros" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="animalCategory" class="block text-sm font-medium text-slate-600">Categoria Animal</label>
+                                <input type="text" id="animalCategory" placeholder="Ex: Bezerro, Garrote, Novilha" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
+                         <legend class="text-lg font-semibold text-slate-700 px-2 flex items-center"><i class="fas fa-shopping-cart mr-2"></i>Aquisição e Premissas Gerais</legend>
+                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5 mt-4">
+                            <div>
+                                <label for="pricePerKg" class="block text-sm font-medium text-slate-600">Valor Aquisição (R$/kg)</label>
+                                <input type="number" id="pricePerKg" value="12.50" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="initialWeight" class="block text-sm font-medium text-slate-600">Peso Compra (kg)</label>
+                                <input type="number" id="initialWeight" value="210" step="1" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="sanitaryCost" class="block text-sm font-medium text-slate-600">Custo Sanitário Entrada (R$)</label>
+                                <input type="number" id="sanitaryCost" value="45.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                             <div>
+                                <label for="mortalityRate" class="block text-sm font-medium text-slate-600">Mortalidade no Ciclo (%)</label>
+                                <input type="number" id="mortalityRate" value="0.50" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                         </div>
+                     </fieldset>
+
+                    <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
+                        <legend class="text-lg font-semibold text-slate-700 px-2 flex items-center"><i class="fas fa-leaf mr-2"></i>Etapa 1: Recria (Custo Diário)</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5 mt-4">
+                            <div>
+                                <label for="recria1EntryDate" class="block text-sm font-medium text-slate-600">Data Entrada - Fase 1</label>
+                                <input type="date" id="recria1EntryDate" value="2025-08-15" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="recria1ExitDate" class="block text-sm font-medium text-slate-600">Data Saída - Fase 1</label>
+                                <input type="date" id="recria1ExitDate" value="2025-11-15" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="gmdRecria1" class="block text-sm font-medium text-slate-600">GMD - Fase 1 (kg/dia)</label>
+                                <input type="number" id="gmdRecria1" value="0.550" step="0.001" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="dailyCostRecria1" class="block text-sm font-medium text-slate-600">Custo Diário - Fase 1 (R$)</label>
+                                <input type="number" id="dailyCostRecria1" value="5.50" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm" title="Ex: Sequestro, suplementação intensiva a pasto.">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
+                        <legend class="text-lg font-semibold text-slate-700 px-2 flex items-center"><i class="far fa-calendar-alt mr-2"></i>Etapa 2: Recria (Custo Mensal)</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5 mt-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600">Data Entrada - Fase 2</label>
+                                <p id="recria2EntryDateDisplay" class="mt-1 block w-full rounded-md bg-slate-100 border-slate-300 py-2 px-3 text-sm text-slate-500">Automática</p>
+                            </div>
+                            <div>
+                                <label for="recria2ExitDate" class="block text-sm font-medium text-slate-600">Data Saída - Fase 2</label>
+                                <input type="date" id="recria2ExitDate" value="2026-06-15" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="gmdRecria2" class="block text-sm font-medium text-slate-600">GMD - Fase 2 (kg/dia)</label>
+                                <input type="number" id="gmdRecria2" value="0.600" step="0.001" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="monthlyCostRecria2" class="block text-sm font-medium text-slate-600">Custo Mensal - Fase 2 (R$)</label>
+                                <input type="number" id="monthlyCostRecria2" value="80.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm" title="Ex: Aluguel de pasto + suplementação.">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
+                        <legend class="text-lg font-semibold text-slate-700 px-2 flex items-center"><i class="fas fa-drumstick-bite mr-2"></i>Fase de Engorda em Confinamento</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5 mt-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600">Data Entrada - Confinamento</label>
+                                <p id="confinementEntryDateDisplay" class="mt-1 block w-full rounded-md bg-slate-100 border-slate-300 py-2 px-3 text-sm text-slate-500">Automática</p>
+                            </div>
+                            <div>
+                                <label for="diasConfinamento" class="block text-sm font-medium text-slate-600">Dias de Confinamento</label>
+                                <input type="number" id="diasConfinamento" value="100" step="1" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="gmdConfinamento" class="block text-sm font-medium text-slate-600">GMD no Confinamento (kg/dia)</label>
+                                <input type="number" id="gmdConfinamento" value="1.800" step="0.001" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="dailyCostConfinamento" class="block text-sm font-medium text-slate-600">Custo da Diária (R$)</label>
+                                <input type="number" id="dailyCostConfinamento" value="16.50" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
+                        <legend class="text-lg font-semibold text-slate-700 px-2 flex items-center"><i class="fas fa-dollar-sign mr-2"></i>Premissas de Venda</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-x-6 gap-y-5 mt-4">
+                            <div>
+                                <label for="rendimentoCarcaca" class="block text-sm font-medium text-slate-600">Rendimento de Carcaça (%)</label>
+                                <input type="number" id="rendimentoCarcaca" value="56.50" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="arrobaPriceGordo" class="block text-sm font-medium text-slate-600">Arroba do Boi Gordo (R$/@)</label>
+                                <input type="number" id="arrobaPriceGordo" value="320.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <div id="errorMessage" class="text-sm text-red-600 mt-4 font-medium"></div>
+
+                    <!-- Botões de Ação -->
+                    <div class="mt-10 flex flex-wrap gap-4">
+                        <button type="submit" class="btn-hover flex-1 inline-flex items-center justify-center rounded-lg bg-blue-700 px-6 py-3 text-base font-bold text-white shadow-md hover:bg-blue-800">
+                            <i class="fas fa-calculator mr-2"></i>Calcular Simulação
+                        </button>
+                        <button type="button" id="saveBtn" class="btn-hover flex-1 inline-flex items-center justify-center rounded-lg bg-green-600 px-6 py-3 text-base font-bold text-white shadow-md hover:bg-green-700">
+                            <i class="fas fa-save mr-2"></i>Salvar Simulação
+                        </button>
+                        <button type="button" id="clearFormButton" class="btn-hover flex-1 inline-flex items-center justify-center rounded-lg bg-gray-300 px-6 py-3 text-base font-bold text-gray-800 shadow-md hover:bg-gray-400">
+                            <i class="fas fa-broom mr-2"></i>Limpar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Seção de Resultados (inicialmente oculta) -->
+            <div id="results-section" class="hidden space-y-8">
+                 <!-- Cards de Indicadores -->
+                <div class="bg-white shadow-xl rounded-2xl p-6 sm:p-8 fade-in border border-slate-200">
+                    <h2 class="text-xl font-semibold text-slate-700 mb-6">Resultados da Simulação</h2>
+                    <div id="keyMetricsCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-2 mb-8">
+                         <!-- Cards serão preenchidos via JS -->
+                    </div>
+                    <!-- Botões de Exportação -->
+                    <div class="flex flex-wrap gap-4 mt-6 no-print">
+                        <button id="printButton" class="btn-hover flex-1 inline-flex items-center justify-center rounded-lg bg-blue-600 text-white px-5 py-2 font-medium">
+                            <i class="fas fa-print mr-2"></i>Imprimir Relatório
+                        </button>
+                        <button id="exportExcelBtn" class="btn-hover flex-1 inline-flex items-center justify-center rounded-lg bg-green-700 text-white px-5 py-2 font-medium">
+                            <i class="fas fa-file-excel mr-2"></i>Exportar para Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabelas Detalhadas -->
+                <div class="bg-white shadow-xl rounded-2xl p-6 sm:p-8 fade-in border border-slate-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                        <!-- As 4 tabelas do seu código original serão inseridas aqui via JS -->
+                         <div class="flex flex-col">
+                            <h3 class="text-md font-semibold text-slate-600 mb-2">Aquisição e Duração</h3>
+                            <div class="overflow-x-auto rounded-lg shadow ring-1 ring-black ring-opacity-5 flex-grow">
+                                <table class="min-w-full divide-y divide-slate-200 h-full"><thead class="bg-slate-50"><tr><th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Descrição</th><th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</th></tr></thead><tbody id="acquisitionTable" class="bg-white divide-y divide-slate-200"></tbody></table>
+                            </div>
+                        </div>
+                        <div class="flex flex-col">
+                            <h3 class="text-md font-semibold text-slate-600 mb-2">Fases de Recria a Pasto</h3>
+                            <div class="overflow-x-auto rounded-lg shadow ring-1 ring-black ring-opacity-5 flex-grow">
+                                <table class="min-w-full divide-y divide-slate-200 h-full"><thead class="bg-slate-50"><tr><th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Descrição</th><th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</th></tr></thead><tbody id="recriaTable" class="bg-white divide-y divide-slate-200"></tbody></table>
+                            </div>
+                        </div>
+                        <div class="flex flex-col">
+                            <h3 class="text-md font-semibold text-slate-600 mb-2">Fase de Confinamento</h3>
+                            <div class="overflow-x-auto rounded-lg shadow ring-1 ring-black ring-opacity-5 flex-grow">
+                                <table class="min-w-full divide-y divide-slate-200 h-full"><thead class="bg-slate-50"><tr><th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Descrição</th><th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</th></tr></thead><tbody id="confinamentoTable" class="bg-white divide-y divide-slate-200"></tbody></table>
+                            </div>
+                        </div>
+                        <div class="flex flex-col">
+                            <h3 class="text-md font-semibold text-slate-600 mb-2">Resultado Final do Ciclo</h3>
+                            <div class="overflow-x-auto rounded-lg shadow ring-1 ring-black ring-opacity-5 flex-grow">
+                                <table class="min-w-full divide-y divide-slate-200 h-full"><thead class="bg-slate-50"><tr><th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Descrição</th><th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</th></tr></thead><tbody id="finalTable" class="bg-white divide-y divide-slate-200"></tbody></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficos -->
+                <div id="charts-section" class="bg-white shadow-2xl rounded-xl p-6 sm:p-8 fade-in border border-slate-300">
+                    <h2 class="text-xl font-semibold text-slate-700 mb-6">Gráficos da Simulação</h2>
+                    <div class="space-y-8">
+                         <!-- Os 3 canvas para gráficos do seu código original -->
+                        <div class="bg-white p-4 rounded-lg shadow-md relative h-80 sm:h-96 border border-slate-200"><canvas id="metricsChart"></canvas></div>
+                        <div class="bg-white p-4 rounded-lg shadow-md relative h-80 sm:h-96 border border-slate-200"><canvas id="cashFlowChart"></canvas></div>
+                        <div class="bg-white p-4 rounded-lg shadow-md relative h-80 sm:h-96 border border-slate-200"><canvas id="sensitivityChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Aba de Histórico -->
+        <div id="history" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6"><i class="fas fa-history mr-2"></i>Histórico de Simulações</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="p-3 text-left">Data</th>
+                                <th class="p-3 text-left">Nome da Simulação</th>
+                                <th class="p-3 text-left">Lucro Bruto</th>
+                                <th class="p-3 text-left">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body">
+                            <tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhuma simulação salva.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Aba de Comparação -->
+        <div id="comparison" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6"><i class="fas fa-balance-scale mr-2"></i>Comparar Simulações</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-blue-800 mb-3">Simulação 1</h4>
+                        <select id="compare-sim1" class="w-full p-2 border rounded-md bg-white">
+                            <option value="">Selecione uma simulação...</option>
+                        </select>
+                        <div id="sim1-details" class="mt-3 text-sm hidden space-y-1"></div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-green-800 mb-3">Simulação 2</h4>
+                        <select id="compare-sim2" class="w-full p-2 border rounded-md bg-white">
+                            <option value="">Selecione uma simulação...</option>
+                        </select>
+                        <div id="sim2-details" class="mt-3 text-sm hidden space-y-1"></div>
+                    </div>
+                </div>
+                <div id="comparison-results" class="hidden">
+                    <h4 class="text-xl font-bold mb-4 text-center">Resultado da Comparação</h4>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white rounded-xl shadow p-4"><canvas id="comparisonChartLucro"></canvas></div>
+                        <div class="bg-white rounded-xl shadow p-4"><canvas id="comparisonChartCustoArroba"></canvas></div>
+                        <div class="bg-white rounded-xl shadow p-4"><canvas id="comparisonChartMargem"></canvas></div>
+                        <div class="bg-white rounded-xl shadow p-4"><canvas id="comparisonChartTIR"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="confirmModal" class="modal hidden no-print"><div class="modal-content"><span class="close-button">&times;</span><h3 id="confirmTitle" class="text-lg font-bold text-slate-800"></h3><p id="confirmMessage" class="text-sm text-slate-600 mt-2"></p><div class="mt-6 flex justify-end space-x-4"><button id="cancelBtn" class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50">Cancelar</button><button id="confirmBtn" class="px-4 py-2 rounded-lg border border-transparent bg-red-600 text-white hover:bg-red-700">Confirmar</button></div></div></div>
+    <div id="tourModal" class="modal hidden no-print"><div class="modal-content"><span class="close-button">&times;</span><h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fas fa-route mr-2"></i>Tour Guiado</h2><div id="tour-content" class="text-gray-700 text-base leading-relaxed"></div><div class="flex justify-between mt-6"><button id="prev-step" class="px-4 py-2 bg-gray-300 rounded-lg"><i class="fa fa-arrow-left mr-2"></i>Anterior</button><button id="next-step" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Próximo<i class="fas fa-arrow-right ml-2"></i></button></div></div></div>
+    <div id="alertModal" class="modal hidden no-print"><div class="modal-content text-center"><span class="close-button">&times;</span><div id="alertIcon" class="text-5xl mb-4"></div><h3 id="alertTitle" class="text-lg font-bold text-slate-800 mb-2"></h3><p id="alertMessage" class="text-sm text-slate-600"></p><button id="alertOkBtn" class="mt-6 px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">OK</button></div></div>
+    
+    <script>
+    // Módulo principal da aplicação
+    const App = (() => {
+        // Estado da Aplicação
+        let state = {
+            currentSimulation: null,
+            savedSimulations: JSON.parse(localStorage.getItem('savedSimulations_recriaV2')) || [],
+            chartInstances: {},
+            tourStep: 0,
+        };
+
+        // Elementos do DOM
+        const dom = {
+            form: document.getElementById('simulationForm'),
+            resultsSection: document.getElementById('results-section'),
+            tabButtons: document.querySelectorAll('.tab-btn'),
+            tabContents: document.querySelectorAll('.tab-content'),
+            saveBtn: document.getElementById('saveBtn'),
+            tourBtn: document.getElementById('tourBtn'),
+            exampleBtn: document.getElementById('exampleBtn'),
+            clearFormButton: document.getElementById('clearFormButton'),
+            printButton: document.getElementById('printButton'),
+            exportExcelBtn: document.getElementById('exportExcelBtn'),
+        };
+
+        // --- INICIALIZAÇÃO E EVENTOS ---
+        const init = () => {
+            setupEventListeners();
+            loadSavedSimulations();
+            updateAutomaticDates();
+        };
+
+        const setupEventListeners = () => {
+            dom.form.addEventListener('submit', handleFormSubmit);
+            dom.tabButtons.forEach(btn => btn.addEventListener('click', handleTabSwitch));
+            dom.saveBtn.addEventListener('click', handleSaveSimulation);
+            dom.tourBtn.addEventListener('click', startTour);
+            dom.exampleBtn.addEventListener('click', loadExample);
+            dom.clearFormButton.addEventListener('click', () => showConfirmation('Limpar Formulário', 'Você tem certeza que deseja apagar todos os dados do formulário?', performClear));
+            dom.printButton.addEventListener('click', generatePrintReport);
+            dom.exportExcelBtn.addEventListener('click', exportToExcel);
+
+            // Atualizadores de data automáticos
+            ['recria1ExitDate', 'recria2ExitDate'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateAutomaticDates);
+            });
+            
+            // Fechar modais
+            document.querySelectorAll('.modal .close-button, #cancelBtn, #alertOkBtn').forEach(el => {
+                el.addEventListener('click', () => el.closest('.modal').classList.add('hidden'));
+            });
+            
+             // Comparação
+            document.getElementById('compare-sim1').addEventListener('change', updateComparison);
+            document.getElementById('compare-sim2').addEventListener('change', updateComparison);
+        };
+        
+        // --- LÓGICA DE CÁLCULO (CORRIGIDA E ALINHADA AO ORIGINAL) ---
+        const calculateSimulation = (inputs, updateUI = true) => {
+            const errorMessage = document.getElementById('errorMessage');
+            if (updateUI) errorMessage.textContent = '';
+
+            if ([inputs.recria1EntryDate, inputs.recria1ExitDate, inputs.recria2ExitDate].some(d => isNaN(d.getTime()))) {
+                if (updateUI) showAlert('Erro de Validação', 'Por favor, preencha todas as datas corretamente.', 'error'); return null;
+            }
+            if (inputs.recria1ExitDate < inputs.recria1EntryDate || inputs.recria2ExitDate < inputs.recria1ExitDate) {
+                if (updateUI) showAlert('Erro de Validação', 'As datas das fases de recria não estão em ordem cronológica.', 'error'); return null;
+            }
+            if (inputs.diasConfinamento < 0) {
+                if (updateUI) showAlert('Erro de Validação', 'O número de dias de confinamento não pode ser negativo.', 'error'); return null;
+            }
+            
+            const roundToTwo = (num) => Math.round(num * 100) / 100;
+
+            const purchaseValue = roundToTwo(inputs.pricePerKg * inputs.initialWeight);
+            const totalInitialCost = roundToTwo(purchaseValue + inputs.sanitaryCost);
+            const daysRecria1 = Math.max(0, Math.round((inputs.recria1ExitDate - inputs.recria1EntryDate) / (1000 * 60 * 60 * 24)));
+            const costRecria1 = roundToTwo(daysRecria1 * inputs.dailyCostRecria1);
+            const weightGainRecria1 = roundToTwo(daysRecria1 * inputs.gmdRecria1);
+            const weightAfterRecria1 = roundToTwo(inputs.initialWeight + weightGainRecria1);
+            
+            const daysRecria2 = Math.max(0, Math.round((inputs.recria2ExitDate - inputs.recria1ExitDate) / (1000 * 60 * 60 * 24)));
+            let recria2MonthsTouched = 0;
+            if (daysRecria2 > 0) {
+                let start = new Date(inputs.recria1ExitDate);
+                start.setUTCDate(start.getUTCDate() + 1);
+                let end = inputs.recria2ExitDate;
+                recria2MonthsTouched = (end.getUTCFullYear() - start.getUTCFullYear()) * 12 + (end.getUTCMonth() - start.getUTCMonth()) + 1;
+            }
+            const costRecria2 = roundToTwo(inputs.monthlyCostRecria2 * recria2MonthsTouched);
+            const weightGainRecria2 = roundToTwo(daysRecria2 * inputs.gmdRecria2);
+            const weightAfterRecria2 = roundToTwo(weightAfterRecria1 + weightGainRecria2);
+            
+            const totalCostRecria = roundToTwo(costRecria1 + costRecria2);
+            const totalDaysRecria = daysRecria1 + daysRecria2;
+            
+            const weightGainConfinamento = roundToTwo(inputs.gmdConfinamento * inputs.diasConfinamento);
+            const finalWeightCycle = roundToTwo(weightAfterRecria2 + weightGainConfinamento);
+            const costConfinamento = roundToTwo(inputs.diasConfinamento * inputs.dailyCostConfinamento);
+            
+            const totalProductionCost = roundToTwo(totalInitialCost + totalCostRecria + costConfinamento);
+            const mortalityCost = roundToTwo(totalProductionCost * inputs.mortalityRate);
+            const finalTotalCost = roundToTwo(totalProductionCost + mortalityCost);
+            
+            const finalCarcassWeight = roundToTwo(finalWeightCycle * inputs.rendimentoCarcaca);
+            const finalArrobas = roundToTwo(finalCarcassWeight > 0 ? (finalCarcassWeight / 15) : 0);
+            const finalRevenue = roundToTwo(finalArrobas * inputs.arrobaPriceGordo);
+            
+            const grossProfit = roundToTwo(finalRevenue - finalTotalCost);
+            const grossMargin = finalRevenue !== 0 ? roundToTwo((grossProfit / finalRevenue) * 100) : 0;
+            const costPerArroba = finalArrobas > 0 ? roundToTwo(finalTotalCost / finalArrobas) : 0;
+            const costOfGain = roundToTwo(finalTotalCost - purchaseValue);
+            
+            // Cálculo do Custo @ Produzida conforme a fórmula especificada: (Custo Total - Custo Aquisição) / (@ Venda - @ Compra)
+            // Onde @ Compra é estimada com um rendimento de carcaça fixo de 50% (0.5) sobre o peso de compra.
+            const initialArrobasEstimated = roundToTwo((inputs.initialWeight * 0.5) / 15);
+            const producedArrobas = roundToTwo(finalArrobas - initialArrobasEstimated);
+            const costPerProducedArroba = producedArrobas > 0 ? roundToTwo(costOfGain / producedArrobas) : 0;
+
+            const cashFlowMap = new Map();
+            const addToFlow = (date, amount) => {
+                const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth()).padStart(2, '0')}`;
+                cashFlowMap.set(key, (cashFlowMap.get(key) || 0) + amount);
+            };
+            addToFlow(inputs.recria1EntryDate, -totalInitialCost);
+            for(let i = 0; i < daysRecria1; i++) { let d = new Date(inputs.recria1EntryDate); d.setUTCDate(d.getUTCDate() + i); addToFlow(d, -inputs.dailyCostRecria1); }
+            if (daysRecria2 > 0) { let d = new Date(inputs.recria1ExitDate); d.setUTCDate(d.getUTCDate() + 1); d.setUTCDate(1); while (d <= inputs.recria2ExitDate) { addToFlow(d, -inputs.monthlyCostRecria2); d.setUTCMonth(d.getUTCMonth() + 1); } }
+            let confinementSaleDate = new Date(inputs.recria2ExitDate);
+            if (inputs.diasConfinamento > 0) {
+                for (let i = 0; i < inputs.diasConfinamento; i++) { let d = new Date(inputs.recria2ExitDate); d.setUTCDate(d.getUTCDate() + i + 1); addToFlow(d, -inputs.dailyCostConfinamento); }
+                confinementSaleDate.setUTCDate(confinementSaleDate.getUTCDate() + inputs.diasConfinamento);
+            }
+            addToFlow(confinementSaleDate, finalRevenue);
+            if (mortalityCost > 0) addToFlow(confinementSaleDate, -mortalityCost);
+
+            const sortedKeys = Array.from(cashFlowMap.keys()).sort();
+            const cashFlow = sortedKeys.map(key => roundToTwo(cashFlowMap.get(key)));
+            const tir = calculateTIR(cashFlow) * 100;
+
+            const results = { purchaseValue, totalInitialCost, totalDaysCycle: totalDaysRecria + inputs.diasConfinamento, daysRecria1, weightGainRecria1, costRecria1, weightAfterRecria1, daysRecria2, weightGainRecria2, costRecria2, weightAfterRecria2, totalCostRecria, daysConfinamento: inputs.diasConfinamento, weightGainConfinamento, finalWeightCycle, costConfinamento, totalProductionCost, mortalityCost, finalTotalCost, finalCarcassWeight, finalArrobas, finalRevenue, grossProfit, grossMargin, costPerArroba, costPerProducedArroba, tir, cashFlowMap, sortedKeys };
+            
+            if (updateUI) {
+                state.currentSimulation = { inputs, results, timestamp: new Date().getTime() };
+                updateResultsUI(results);
+            }
+            return results;
+        };
+
+        const calculateTIR = (cashFlows) => {
+            if (!cashFlows || !cashFlows.some(v => v > 0) || !cashFlows.some(v => v < 0)) return NaN;
+            let rate = 0.1, maxIter = 1000, tolerance = 1e-7;
+            for (let i = 0; i < maxIter; i++) {
+                let npv = 0, deriv = 0;
+                for (let t = 0; t < cashFlows.length; t++) {
+                    npv += (cashFlows[t] || 0) / Math.pow(1 + rate, t);
+                    if (t > 0) deriv -= t * (cashFlows[t] || 0) / Math.pow(1 + rate, t + 1);
+                }
+                if (Math.abs(npv) < tolerance) return rate;
+                if (deriv === 0) return NaN;
+                let newRate = rate - npv / deriv;
+                if (Math.abs(newRate - rate) < tolerance) return newRate;
+                rate = newRate;
+            }
+            return NaN;
+        };
+
+        // --- MANIPULADORES DE EVENTOS ---
+        const handleFormSubmit = (e) => {
+            e.preventDefault();
+            const inputs = getFormInputs();
+            const results = calculateSimulation(inputs);
+            if (results) {
+                performSensitivityAnalysis(inputs, results);
+                dom.resultsSection.classList.remove('hidden');
+                dom.resultsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+        const handleTabSwitch = (e) => {
+            const tabId = e.currentTarget.dataset.tab;
+            dom.tabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+            dom.tabContents.forEach(content => content.classList.toggle('active', content.id === tabId));
+        };
+
+        const handleSaveSimulation = () => {
+            if (!state.currentSimulation) {
+                showAlert('Atenção', 'Nenhuma simulação para salvar. Por favor, calcule primeiro.', 'warning');
+                return;
+            }
+            const simName = state.currentSimulation.inputs.simulationName;
+            if (!simName) {
+                showAlert('Atenção', 'Por favor, insira um nome para a simulação antes de salvar.', 'warning');
+                return;
+            }
+            const existingIndex = state.savedSimulations.findIndex(sim => sim.inputs.simulationName === simName);
+
+            if (existingIndex > -1) {
+                showConfirmation('Atualizar Simulação', `Já existe uma simulação com o nome "${simName}". Deseja substituí-la?`, () => {
+                    state.savedSimulations[existingIndex] = state.currentSimulation;
+                    persistAndReload();
+                    showAlert('Sucesso', 'Simulação atualizada com sucesso! Você pode acessá-la na aba \'Histórico\'.<br><br><span class="font-semibold text-yellow-700">Atenção:</span> As simulações são salvas localmente e serão apagadas se o histórico do seu navegador for limpo.', 'success');
+                });
+            } else {
+                state.savedSimulations.unshift(state.currentSimulation);
+                persistAndReload();
+                showAlert('Sucesso', 'Simulação salva com sucesso! Você pode acessá-la na aba \'Histórico\'.<br><br><span class="font-semibold text-yellow-700">Atenção:</span> As simulações são salvas localmente e serão apagadas se o histórico do seu navegador for limpo.', 'success');
+            }
+        };
+
+        // --- LÓGICA DE UI ---
+        const updateResultsUI = (data) => {
+            updateKeyMetrics(data);
+            updateTables(data);
+            updateCharts(data);
+        };
+        
+        const updateKeyMetrics = (data) => {
+            const metrics = [
+                { label: 'Lucro Bruto', value: formatCurrency(data.grossProfit), isPositive: data.grossProfit >= 0 },
+                { label: 'Margem Bruta', value: formatPercent(data.grossMargin), isPositive: data.grossMargin >= 0 },
+                { label: 'TIR Mensal', value: isFinite(data.tir) ? formatPercent(data.tir) : 'N/A', isPositive: data.tir >= 0 || !isFinite(data.tir) },
+                { label: 'Custo Total/@', value: formatCurrency(data.costPerArroba), isPositive: false },
+                { label: 'Custo @ Produzida', value: formatCurrency(data.costPerProducedArroba), isPositive: false }
+            ];
+            const container = document.getElementById('keyMetricsCards');
+            container.innerHTML = metrics.map(m => `
+                <div class="bg-slate-50 p-5 rounded-xl shadow-lg text-center border border-slate-200">
+                    <p class="text-base text-slate-600 font-semibold">${m.label}</p>
+                    <p class="text-2xl font-bold mt-1 ${m.isPositive ? 'text-green-600' : 'text-red-600'}">${m.value}</p>
+                </div>
+            `).join('');
+        };
+
+        const updateTables = (data) => {
+            document.getElementById('acquisitionTable').innerHTML = `<tr><td class="px-4 py-3 text-sm">Custo Aquisição Animal</td><td class="px-4 py-3 text-sm">${formatCurrency(data.purchaseValue)}</td></tr><tr><td class="px-4 py-3 text-sm">Custo Sanitário</td><td class="px-4 py-3 text-sm">${formatCurrency(data.totalInitialCost - data.purchaseValue)}</td></tr><tr class="font-bold bg-slate-50"><td class="px-4 py-3 text-sm">Custo Total de Entrada</td><td class="px-4 py-3 text-sm">${formatCurrency(data.totalInitialCost)}</td></tr><tr><td class="px-4 py-3 text-sm">Duração Total do Ciclo</td><td class="px-4 py-3 text-sm">${formatNumber(data.totalDaysCycle, 0)} dias</td></tr>`;
+            document.getElementById('recriaTable').innerHTML = `<tr><td class="px-4 py-3 text-sm">Duração Fase 1</td><td class="px-4 py-3 text-sm">${formatNumber(data.daysRecria1, 0)} dias</td></tr><tr><td class="px-4 py-3 text-sm">Custo Fase 1</td><td class="px-4 py-3 text-sm">${formatCurrency(data.costRecria1)}</td></tr><tr><td class="px-4 py-3 text-sm">Duração Fase 2</td><td class="px-4 py-3 text-sm">${formatNumber(data.daysRecria2, 0)} dias</td></tr><tr><td class="px-4 py-3 text-sm">Custo Fase 2</td><td class="px-4 py-3 text-sm">${formatCurrency(data.costRecria2)}</td></tr><tr class="font-bold bg-slate-50"><td class="px-4 py-3 text-sm">Custo Total Recria</td><td class="px-4 py-3 text-sm">${formatCurrency(data.totalCostRecria)}</td></tr>`;
+            document.getElementById('confinamentoTable').innerHTML = `<tr><td class="px-4 py-3 text-sm">Duração Confinamento</td><td class="px-4 py-3 text-sm">${formatNumber(data.daysConfinamento, 0)} dias</td></tr><tr><td class="px-4 py-3 text-sm">Custo Total Confinamento</td><td class="px-4 py-3 text-sm">${formatCurrency(data.costConfinamento)}</td></tr><tr><td class="px-4 py-3 text-sm">Peso Final de Venda</td><td class="px-4 py-3 text-sm">${formatNumber(data.finalWeightCycle)} kg</td></tr>`;
+            document.getElementById('finalTable').innerHTML = `
+                <tr><td class="px-4 py-3 text-sm">Custo de Produção</td><td class="px-4 py-3 text-sm">${formatCurrency(data.totalProductionCost)}</td></tr>
+                <tr><td class="px-4 py-3 text-sm">Custo de Mortalidade</td><td class="px-4 py-3 text-sm">${formatCurrency(data.mortalityCost)}</td></tr>
+                <tr class="font-bold bg-slate-50"><td class="px-4 py-3 text-sm">Custo Total Final</td><td class="px-4 py-3 text-sm">${formatCurrency(data.finalTotalCost)}</td></tr>
+                <tr><td class="px-4 py-3 text-sm">Peso Carcaça</td><td class="px-4 py-3 text-sm">${formatNumber(data.finalCarcassWeight)} kg</td></tr>
+                <tr><td class="px-4 py-3 text-sm">Arrobas para Venda</td><td class="px-4 py-3 text-sm">${formatNumber(data.finalArrobas)} @</td></tr>
+                <tr><td class="px-4 py-3 text-sm font-bold">Receita Bruta Total</td><td class="px-4 py-3 text-sm font-bold text-green-600">${formatCurrency(data.finalRevenue)}</td></tr>
+            `;
+        };
+        
+        const updateCharts = (data) => {
+            const { finalRevenue, finalTotalCost, grossProfit, cashFlowMap, sortedKeys } = data;
+            
+            // Gráfico de Métricas
+            const metricsData = {
+                labels: ['Receita', 'Custo', 'Lucro'],
+                datasets: [{
+                    data: [finalRevenue, finalTotalCost, grossProfit],
+                    backgroundColor: [
+                        'rgba(22, 163, 74, 0.7)',
+                        'rgba(220, 38, 38, 0.7)',
+                        grossProfit >= 0 ? 'rgba(5, 150, 105, 0.8)' : 'rgba(185, 28, 28, 0.8)'
+                    ],
+                    borderColor: [
+                        '#16a34a',
+                        '#dc2626',
+                        grossProfit >= 0 ? '#047857' : '#b91c1c'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8,
+                }]
+            };
+            createOrUpdateChart('metricsChart', 'bar', metricsData, { 
+                plugins: { 
+                    title: { display: true, text: 'Indicadores Econômicos Chave' }, 
+                    legend: { display: false } 
+                }, 
+                scales: { 
+                    y: { 
+                        ticks: { callback: formatCurrency } 
+                    } 
+                } 
+            });
+
+            // Gráfico de Fluxo de Caixa
+            const cashFlow = sortedKeys.map(key => cashFlowMap.get(key));
+            const cumulativeCashFlow = cashFlow.reduce((acc, val) => [...acc, (acc.length > 0 ? acc[acc.length-1] : 0) + val], []);
+            const cashFlowLabels = sortedKeys.map(key => new Date(key + '-02').toLocaleString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC'}));
+            const cashFlowData = {
+                labels: cashFlowLabels,
+                datasets: [
+                    { 
+                        type: 'line', 
+                        label: 'Saldo Acumulado', 
+                        data: cumulativeCashFlow, 
+                        borderColor: '#059669',
+                        backgroundColor: (context) => {
+                            const chart = context.chart;
+                            const {ctx, chartArea} = chart;
+                            if (!chartArea) return null;
+                            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                            gradient.addColorStop(0, 'rgba(16, 185, 129, 0)');
+                            gradient.addColorStop(1, 'rgba(16, 185, 129, 0.4)');
+                            return gradient;
+                        },
+                        fill: true, 
+                        yAxisID: 'y1',
+                        tension: 0.4,
+                        pointBackgroundColor: '#059669',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#059669',
+                    },
+                    { 
+                        type: 'bar', 
+                        label: 'Fluxo Mensal', 
+                        data: cashFlow, 
+                        backgroundColor: cashFlow.map(v => v >= 0 ? 'rgba(59, 130, 246, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+                        borderRadius: 4,
+                        yAxisID: 'y' 
+                    }
+                ]
+            };
+            createOrUpdateChart('cashFlowChart', 'bar', cashFlowData, { 
+                plugins: { 
+                    title: { display: true, text: 'Projeção do Fluxo de Caixa' } 
+                }, 
+                scales: { 
+                    y: { 
+                        position: 'left', 
+                        title: {display: true, text: 'Fluxo Mensal (R$)'},
+                        ticks: { callback: formatCurrency }
+                    }, 
+                    y1: { 
+                        position: 'right', 
+                        grid: { drawOnChartArea: false }, 
+                        title: {display: true, text: 'Saldo Acumulado (R$)'},
+                        ticks: { callback: formatCurrency }
+                    } 
+                } 
+            });
+        };
+        
+        const performSensitivityAnalysis = (baseInputs, baseResults) => {
+             const variations = [-0.15, -0.075, 0, 0.075, 0.15];
+             const results = { price: [], gmd: [], revenue: [] };
+             variations.forEach(v => {
+                 let inputsPrice = { ...baseInputs, pricePerKg: baseInputs.pricePerKg * (1 - v) };
+                 results.price.push(calculateSimulation(inputsPrice, false)?.grossProfit ?? 0);
+                 let inputsGMD = { ...baseInputs, gmdConfinamento: baseInputs.gmdConfinamento * (1 + v) };
+                 results.gmd.push(calculateSimulation(inputsGMD, false)?.grossProfit ?? 0);
+                 let inputsRevenue = { ...baseInputs, arrobaPriceGordo: baseInputs.arrobaPriceGordo * (1 + v) };
+                 results.revenue.push(calculateSimulation(inputsRevenue, false)?.grossProfit ?? 0);
+             });
+             const sensitivityData = {
+                 labels: variations.map(v => `${(v * 100).toFixed(1)}%`),
+                 datasets: [
+                     { label: 'Lucro x Preço de Aquisição (-)', data: results.price, backgroundColor: 'rgba(239, 68, 68, 0.7)', borderColor: '#dc2626', borderWidth: 1, borderRadius: 5 },
+                     { label: 'Lucro x GMD Confinamento (+)', data: results.gmd, backgroundColor: 'rgba(245, 158, 11, 0.7)', borderColor: '#d97706', borderWidth: 1, borderRadius: 5 },
+                     { label: 'Lucro x Preço da Arroba (+)', data: results.revenue, backgroundColor: 'rgba(22, 163, 74, 0.7)', borderColor: '#15803d', borderWidth: 1, borderRadius: 5 }
+                 ]
+             };
+             createOrUpdateChart('sensitivityChart', 'bar', sensitivityData, { 
+                plugins: { 
+                    title: { display: true, text: 'Análise de Sensibilidade do Lucro Bruto' } 
+                }, 
+                scales: { 
+                    y: { 
+                        title: { display: true, text: 'Lucro (R$)' }, 
+                        ticks: { callback: formatCurrency } 
+                    }, 
+                    x: { 
+                        title: { display: true, text: 'Variação do Parâmetro' } 
+                    } 
+                } 
+            });
+        };
+        
+        const createOrUpdateChart = (canvasId, type, data, options) => {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (state.chartInstances[canvasId]) {
+                state.chartInstances[canvasId].destroy();
+            }
+
+            const professionalOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 800, easing: 'easeInOutCubic' },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 20, font: { size: 12 } }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: '#1e293b',
+                        titleColor: '#ffffff',
+                        bodyColor: '#cbd5e1',
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        boxPadding: 4,
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                    },
+                    title: {
+                        display: true,
+                        font: { size: 16, weight: 'bold' },
+                        color: '#1e293b',
+                        padding: { top: 10, bottom: 25 }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#475569' }
+                    },
+                    y: {
+                        border: { display: false },
+                        grid: { color: '#e2e8f0' },
+                        ticks: { color: '#475569' }
+                    }
+                }
+            };
+            
+            // Simples merge de opções
+            const finalOptions = { ...professionalOptions, ...options };
+            finalOptions.plugins = { ...professionalOptions.plugins, ...options.plugins };
+            finalOptions.scales = { ...professionalOptions.scales, ...options.scales };
+            if(options.plugins && options.plugins.title) {
+                finalOptions.plugins.title = {...professionalOptions.plugins.title, ...options.plugins.title};
+            }
+
+
+            state.chartInstances[canvasId] = new Chart(ctx, { type, data, options: finalOptions });
+        };
+
+        // --- FUNCIONALIDADES ADICIONAIS ---
+        const loadSavedSimulations = () => {
+            const historyBody = document.getElementById('history-body');
+            const compareSelect1 = document.getElementById('compare-sim1');
+            const compareSelect2 = document.getElementById('compare-sim2');
+
+            historyBody.innerHTML = '';
+            compareSelect1.innerHTML = '<option value="">Selecione uma simulação...</option>';
+            compareSelect2.innerHTML = '<option value="">Selecione uma simulação...</option>';
+
+            if (state.savedSimulations.length === 0) {
+                historyBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhuma simulação salva.</td></tr>';
+                return;
+            }
+
+            state.savedSimulations.forEach((sim, index) => {
+                const date = new Date(sim.timestamp).toLocaleDateString('pt-BR');
+                const name = sim.inputs.simulationName || 'Simulação sem nome';
+                const profit = formatCurrency(sim.results.grossProfit);
+
+                const row = `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-3">${date}</td>
+                        <td class="p-3 font-medium">${name}</td>
+                        <td class="p-3 ${sim.results.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}">${profit}</td>
+                        <td class="p-3 space-x-2">
+                            <button class="view-sim-btn text-blue-600 hover:text-blue-800" data-index="${index}" title="Carregar"><i class="fas fa-eye"></i></button>
+                            <button class="delete-sim-btn text-red-600 hover:text-red-800" data-index="${index}" title="Excluir"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                historyBody.innerHTML += row;
+
+                const option = `<option value="${index}">${name} (${date})</option>`;
+                compareSelect1.innerHTML += option;
+                compareSelect2.innerHTML += option;
+            });
+            
+            document.querySelectorAll('.view-sim-btn').forEach(btn => btn.addEventListener('click', (e) => loadSimulation(e.currentTarget.dataset.index)));
+            document.querySelectorAll('.delete-sim-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                const index = e.currentTarget.dataset.index;
+                const simName = state.savedSimulations[index].inputs.simulationName;
+                showConfirmation('Excluir Simulação', `Tem certeza de que deseja excluir "${simName}"?`, () => deleteSimulation(index));
+            }));
+        };
+        
+        const loadSimulation = (index) => {
+            const sim = state.savedSimulations[index];
+            if (!sim) return;
+            
+            Object.keys(sim.inputs).forEach(key => {
+                const el = document.getElementById(key);
+                if(el) {
+                    if (el.type === 'date' && sim.inputs[key]) {
+                        el.value = new Date(sim.inputs[key]).toISOString().split('T')[0];
+                    } else {
+                        el.value = sim.inputs[key];
+                    }
+                }
+            });
+            updateAutomaticDates();
+            handleFormSubmit(new Event('submit'));
+            document.querySelector('.tab-btn[data-tab="simulation"]').click();
+            showAlert('Sucesso', `Simulação "${sim.inputs.simulationName}" carregada.`, 'success');
+        };
+
+        const deleteSimulation = (index) => {
+            state.savedSimulations.splice(index, 1);
+            persistAndReload();
+            showAlert('Sucesso', 'Simulação excluída.', 'success');
+        };
+
+        const updateComparison = () => {
+            const index1 = document.getElementById('compare-sim1').value;
+            const index2 = document.getElementById('compare-sim2').value;
+            const resultsDiv = document.getElementById('comparison-results');
+            const details1 = document.getElementById('sim1-details');
+            const details2 = document.getElementById('sim2-details');
+
+            details1.innerHTML = '';
+            details2.innerHTML = '';
+            details1.classList.add('hidden');
+            details2.classList.add('hidden');
+            resultsDiv.classList.add('hidden');
+
+            if (index1) showSimDetails(index1, details1);
+            if (index2) showSimDetails(index2, details2);
+            
+            if (index1 && index2 && index1 !== index2) {
+                const sim1 = state.savedSimulations[index1];
+                const sim2 = state.savedSimulations[index2];
+                
+                const lucroData = {
+                    labels: [sim1.inputs.simulationName, sim2.inputs.simulationName],
+                    datasets: [{ 
+                        label: 'Lucro Bruto', 
+                        data: [sim1.results.grossProfit, sim2.results.grossProfit], 
+                        backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)'],
+                        borderColor: ['#1d4ed8', '#059669'],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }]
+                };
+                createOrUpdateChart('comparisonChartLucro', 'bar', lucroData, {plugins: {title: {display: true, text: 'Comparativo: Lucro Bruto (R$)'}, legend: {display: false}}, scales: {y: {ticks: {callback: formatCurrency}}}});
+
+                const custoData = {
+                    labels: [sim1.inputs.simulationName, sim2.inputs.simulationName],
+                    datasets: [{ 
+                        label: 'Custo @ Produzida', 
+                        data: [sim1.results.costPerProducedArroba, sim2.results.costPerProducedArroba], 
+                        backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)'],
+                        borderColor: ['#1d4ed8', '#059669'],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }]
+                };
+                createOrUpdateChart('comparisonChartCustoArroba', 'bar', custoData, {plugins: {title: {display: true, text: 'Comparativo: Custo @ Produzida (R$)'}, legend: {display: false}}, scales: {y: {ticks: {callback: formatCurrency}}}});
+                
+                const margemData = {
+                    labels: [sim1.inputs.simulationName, sim2.inputs.simulationName],
+                    datasets: [{
+                        label: 'Margem Bruta (%)',
+                        data: [sim1.results.grossMargin, sim2.results.grossMargin],
+                        backgroundColor: ['rgba(139, 92, 246, 0.8)', 'rgba(20, 184, 166, 0.8)'],
+                        borderColor: ['#7c3aed', '#0d9488'],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }]
+                };
+                createOrUpdateChart('comparisonChartMargem', 'bar', margemData, {
+                    plugins: {
+                        title: { display: true, text: 'Comparativo: Margem Bruta (%)' },
+                        legend: { display: false }
+                    },
+                    scales: { y: { ticks: { callback: (value) => `${formatNumber(value, 2)}%` } } }
+                });
+
+                const tirData = {
+                    labels: [sim1.inputs.simulationName, sim2.inputs.simulationName],
+                    datasets: [{
+                        label: 'TIR Mensal (%)',
+                        data: [ isFinite(sim1.results.tir) ? sim1.results.tir : 0, isFinite(sim2.results.tir) ? sim2.results.tir : 0 ],
+                        backgroundColor: ['rgba(139, 92, 246, 0.8)', 'rgba(20, 184, 166, 0.8)'],
+                        borderColor: ['#7c3aed', '#0d9488'],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }]
+                };
+                createOrUpdateChart('comparisonChartTIR', 'bar', tirData, {
+                    plugins: {
+                        title: { display: true, text: 'Comparativo: TIR Mensal (%)' },
+                        legend: { display: false }
+                    },
+                    scales: { y: { ticks: { callback: (value) => `${formatNumber(value, 2)}%` } } }
+                });
+
+                resultsDiv.classList.remove('hidden');
+            }
+        };
+
+        const showSimDetails = (index, el) => {
+            const sim = state.savedSimulations[index];
+            el.innerHTML = `
+                <p><strong>Fazenda:</strong> ${sim.inputs.farmName || 'N/A'}</p>
+                <p><strong>Lucro:</strong> ${formatCurrency(sim.results.grossProfit)}</p>
+                <p><strong>Custo @:</strong> ${formatCurrency(sim.results.costPerProducedArroba)}</p>
+            `;
+            el.classList.remove('hidden');
+        };
+        
+        const persistAndReload = () => {
+            localStorage.setItem('savedSimulations_recriaV2', JSON.stringify(state.savedSimulations));
+            loadSavedSimulations();
+            updateComparison();
+        };
+
+        const exportToExcel = () => {
+             if (!state.currentSimulation) { showAlert('Atenção', 'Nenhuma simulação para exportar.', 'warning'); return; }
+            const { inputs, results } = state.currentSimulation;
+            const data = [
+                ['Parâmetro', 'Valor'],
+                ['Nome da Simulação', inputs.simulationName],['Fazenda', inputs.farmName],
+                ['Técnico Responsável', inputs.techName],
+                ['Localidade', inputs.location],
+                ['Raça', inputs.breed],
+                ['Sexo', inputs.sex],
+                ['Categoria Animal', inputs.animalCategory],
+                ['Valor Aquisição (R$/kg)', inputs.pricePerKg],['Peso Compra (kg)', inputs.initialWeight],['Custo Sanitário Entrada (R$)', inputs.sanitaryCost],['Mortalidade no Ciclo (%)', inputs.mortalityRate*100],
+                ['Data Entrada - Fase 1', inputs.recria1EntryDate.toLocaleDateString('pt-BR')],['Data Saída - Fase 1', inputs.recria1ExitDate.toLocaleDateString('pt-BR')],['GMD - Fase 1 (kg/dia)', inputs.gmdRecria1],['Custo Diário - Fase 1 (R$)', inputs.dailyCostRecria1],
+                ['Data Saída - Fase 2', inputs.recria2ExitDate.toLocaleDateString('pt-BR')],['GMD - Fase 2 (kg/dia)', inputs.gmdRecria2],['Custo Mensal - Fase 2 (R$)', inputs.monthlyCostRecria2],
+                ['Dias de Confinamento', inputs.diasConfinamento],['GMD no Confinamento (kg/dia)', inputs.gmdConfinamento],['Custo da Diária (R$)', inputs.dailyCostConfinamento],
+                ['Rendimento de Carcaça (%)', inputs.rendimentoCarcaca*100],['Arroba do Boi Gordo (R$/@)', inputs.arrobaPriceGordo],
+                [],
+                ['Resultado', 'Valor'],
+                ['Lucro Bruto (R$)', results.grossProfit.toFixed(2)],['Margem Bruta (%)', results.grossMargin.toFixed(2)],['TIR Mensal (%)', isFinite(results.tir) ? results.tir.toFixed(2) : 'N/A'],['Custo Total/@ (R$)', results.costPerArroba.toFixed(2)],['Custo @ Produzida (R$)', results.costPerProducedArroba.toFixed(2)],
+                ['Receita Bruta Total (R$)', results.finalRevenue.toFixed(2)],['Custo Total Final (R$)', results.finalTotalCost.toFixed(2)],['Peso Final de Venda (kg)', results.finalWeightCycle.toFixed(2)],['Arrobas para Venda (@)', results.finalArrobas.toFixed(2)],
+            ];
+            const csvContent = "data:text/csv;charset=utf-8," + data.map(e => e.join(",")).join("\n");
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", `simulacao_${inputs.simulationName.replace(/\s/g, '_')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+        
+        const generatePrintReport = () => {
+            if (!state.currentSimulation) { showAlert('Atenção', 'Nenhuma simulação para gerar relatório.', 'warning'); return; }
+            const { inputs, results } = state.currentSimulation;
+            const chartImages = {
+                metrics: state.chartInstances.metricsChart?.toBase64Image(),
+                cashFlow: state.chartInstances.cashFlowChart?.toBase64Image(),
+                sensitivity: state.chartInstances.sensitivityChart?.toBase64Image()
+            };
+
+            const allData = [
+                { label: 'Nome da Simulação', value: inputs.simulationName }, { label: 'Fazenda', value: inputs.farmName || 'N/A' },
+                { label: 'Técnico', value: inputs.techName || 'N/A' }, { label: 'Localidade', value: inputs.location || 'N/A' },
+                { label: 'Raça', value: inputs.breed || 'N/A' }, { label: 'Sexo', value: inputs.sex || 'N/A' },
+                { label: 'Categoria', value: inputs.animalCategory || 'N/A' }, {},
+                { separator: 'Premissas de Aquisição e Venda' },
+                { label: 'Valor Aquisição', value: `${formatCurrency(inputs.pricePerKg)}/kg` }, { label: 'Preço Arroba', value: formatCurrency(inputs.arrobaPriceGordo) },
+                { label: 'Peso Compra', value: `${formatNumber(inputs.initialWeight, 0)} kg` }, { label: 'Rend. Carcaça', value: formatPercent(inputs.rendimentoCarcaca * 100) },
+                { label: 'Custo Sanitário', value: formatCurrency(inputs.sanitaryCost) }, { label: 'Mortalidade', value: formatPercent(inputs.mortalityRate * 100) },
+                { separator: 'Desempenho e Custos' },
+                { label: 'GMD Recria 1', value: `${formatNumber(inputs.gmdRecria1, 3)} kg/dia` }, { label: 'Custo Diário R1', value: formatCurrency(inputs.dailyCostRecria1) },
+                { label: 'GMD Recria 2', value: `${formatNumber(inputs.gmdRecria2, 3)} kg/dia` }, { label: 'Custo Mensal R2', value: formatCurrency(inputs.monthlyCostRecria2) },
+                { label: 'GMD Conf.', value: `${formatNumber(inputs.gmdConfinamento, 3)} kg/dia` }, { label: 'Custo Diária Conf.', value: formatCurrency(inputs.dailyCostConfinamento) },
+                { separator: 'Resultados Econômicos' },
+                { label: 'Receita Bruta Total', value: formatCurrency(results.finalRevenue) }, { label: 'Custo Total Final', value: formatCurrency(results.finalTotalCost) },
+                { label: 'Custo @ Produzida', value: formatCurrency(results.costPerProducedArroba) }, { label: 'Custo Total/@', value: formatCurrency(results.costPerArroba) },
+                { label: 'Margem Bruta', value: formatPercent(results.grossMargin) }, { label: 'TIR Mensal', value: isFinite(results.tir) ? formatPercent(results.tir) : 'N/A' },
+                { separator: 'Resultados Físicos' },
+                { label: 'Peso Final', value: `${formatNumber(results.finalWeightCycle)} kg` }, { label: 'Peso Carcaça', value: `${formatNumber(results.finalCarcassWeight)} kg` },
+                { label: 'Arrobas Totais', value: `${formatNumber(results.finalArrobas)} @` }, {}
+            ];
+
+            let detailedTableHTML = '<table class="w-full text-xs"><tbody>';
+            for (let i = 0; i < allData.length; i++) {
+                if (allData[i].separator) {
+                    detailedTableHTML += `<tr><td colspan="4" class="pt-2 pb-1 border-b font-semibold text-slate-700">${allData[i].separator}</td></tr>`;
+                    continue;
+                }
+                let rowHTML = '<tr>';
+                const item1 = allData[i];
+                rowHTML += `<td class="font-semibold text-slate-600 py-1 pr-2 w-1/4">${item1.label || ''}</td><td class="pr-3 w-1/4">${item1.value || ''}</td>`;
+
+                if (i + 1 < allData.length && !allData[i+1].separator) {
+                    const item2 = allData[i + 1];
+                    rowHTML += `<td class="font-semibold text-slate-600 py-1 pr-2 w-1/4">${item2.label || ''}</td><td class="w-1/4">${item2.value || ''}</td>`;
+                    i++;
+                } else {
+                    rowHTML += '<td colspan="2"></td>';
+                }
+                rowHTML += '</tr>';
+                detailedTableHTML += rowHTML;
+            }
+            detailedTableHTML += '</tbody></table>';
+
+            const printContent = `
+                <html><head><title>Relatório - ${inputs.simulationName}</title><script src="https://cdn.tailwindcss.com"><\/script><style>:root { --primary: #1e3a8a; } @media print { body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; } @page { size: A4 portrait; margin: 1.2cm; } .page-break { page-break-before: always; } .print-card { page-break-inside: avoid; } }</style></head>
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+                <body class="text-slate-800">
+                    <div class="print-card">
+                        <header class="text-center mb-4 border-b pb-2">
+                            <h1 class="text-xl font-bold text-[--primary]">Relatório de Simulação Econômica</h1>
+                            <p class="text-sm font-semibold">${inputs.simulationName}</p>
+                        </header>
+                        <section class="mb-4">
+                            <h2 class="text-base font-bold text-[--primary] mb-2">Indicadores Chave</h2>
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Lucro Bruto</p><p class="text-lg font-bold ${results.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}">${formatCurrency(results.grossProfit)}</p></div>
+                                <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Margem Bruta</p><p class="text-lg font-bold">${formatPercent(results.grossMargin)}</p></div>
+                                <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Custo @ Prod.</p><p class="text-lg font-bold text-red-600">${formatCurrency(results.costPerProducedArroba)}</p></div>
+                            </div>
+                        </section>
+                        <section class="mb-4">
+                             <h2 class="text-base font-bold text-[--primary] mb-2">Dados Consolidados</h2>
+                             ${detailedTableHTML}
+                        </section>
+                        <section>
+                            <h2 class="text-base font-bold text-[--primary] mb-2">Resultado Econômico</h2>
+                            ${chartImages.metrics ? `<img src="${chartImages.metrics}" class="w-full h-auto">` : '<p>Gráfico indisponível.</p>'}
+                        </section>
+                    </div>
+                    <div class="page-break print-card">
+                         <h2 class="text-base font-bold text-[--primary] mb-2">Análises Gráficas Adicionais</h2>
+                         <div class="space-y-6">
+                            <div>
+                                <h3 class="text-sm font-semibold text-center mb-1">Fluxo de Caixa Projetado</h3>
+                                ${chartImages.cashFlow ? `<img src="${chartImages.cashFlow}" class="w-full h-auto border rounded">` : ''}
+                            </div>
+                             <div>
+                                <h3 class="text-sm font-semibold text-center mb-1">Análise de Sensibilidade</h3>
+                                ${chartImages.sensitivity ? `<img src="${chartImages.sensitivity}" class="w-full h-auto border rounded">` : ''}
+                            </div>
+                         </div>
+                    </div>
+                
+    <!-- Rodapé Acadêmico/Profissional -->
+    <footer class="no-print mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
+        <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color: #0d9488; text-decoration: none;">ricardobrumatti.pro.br</a> | &copy; 2026</p>
+    </footer>
+</body></html>`;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            setTimeout(() => { printWindow.print(); printWindow.close(); }, 800);
+        };
+        
+        // --- TOUR GUIADO ---
+        const tourSteps = [
+            { title: "Bem-vindo!", content: "Este é o Simulador Econômico Avançado. Vamos conhecer as principais funcionalidades." },
+            { title: "Passo 1: Simulação", content: "Aqui você insere todos os dados para a sua simulação. Campos com * são obrigatórios. Use o botão 'Carregar Exemplo' para ver como funciona." },
+            { title: "Passo 2: Calcular e Salvar", content: "Depois de preencher, clique em 'Calcular Simulação'. Para guardar o cenário, clique em 'Salvar Simulação'." },
+            { title: "Passo 3: Histórico", content: "Na aba 'Histórico', você pode ver, carregar ou excluir simulações salvas anteriormente." },
+            { title: "Passo 4: Comparação", content: "Use a aba 'Comparação' para analisar dois cenários salvos lado a lado, facilitando a tomada de decisão." },
+            { title: "Fim do Tour", content: "Agora você está pronto para explorar a ferramenta! Bons negócios!" },
+        ];
+        const startTour = () => { state.tourStep = 0; updateTourContent(); document.getElementById('tourModal').classList.remove('hidden'); };
+        const updateTourContent = () => {
+            const step = tourSteps[state.tourStep];
+            document.getElementById('tour-content').innerHTML = `<h3 class="text-lg font-bold mb-2">${step.title}</h3><p>${step.content}</p>`;
+            document.getElementById('prev-step').style.visibility = state.tourStep === 0 ? 'hidden' : 'visible';
+            document.getElementById('next-step').textContent = state.tourStep === tourSteps.length - 1 ? 'Concluir' : 'Próximo';
+        };
+        document.getElementById('next-step').addEventListener('click', () => { state.tourStep++; if(state.tourStep >= tourSteps.length) { document.getElementById('tourModal').classList.add('hidden'); } else { updateTourContent(); } });
+        document.getElementById('prev-step').addEventListener('click', () => { if(state.tourStep > 0) { state.tourStep--; updateTourContent(); } });
+
+        // --- FUNÇÕES UTILITÁRIAS ---
+        const getFormInputs = () => ({
+            simulationName: document.getElementById('simulationName').value, farmName: document.getElementById('farmName').value,
+            techName: document.getElementById('techName').value,
+            location: document.getElementById('location').value,
+            breed: document.getElementById('breed').value,
+            sex: document.getElementById('sex').value,
+            animalCategory: document.getElementById('animalCategory').value,
+            pricePerKg: parseFloat(document.getElementById('pricePerKg').value) || 0, initialWeight: parseFloat(document.getElementById('initialWeight').value) || 0,
+            sanitaryCost: parseFloat(document.getElementById('sanitaryCost').value) || 0, mortalityRate: (parseFloat(document.getElementById('mortalityRate').value) / 100) || 0,
+            recria1EntryDate: new Date(document.getElementById('recria1EntryDate').value + "T12:00:00Z"), recria1ExitDate: new Date(document.getElementById('recria1ExitDate').value + "T12:00:00Z"),
+            gmdRecria1: parseFloat(document.getElementById('gmdRecria1').value) || 0, dailyCostRecria1: parseFloat(document.getElementById('dailyCostRecria1').value) || 0,
+            recria2ExitDate: new Date(document.getElementById('recria2ExitDate').value + "T12:00:00Z"), gmdRecria2: parseFloat(document.getElementById('gmdRecria2').value) || 0,
+            monthlyCostRecria2: parseFloat(document.getElementById('monthlyCostRecria2').value) || 0, diasConfinamento: parseInt(document.getElementById('diasConfinamento').value, 10) || 0,
+            gmdConfinamento: parseFloat(document.getElementById('gmdConfinamento').value) || 0, dailyCostConfinamento: parseFloat(document.getElementById('dailyCostConfinamento').value) || 0,
+            rendimentoCarcaca: (parseFloat(document.getElementById('rendimentoCarcaca').value) / 100) || 0, arrobaPriceGordo: parseFloat(document.getElementById('arrobaPriceGordo').value) || 0,
+        });
+
+        const performClear = () => {
+            // Seleciona todos os inputs dentro do formulário
+            const formInputs = dom.form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
+            
+            // Itera sobre cada input e define seu valor como uma string vazia para uma limpeza completa
+            formInputs.forEach(input => {
+                input.value = '';
+            });
+
+            // Atualiza as datas que são exibidas em parágrafos e não em inputs
+            updateAutomaticDates();
+            
+            // Esconde a seção de resultados e limpa mensagens de erro
+            dom.resultsSection.classList.add('hidden');
+            document.getElementById('errorMessage').textContent = '';
+
+            // Limpa o estado da simulação atual
+            state.currentSimulation = null;
+        };
+
+        const loadExample = () => {
+            // Informações do Relatório
+            document.getElementById('simulationName').value = "Cenário Exemplo Padrão";
+            document.getElementById('farmName').value = "Fazenda Experimental";
+            document.getElementById('techName').value = "Prof. Ricardo C. Brumatti";
+            document.getElementById('location').value = "Campo Grande / MS";
+            document.getElementById('breed').value = "Nelore";
+            document.getElementById('sex').value = "Machos Inteiros";
+            document.getElementById('animalCategory').value = "Garrote";
+
+            // Aquisição e Premissas Gerais
+            document.getElementById('pricePerKg').value = "12.50";
+            document.getElementById('initialWeight').value = "210";
+            document.getElementById('sanitaryCost').value = "45.00";
+            document.getElementById('mortalityRate').value = "0.50";
+
+            // Etapa 1: Recria
+            document.getElementById('recria1EntryDate').value = "2025-08-15";
+            document.getElementById('recria1ExitDate').value = "2025-11-15";
+            document.getElementById('gmdRecria1').value = "0.550";
+            document.getElementById('dailyCostRecria1').value = "5.50";
+
+            // Etapa 2: Recria
+            document.getElementById('recria2ExitDate').value = "2026-06-15";
+            document.getElementById('gmdRecria2').value = "0.600";
+            document.getElementById('monthlyCostRecria2').value = "80.00";
+
+            // Confinamento
+            document.getElementById('diasConfinamento').value = "100";
+            document.getElementById('gmdConfinamento').value = "1.800";
+            document.getElementById('dailyCostConfinamento').value = "16.50";
+            
+            // Venda
+            document.getElementById('rendimentoCarcaca').value = "56.50";
+            document.getElementById('arrobaPriceGordo').value = "320.00";
+            
+            updateAutomaticDates();
+            showAlert('Sucesso', 'Cenário de exemplo carregado. Clique em "Calcular Simulação" para ver os resultados.', 'success');
+        };
+
+        const updateAutomaticDates = () => {
+            const recria1ExitVal = document.getElementById('recria1ExitDate').value;
+            if (recria1ExitVal) {
+                const recria1ExitDate = new Date(recria1ExitVal + "T12:00:00Z");
+                const recria2EntryDate = new Date(recria1ExitDate);
+                recria2EntryDate.setUTCDate(recria2EntryDate.getUTCDate() + 1);
+                document.getElementById('recria2EntryDateDisplay').textContent = recria2EntryDate.toLocaleDateString('pt-BR', {timeZone: 'UTC'});
+                const recria2ExitVal = document.getElementById('recria2ExitDate').value;
+                if(recria2ExitVal) {
+                    const recria2ExitDate = new Date(recria2ExitVal + "T12:00:00Z");
+                    const confEntryDate = new Date(recria2ExitDate);
+                    confEntryDate.setUTCDate(confEntryDate.getUTCDate() + 1);
+                    document.getElementById('confinementEntryDateDisplay').textContent = confEntryDate.toLocaleDateString('pt-BR', {timeZone: 'UTC'});
+                } else {
+                    document.getElementById('confinementEntryDateDisplay').textContent = 'Automática';
+                }
+            } else {
+                 document.getElementById('recria2EntryDateDisplay').textContent = 'Automática';
+                 document.getElementById('confinementEntryDateDisplay').textContent = 'Automática';
+            }
+        };
+
+        const formatCurrency = (num) => `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const formatNumber = (num, digits = 2) => num.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+        const formatPercent = (num) => `${formatNumber(num, 2)}%`;
+
+        const showConfirmation = (title, message, onConfirm) => {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            document.getElementById('confirmBtn').onclick = () => { onConfirm(); document.getElementById('confirmModal').classList.add('hidden'); };
+            document.getElementById('confirmModal').classList.remove('hidden');
+        };
+
+        const showAlert = (title, message, type = 'info') => {
+            const icons = { success: 'fa-check-circle text-green-500', error: 'fa-times-circle text-red-500', warning: 'fa-exclamation-triangle text-yellow-500', info: 'fa-info-circle text-blue-500' };
+            document.getElementById('alertIcon').innerHTML = `<i class="fas ${icons[type]}"></i>`;
+            document.getElementById('alertTitle').textContent = title;
+            document.getElementById('alertMessage').innerHTML = message;
+            document.getElementById('alertModal').classList.remove('hidden');
+        };
+        
+        // Expor métodos públicos
+        return { init };
+    })();
+
+    document.addEventListener('DOMContentLoaded', App.init);
+    </script>
+</body>
+</html>

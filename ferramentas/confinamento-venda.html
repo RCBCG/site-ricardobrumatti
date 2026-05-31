@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<!--
+    Simulador de Ponto Ótimo de Venda em Confinamento (v7.4 - Theme Fix)
+    Baseado no modelo de Análise Marginal (RMg = CMg)
+    
+    Desenvolvido para: Prof. Ricardo C. Brumatti - FAMEZ/UFMS
+-->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador gratuito: Simulador: Ponto Ótimo de Venda | Prof. Ricardo Brumatti. Desenvolvido pelo Prof. Ricardo C. Brumatti (FAMEZ/UFMS) para análise econômica e pecuária de corte.">
+    <title>Simulador: Ponto Ótimo de Venda | Prof. Ricardo Brumatti</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+
+    <!-- CDNs -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration (Image 2 Colors) -->
+    <script id="tailwind-theme-config">
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            emerald: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c', // Overridden to darker deep teal
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            blue: {
+                                50: '#f8fafc',
+                                100: '#f1f5f9',
+                                200: '#e2e8f0',
+                                300: '#cbd5e1',
+                                400: '#94a3b8',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            teal: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            green: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+    
+    <script>
+        /* Removed local config to use global brand theme config */
+    </script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+
+    <style>
+        /* CSS Variables */
+        :root { --primary: #1e3a8a; --secondary: #3b82f6; --success: #10b981; --danger: #ef4444; --bg-page: #f8fafc; --bg-card: #ffffff; --text-main: #1e293b; --text-muted: #64748b; }
+        .dark { --primary: #60a5fa; --secondary: #3b82f6; --bg-page: #0f172a; --bg-card: #1e293b; --text-main: #f1f5f9; --text-muted: #94a3b8; }
+        
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-page); color: var(--text-main); transition: background-color 0.3s, color 0.3s; }
+        
+        .card { background-color: var(--bg-card); border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); }
+        .dark .card { border-color: rgba(255,255,255,0.05); }
+        
+        .btn-primary { background-color: #1e3a8a; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+        .btn-primary:hover { background-color: #1e40af; } .dark .btn-primary { background-color: #3b82f6; color: #0f172a; }
+        
+        .btn-outline { background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+        .btn-outline:hover { border-color: var(--secondary); color: var(--secondary); background: rgba(59,130,246,0.05); }
+        
+        /* Botões Header */
+        .btn-header { background: white; border: 1px solid #e2e8f0; color: #475569; padding: 0.5rem; border-radius: 0.5rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; }
+        .btn-header:hover { border-color: #cbd5e1; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .dark .btn-header { background: #1e293b; border-color: #334155; color: #94a3b8; }
+        .dark .btn-header:hover { border-color: #475569; color: #f1f5f9; }
+
+        .input-field { width: 100%; padding: 0.6rem; border-radius: 0.375rem; border: 1px solid #cbd5e1; background: var(--bg-card); color: var(--text-main); text-align: right; }
+        .input-field:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); } .dark .input-field { border-color: #475569; }
+        
+        /* Tabelas e Listas */
+        .heatmap-table { width: 100%; border-collapse: collapse; font-size: 0.80rem; }
+        .heatmap-table th, .heatmap-table td { padding: 8px; text-align: center; border: 1px solid #e2e8f0; } .dark .heatmap-table th, .dark .heatmap-table td { border-color: #334155; }
+        .heatmap-cell { font-weight: bold; color: #fff; border-radius: 4px; font-size: 0.85rem; }
+        
+        .table-container { max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 0.5rem; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .data-table th { position: sticky; top: 0; background: var(--bg-page); z-index: 10; padding: 10px; text-align: right; }
+        .data-table td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; text-align: right; } .dark .data-table td { border-color: #334155; }
+        .data-table tr:hover { background-color: rgba(59, 130, 246, 0.05); }
+        
+        .detail-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9; } .detail-list li:last-child { border-bottom: none; } .dark .detail-list li { border-bottom-color: #334155; }
+        .detail-label { color: var(--text-muted); font-size: 0.875rem; } .detail-value { font-weight: 600; color: var(--text-main); font-size: 0.875rem; }
+        
+        /* PDF Styles */
+        .pdf-page-container { position: absolute; top: -9999px; left: -9999px; width: 794px; min-height: 1123px; background: white; color: black; font-family: 'Inter', sans-serif; padding: 30px 40px; box-sizing: border-box; }
+        .pdf-header { border-bottom: 2px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .pdf-section-title { font-size: 13px; font-weight: bold; color: #1e3a8a; border-bottom: 1px solid #eee; margin-top: 15px; margin-bottom: 8px; padding-bottom: 4px; text-transform: uppercase; }
+        .pdf-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; } .pdf-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .pdf-card { background: #f8fafc; border: 1px solid #ddd; padding: 10px; border-radius: 6px; }
+        .pdf-label { font-size: 9px; color: #64748b; text-transform: uppercase; font-weight: bold; } .pdf-value { font-size: 13px; font-weight: bold; color: #1e293b; } .pdf-kpi-val { font-size: 20px; font-weight: 800; color: #1e3a8a; }
+        .pdf-list li { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #eee; font-size: 10px; }
+        .pdf-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 5px; }
+        .pdf-table th { background: #1e3a8a; color: white; text-align: center; padding: 6px; font-weight: bold; text-transform: uppercase; }
+        .pdf-table td { text-align: center; padding: 4px; border: 1px solid #e2e8f0; color: #334155; }
+        .pdf-row-even { background-color: #f1f5f9; } .pdf-highlight { background-color: #dcfce7 !important; color: #166534 !important; font-weight: bold; border: 2px solid #22c55e !important; }
+        
+        @media print { .no-print { display: none !important; } body { background: white; color: black; } }
+    </style>
+
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+<body class="antialiased">
+    <script>
+        if (window.self !== window.top) {
+            document.write('<style>.back-btn-container { display: none !important; }</style>');
+        }
+    </script>
+    <div class="back-btn-container no-print" style="padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; width: 100%;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#0d9488'" onmouseout="this.style.color='#64748b'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar ao site
+        </a>
+        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">ricardobrumatti.pro.br</span>
+    </div>
+
+
+    <!-- CABEÇALHO -->
+    <header class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-start gap-4">
+                <div class="pt-1"><i class="fa-solid fa-chart-line text-5xl text-blue-900 dark:text-blue-400"></i></div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-blue-900 dark:text-white leading-tight">Simulador de Ponto Ótimo de Venda</h1>
+                    <p class="text-base text-slate-700 dark:text-slate-300 font-medium mt-1">Baseado no modelo de Análise Marginal (RMg = CMg)</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 italic mt-1">Aplicação desenvolvida por Prof. Ricardo C. Brumatti - FAMEZ/UFMS - Campo Grande, MS, uso gratuito, sem fins comerciais.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 self-end md:self-center">
+                <button id="themeToggle" class="btn-header" title="Alternar Tema"><i class="fa-solid fa-moon"></i></button>
+                <button id="helpBtn" class="btn-header" title="Sobre"><i class="fa-solid fa-question"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- Ações -->
+        <div class="flex flex-wrap gap-3 mb-6 no-print items-center justify-between">
+            <div class="flex gap-3">
+                <button onclick="app.calculate()" class="btn-primary text-lg shadow-blue-900/20"><i class="fa-solid fa-calculator"></i> Calcular Desempenho</button>
+                <button onclick="app.loadExample()" class="btn-outline text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300"><i class="fa-solid fa-wand-magic-sparkles"></i> Carregar Exemplo</button>
+            </div>
+            <div class="flex gap-2">
+                 <button onclick="app.clearForm()" class="btn-outline text-red-500 border-red-200 hover:border-red-400 hover:text-red-600" title="Limpar Tudo"><i class="fa-solid fa-trash"></i></button>
+                <button onclick="app.exportPDF()" id="btnPdf" class="btn-outline" title="Gerar PDF"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                <button onclick="app.exportExcel()" id="btnExcel" class="btn-outline disabled:opacity-50" disabled title="Excel"><i class="fa-solid fa-file-excel"></i> Excel</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+            <!-- Premissas -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="card p-5 border-t-4 border-blue-800">
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800 dark:text-white"><i class="fa-solid fa-sliders text-blue-600"></i> Premissas do Projeto</h2>
+                    <div class="space-y-3 mb-6">
+                        <h3 class="text-sm uppercase tracking-wide font-bold text-slate-400 border-b pb-1">Zootécnico</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Peso Vivo Inicial (kg)</label><input type="text" id="pvi" class="input-field" placeholder="380,00"></div>
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">RC Inicial (%)</label><input type="text" id="rcInicial" class="input-field" placeholder="50,00"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">GPD Inicial (kg/dia)</label><input type="text" id="gpdInicial" class="input-field" placeholder="1,800"></div>
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Redução GPD (kg/dia)</label><input type="text" id="reducaoGPD" class="input-field text-red-500" placeholder="0,003"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">CMS Inicial (kg/dia)</label><input type="text" id="cmsInicial" class="input-field" placeholder="10,00"></div>
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Aumento CMS (kg/dia)</label><input type="text" id="aumentoCMS" class="input-field text-green-500" placeholder="0,025"></div>
+                        </div>
+                        <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">RC Final Esperado (%)</label><input type="text" id="rcFinal" class="input-field" placeholder="56,00"></div>
+                    </div>
+                    <div class="space-y-3">
+                        <h3 class="text-sm uppercase tracking-wide font-bold text-slate-400 border-b pb-1">Econômico</h3>
+                        <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Preço da Arroba (R$/@)</label><div class="relative"><span class="absolute left-3 top-2 text-slate-400 text-sm">R$</span><input type="text" id="precoArroba" class="input-field pl-8 font-semibold text-blue-700 dark:text-blue-400" placeholder="300,00"></div></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Custo Dieta (R$/kg MS)</label><input type="text" id="custoDieta" class="input-field font-semibold" placeholder="1,30"></div>
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Custo Op. (R$/dia)</label><input type="text" id="custoOperacional" class="input-field" placeholder="1,50"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card p-4">
+                    <details>
+                        <summary class="font-semibold cursor-pointer text-sm text-slate-600 dark:text-slate-300">Informações do Relatório</summary>
+                        <div class="mt-3 space-y-2">
+                            <input type="text" id="fazenda" class="input-field text-sm text-left" placeholder="Nome da Fazenda">
+                            <input type="text" id="tecnico" class="input-field text-sm text-left" placeholder="Técnico Responsável">
+                            <input type="date" id="dataSimulacao" class="input-field text-sm text-left">
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Resultados -->
+            <div class="lg:col-span-8 space-y-6 hidden" id="resultsArea">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="card p-4 bg-gradient-to-br from-blue-900 to-blue-800 text-white shadow-lg">
+                        <div class="flex justify-between items-start">
+                            <div><p class="text-blue-200 text-xs uppercase font-bold tracking-wider">Ponto de Venda</p><h3 class="text-4xl font-extrabold mt-1" id="resDiaOtimo">--</h3><p class="text-sm text-blue-200 mt-1">dias de cocho</p></div>
+                            <i class="fa-regular fa-calendar-check text-3xl text-blue-400 opacity-50"></i>
+                        </div>
+                    </div>
+                    <div class="card p-4 bg-white dark:bg-slate-800 border-l-4 border-green-500">
+                         <div class="flex justify-between items-start">
+                            <div><p class="text-slate-500 dark:text-slate-400 text-xs uppercase font-bold">Lucro Máximo</p><h3 class="text-3xl font-bold text-green-600 mt-1" id="resLucro">R$ --</h3><p class="text-sm text-slate-400 mt-1">por cabeça</p></div>
+                            <i class="fa-solid fa-sack-dollar text-2xl text-green-200"></i>
+                        </div>
+                    </div>
+                    <div class="card p-4 bg-white dark:bg-slate-800 border-l-4 border-slate-400">
+                        <div class="flex justify-between items-start">
+                           <div><p class="text-slate-500 dark:text-slate-400 text-xs uppercase font-bold">Peso Final</p><h3 class="text-3xl font-bold text-slate-700 dark:text-slate-200 mt-1" id="resPeso">-- kg</h3><p class="text-sm text-slate-400 mt-1" id="resArrobas">-- @</p></div>
+                           <i class="fa-solid fa-cow text-2xl text-slate-200"></i>
+                       </div>
+                   </div>
+                </div>
+
+                <div class="card min-h-[500px] flex flex-col">
+                    <div class="flex border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
+                        <button class="tab-btn active px-6 py-3 text-sm font-medium border-b-2 border-blue-600 text-blue-600 dark:text-blue-400" onclick="app.switchTab('marginal')">Marginal</button>
+                        <button class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" onclick="app.switchTab('financeiro')">Detalhamento</button>
+                        <button class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" onclick="app.switchTab('tornado')">Tornado</button>
+                        <button class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" onclick="app.switchTab('sensibilidade')">Matriz</button>
+                        <button class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" onclick="app.switchTab('tabela')">Tabela</button>
+                    </div>
+                    
+                    <div class="p-4 flex-grow bg-white dark:bg-slate-800 rounded-b-lg">
+                        <div id="tab-marginal" class="tab-content h-96 w-full"><canvas id="chartMarginal"></canvas></div>
+                        
+                        <div id="tab-financeiro" class="tab-content hidden grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
+                            <div class="border-r border-slate-100 dark:border-slate-700 pr-4">
+                                <h4 class="font-bold text-blue-900 dark:text-blue-300 border-b mb-3 pb-1">Zootécnico</h4>
+                                <ul class="detail-list">
+                                    <li><span class="detail-label">Peso Inicial (kg):</span> <span class="detail-value" id="detPesoInicial">--</span></li>
+                                    <li><span class="detail-label">GPD Médio (kg):</span> <span class="detail-value" id="detGpdMedio">--</span></li>
+                                    <li><span class="detail-label">Ganho Total (kg):</span> <span class="detail-value" id="detGanhoTotal">--</span></li>
+                                    <li><span class="detail-label">CMS Médio (kg):</span> <span class="detail-value" id="detCmsMedio">--</span></li>
+                                    <li><span class="detail-label">Consumo Total (kg):</span> <span class="detail-value" id="detConsumoTotal">--</span></li>
+                                    <li><span class="detail-label">Conversão Alim.:</span> <span class="detail-value" id="detCA">--</span></li>
+                                    <li><span class="detail-label">Rendimento Carcaça:</span> <span class="detail-value" id="detRC">--</span></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-green-800 dark:text-green-400 border-b mb-3 pb-1">Econômico</h4>
+                                <ul class="detail-list">
+                                    <li><span class="detail-label">Carcaça Inicial (@):</span> <span class="detail-value" id="detCarcacaIni">--</span></li>
+                                    <li><span class="detail-label">Carcaça Final (@):</span> <span class="detail-value" id="detCarcacaFim">--</span></li>
+                                    <li><span class="detail-label">Arrobas Ganhas (@):</span> <span class="detail-value" id="detArrobasGanhas">--</span></li>
+                                    <li><span class="detail-label">Custo Total (@):</span> <span class="detail-value text-red-600" id="detCustoTotalArr">--</span></li>
+                                    <li><span class="detail-label">Custo Total (R$/cab):</span> <span class="detail-value text-red-600 font-bold" id="detCustoTotal">--</span></li>
+                                    <li><span class="detail-label">Receita Total (R$/cab):</span> <span class="detail-value text-green-600 font-bold" id="detReceita">--</span></li>
+                                    <li><span class="detail-label">Custo Dieta (@):</span> <span class="detail-value text-red-600" id="detCustoDietaArr">--</span></li>
+                                    <li><span class="detail-label">Custo Op. (@):</span> <span class="detail-value text-red-600" id="detCustoOpArr">--</span></li>
+                                    <li><span class="detail-label">Custo Médio Diária (R$):</span> <span class="detail-value text-red-600" id="detDiaria">--</span></li>
+                                    <li><span class="detail-label">Margem Operacional (%):</span> <span class="detail-value text-green-600 font-bold" id="detMargem">--</span></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="tab-tornado" class="tab-content hidden h-96 w-full">
+                            <h4 class="text-center font-bold mb-4 text-sm text-slate-600 dark:text-slate-300">Análise de Sensibilidade (Impacto no Lucro +/- 10%)</h4>
+                            <canvas id="chartTornado"></canvas>
+                            <p class="text-center text-xs text-slate-400 mt-2 italic">A barra indica a variação do lucro ao alterar cada premissa individualmente em 10% para mais ou para menos.</p>
+                        </div>
+
+                        <div id="tab-sensibilidade" class="tab-content hidden">
+                            <h4 class="text-center font-bold mb-4 text-sm text-slate-600 dark:text-slate-300">Matriz de Lucro (R$/cab) - Preço x Dieta</h4>
+                            <div class="overflow-x-auto flex justify-center"><div id="heatmapContainer"></div></div>
+                        </div>
+                         <div id="tab-tabela" class="tab-content hidden">
+                             <div class="table-container">
+                                 <table class="data-table"><thead><tr><th>Dia</th><th>Peso</th><th>GPD</th><th>CMS</th><th>RMg</th><th>CMg</th><th>LMg</th><th>L. Acum.</th></tr></thead><tbody id="dailyTableBody"></tbody></table>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="text-center text-xs text-slate-400 mt-10 pb-4 no-print"><p>© <span id="year">2025</span> - Projetos Agropecuários - FAMEZ/UFMS.</p></footer>
+    </main>
+
+    <div id="modalHelp" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[60] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-lg max-w-lg w-full p-6 shadow-2xl">
+            <h3 class="text-xl font-bold text-blue-900 dark:text-white mb-4">Como Funciona?</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-300">O simulador busca o dia onde o Lucro Acumulado é máximo (RMg = CMg).</p>
+            <button onclick="document.getElementById('modalHelp').classList.add('hidden')" class="mt-6 w-full btn-primary justify-center">Entendi</button>
+        </div>
+    </div>
+
+    <script>
+        const app = {
+            state: { chart: null, tornadoChart: null, simulationData: null, inputs: {} },
+            constants: { ARROBA_FACTOR: 15, MAX_DAYS: 200 },
+            init() {
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+                
+                // --- FIX TEMA: Redesenho forçado ---
+                document.getElementById('themeToggle').addEventListener('click', () => {
+                    document.documentElement.classList.toggle('dark');
+                    localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                    if(app.state.simulationData) { 
+                        // Força atualização dos Gráficos (Canvas) e Matriz (HTML String) para novas cores
+                        app.renderCharts(); 
+                        app.renderTornado(app.state.simulationData.inputs);
+                        app.generateHeatmap(app.state.simulationData.inputs); 
+                    }
+                });
+                
+                document.getElementById('helpBtn').addEventListener('click', () => document.getElementById('modalHelp').classList.remove('hidden'));
+                document.getElementById('year').textContent = new Date().getFullYear();
+                document.getElementById('dataSimulacao').valueAsDate = new Date();
+                app.loadFromStorage();
+            },
+            utils: {
+                parseBr: (id) => {
+                    let val = document.getElementById(id).value; if(!val) return 0;
+                    return val.includes(',') ? parseFloat(val.replace(/\./g, '').replace(',', '.')) : parseFloat(val);
+                },
+                formatBr: (num, decimals = 2) => isNaN(num) ? "0,00" : num.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }),
+                formatMoney: (num) => isNaN(num) ? "R$ 0,00" : num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+            },
+            getInputs() {
+                return {
+                    pvi: app.utils.parseBr('pvi'), rcInicial: app.utils.parseBr('rcInicial') / 100,
+                    gpdInicial: app.utils.parseBr('gpdInicial'), reducaoGPD: app.utils.parseBr('reducaoGPD'),
+                    cmsInicial: app.utils.parseBr('cmsInicial'), aumentoCMS: app.utils.parseBr('aumentoCMS'),
+                    rcFinal: app.utils.parseBr('rcFinal') / 100, precoArroba: app.utils.parseBr('precoArroba'),
+                    custoDieta: app.utils.parseBr('custoDieta'), custoOperacional: app.utils.parseBr('custoOperacional'),
+                    fazenda: document.getElementById('fazenda').value, tecnico: document.getElementById('tecnico').value,
+                    dataSim: document.getElementById('dataSimulacao').value
+                };
+            },
+            setInputs(data) {
+                const sv = (id, v, d=2) => document.getElementById(id).value = app.utils.formatBr(v, d);
+                sv('pvi', data.pvi); sv('rcInicial', data.rcInicial*100); sv('gpdInicial', data.gpdInicial, 3);
+                sv('reducaoGPD', data.reducaoGPD, 3); sv('cmsInicial', data.cmsInicial); sv('aumentoCMS', data.aumentoCMS, 3);
+                sv('rcFinal', data.rcFinal*100); sv('precoArroba', data.precoArroba);
+                let c = data.custoDieta; if(!c && data.custoDietaDiario) c = data.custoDietaDiario/data.cmsInicial;
+                sv('custoDieta', c||1.30); sv('custoOperacional', data.custoOperacional);
+                if(data.fazenda) document.getElementById('fazenda').value = data.fazenda;
+                if(data.tecnico) document.getElementById('tecnico').value = data.tecnico;
+            },
+            saveToStorage() { localStorage.setItem('simulador_bovino_v6', JSON.stringify({inputs: app.getInputs()})); },
+            loadFromStorage() { const s = localStorage.getItem('simulador_bovino_v6'); if(s) app.setInputs(JSON.parse(s).inputs); },
+            loadExample() {
+                app.setInputs({
+                    pvi: 380, rcInicial: 0.50, gpdInicial: 1.800, reducaoGPD: 0.003, cmsInicial: 10.0,
+                    aumentoCMS: 0.025, rcFinal: 0.56, precoArroba: 300.00, custoDieta: 1.30, custoOperacional: 1.50,
+                    fazenda: "Fazenda Modelo FAMEZ", tecnico: "Prof. Brumatti"
+                });
+                setTimeout(() => app.calculate(), 100);
+            },
+            clearForm() {
+                document.querySelectorAll('input').forEach(i => i.value = '');
+                document.getElementById('resultsArea').classList.add('hidden');
+                document.getElementById('btnExcel').disabled = true;
+                localStorage.removeItem('simulador_bovino_v6');
+            },
+            runSimulation(inputs) {
+                let results = [], w = inputs.pvi, gpd = inputs.gpdInicial, cms = inputs.cmsInicial, acc = 0;
+                for (let day = 1; day <= app.constants.MAX_DAYS; day++) {
+                    let dGpd = Math.max(0, gpd), dCms = Math.max(0, cms);
+                    let cmg = (dCms * inputs.custoDieta) + inputs.custoOperacional;
+                    let rmg = ((dGpd * inputs.rcFinal) / app.constants.ARROBA_FACTOR) * inputs.precoArroba;
+                    acc += (rmg - cmg);
+                    results.push({ day, weightEnd: w + dGpd, gpd: dGpd, cms: dCms, cmg, rmg, lmg: rmg - cmg, accumulatedProfit: acc });
+                    w += dGpd; gpd -= inputs.reducaoGPD; cms += inputs.aumentoCMS; if(gpd <= 0) break;
+                }
+                return results;
+            },
+            analyzeResults(daily, inputs) {
+                const pos = daily.filter(d => d.lmg >= -0.01);
+                let opt = pos.length > 0 ? pos[pos.length - 1].day - 1 : 0;
+                if(daily[0].lmg < 0) opt = 0;
+                const d = daily[opt];
+                const subset = daily.slice(0, d.day);
+                const tGain = d.weightEnd - inputs.pvi;
+                const tDietCost = subset.reduce((a,c)=>a+(c.cms*inputs.custoDieta),0);
+                const tOpCost = d.day * inputs.custoOperacional;
+                const tCost = tDietCost + tOpCost;
+                const fArr = (d.weightEnd * inputs.rcFinal)/15, iArr = (inputs.pvi*inputs.rcInicial)/15;
+                const gArr = fArr - iArr;
+                const rev = gArr * inputs.precoArroba;
+                return {
+                    days: d.day, finalWeight: d.weightEnd, initialArrobas: iArr, finalArrobas: fArr, gainedArrobas: gArr,
+                    profit: rev - tCost, revenue: rev, totalCost: tCost,
+                    costDietArroba: gArr>0?tDietCost/gArr:0, costOpArroba: gArr>0?tOpCost/gArr:0, costTotalArroba: gArr>0?tCost/gArr:0,
+                    avgGPD: d.day>0?tGain/d.day:0, avgCMS: d.day>0?subset.reduce((a,c)=>a+c.cms,0)/d.day:0, feedConversion: tGain>0?subset.reduce((a,c)=>a+c.cms,0)/tGain:0
+                };
+            },
+            calculate() {
+                try {
+                    const inp = app.getInputs();
+                    if(inp.pvi <= 0) { alert("Preencha valores."); return; }
+                    app.saveToStorage();
+                    const daily = app.runSimulation(inp);
+                    const res = app.analyzeResults(daily, inp);
+                    app.state.simulationData = { dailyData: daily, results: res, inputs: inp };
+                    app.updateUI(); app.generateHeatmap(inp); app.renderCharts(); app.renderTornado(inp); app.renderTable(daily);
+                    document.getElementById('resultsArea').classList.remove('hidden');
+                    document.getElementById('btnExcel').disabled = false;
+                    document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth' });
+                } catch(e) { console.error(e); alert("Erro ao calcular."); }
+            },
+            updateUI() {
+                const r = app.state.simulationData.results, f = app.utils.formatBr, fm = app.utils.formatMoney;
+                const inp = app.state.simulationData.inputs;
+                document.getElementById('resDiaOtimo').innerText = r.days; document.getElementById('resLucro').innerText = fm(r.profit);
+                document.getElementById('resPeso').innerText = f(r.finalWeight, 1) + " kg"; document.getElementById('resArrobas').innerText = f(r.finalArrobas, 1) + " @";
+                document.getElementById('detPesoInicial').innerText = f(inp.pvi, 1) + " kg";
+                document.getElementById('detGpdMedio').innerText = f(r.avgGPD, 3) + " kg/dia";
+                document.getElementById('detGanhoTotal').innerText = f(r.finalWeight - inp.pvi, 1) + " kg";
+                document.getElementById('detCmsMedio').innerText = f(r.avgCMS, 2) + " kg";
+                document.getElementById('detConsumoTotal').innerText = f(r.avgCMS * r.days, 1) + " kg";
+                document.getElementById('detCA').innerText = f(r.feedConversion, 2);
+                document.getElementById('detRC').innerText = f(inp.rcFinal * 100, 1) + "%";
+                document.getElementById('detCarcacaIni').innerText = f(r.initialArrobas, 2) + " @";
+                document.getElementById('detCarcacaFim').innerText = f(r.finalArrobas, 2) + " @";
+                document.getElementById('detArrobasGanhas').innerText = f(r.gainedArrobas, 2) + " @";
+                document.getElementById('detCustoTotalArr').innerText = fm(r.costTotalArroba);
+                document.getElementById('detCustoTotal').innerText = fm(r.totalCost);
+                document.getElementById('detReceita').innerText = fm(r.revenue);
+                document.getElementById('detCustoDietaArr').innerText = fm(r.costDietArroba);
+                document.getElementById('detCustoOpArr').innerText = fm(r.costOpArroba);
+                document.getElementById('detDiaria').innerText = fm(r.totalCost/r.days);
+                const m = r.revenue>0?(r.profit/r.revenue)*100:0;
+                document.getElementById('detMargem').innerText = f(m, 1) + "%";
+            },
+            renderTornado(baseInputs) {
+                const ctx = document.getElementById('chartTornado').getContext('2d');
+                const dark = document.documentElement.classList.contains('dark');
+                const cTx = dark ? '#94a3b8' : '#64748b';
+                const vars = [ { key: 'precoArroba', label: 'Preço @' }, { key: 'custoDieta', label: 'Custo Dieta' }, { key: 'pvi', label: 'Peso Inicial' }, { key: 'gpdInicial', label: 'GPD Inicial' }, { key: 'custoOperacional', label: 'Custo Op.' } ];
+                const baseRes = app.analyzeResults(app.runSimulation(baseInputs), baseInputs);
+                const baseProfit = baseRes.profit;
+                const dataPoints = [];
+                vars.forEach(v => {
+                    let inLow = {...baseInputs}; inLow[v.key] = baseInputs[v.key] * 0.9;
+                    let resLow = app.analyzeResults(app.runSimulation(inLow), inLow).profit;
+                    let inHigh = {...baseInputs}; inHigh[v.key] = baseInputs[v.key] * 1.1;
+                    let resHigh = app.analyzeResults(app.runSimulation(inHigh), inHigh).profit;
+                    let min = Math.min(resLow, resHigh), max = Math.max(resLow, resHigh), impact = max - min;
+                    dataPoints.push({ label: v.label, min, max, impact });
+                });
+                dataPoints.sort((a,b) => b.impact - a.impact);
+                const labels = dataPoints.map(d => d.label), floatData = dataPoints.map(d => [d.min, d.max]);
+                if(app.state.tornadoChart) app.state.tornadoChart.destroy();
+                const formatMoney = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                app.state.tornadoChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: labels, datasets: [{ label: 'Impacto no Lucro (+/- 10%)', data: floatData, backgroundColor: (ctx) => { const v = ctx.raw; if(v && v[0] >= 0 && v[1] >= 0) return '#4ade80'; if(v && v[0] < 0 && v[1] < 0) return '#f87171'; return '#60a5fa'; }, borderWidth: 1, barPercentage: 0.6 }] },
+                    options: { 
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
+                        plugins: { legend: { display: false }, annotation: { annotations: { line1: { type: 'line', xMin: baseProfit, xMax: baseProfit, borderColor: dark ? '#fff' : '#333', borderWidth: 2, borderDash: [5, 5], label: { content: 'Base: ' + formatMoney(baseProfit), display: true, position: 'end', backgroundColor: 'rgba(0,0,0,0.7)', color: 'white' } } } },
+                        tooltip: { callbacks: { label: function(context) { let raw = context.raw; return `${formatMoney(raw[0])} a ${formatMoney(raw[1])}`; } } }
+                    }, 
+                    scales: { x: { grid: { color: dark?'#334155':'#e2e8f0' }, ticks: { color: cTx, callback: v => formatMoney(v) } }, y: { grid: { display: false }, ticks: { color: cTx, font: { weight: 'bold' } } } } }
+                });
+            },
+            generateHeatmap(base) {
+                const steps=5, prices=[], diets=[];
+                for(let i=0;i<steps;i++) { const fac = 1 + (i-2)*0.05; prices.push(base.precoArroba * fac); diets.push(base.custoDieta * fac); }
+                prices.sort((a,b)=>b-a); diets.sort((a,b)=>a-b);
+                let h = '<table class="heatmap-table"><thead><tr><th class="bg-slate-100 dark:bg-slate-700">@ \\ Dieta (Kg)</th>';
+                diets.forEach(d => h+=`<th class="bg-slate-50 dark:bg-slate-800 text-xs">${app.utils.formatMoney(d)}</th>`);
+                h+='</tr></thead><tbody>';
+                prices.forEach(p => {
+                    h+=`<tr><th class="bg-slate-50 dark:bg-slate-800 text-xs font-bold text-blue-700 dark:text-blue-300">${app.utils.formatMoney(p)}</th>`;
+                    diets.forEach(d => {
+                        const ti = {...base, precoArroba: p, custoDieta: d};
+                        const tr = app.runSimulation(ti); const tres = app.analyzeResults(tr, ti);
+                        const prof = tres.profit;
+                        let bg = prof<0?'bg-red-500':(prof<100?'bg-green-300 text-slate-800':(prof<300?'bg-green-500':'bg-green-700'));
+                        h+=`<td class="${bg} heatmap-cell" title="${tres.days} dias">${app.utils.formatMoney(prof)}</td>`;
+                    });
+                    h+='</tr>';
+                });
+                document.getElementById('heatmapContainer').innerHTML = h+'</tbody></table>';
+            },
+            renderTable(data) {
+                const tb = document.getElementById('dailyTableBody'); tb.innerHTML = '';
+                const f = app.utils.formatBr; const fm = app.utils.formatMoney;
+                data.forEach(r => {
+                    const tr = document.createElement('tr');
+                    if(r.day === app.state.simulationData.results.days) tr.classList.add('bg-blue-100', 'dark:bg-blue-900', 'font-bold');
+                    if(r.lmg < 0 && r.day > app.state.simulationData.results.days) tr.classList.add('text-red-400', 'dark:text-red-400');
+                    tr.innerHTML = `<td>${r.day}</td><td>${f(r.weightEnd, 1)}</td><td>${f(r.gpd, 3)}</td><td>${f(r.cms, 2)}</td><td class="text-green-600">${fm(r.rmg)}</td><td class="text-red-500">${fm(r.cmg)}</td><td class="${r.lmg>=0?'text-blue-600':'text-red-600 font-bold'}">${fm(r.lmg)}</td><td>${fm(r.accumulatedProfit)}</td>`;
+                    tb.appendChild(tr);
+                });
+            },
+            switchTab(name) {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('border-blue-600', 'text-blue-600', 'dark:text-blue-400'); btn.classList.add('border-transparent', 'text-slate-500'); });
+                document.getElementById(`tab-${name}`).classList.remove('hidden');
+                const btns = document.querySelectorAll('.tab-btn');
+                let idx = 0; if(name==='financeiro') idx=1; if(name==='tornado') idx=2; if(name==='sensibilidade') idx=3; if(name==='tabela') idx=4;
+                btns[idx].classList.remove('border-transparent', 'text-slate-500'); btns[idx].classList.add('border-blue-600', 'text-blue-600', 'dark:text-blue-400');
+            },
+            renderCharts() {
+                const ctx = document.getElementById('chartMarginal').getContext('2d');
+                const data = app.state.simulationData.dailyData;
+                const limit = app.state.simulationData.results.days + 15;
+                const view = data.slice(0, Math.min(data.length, limit+10));
+                const dark = document.documentElement.classList.contains('dark');
+                const cTx = dark ? '#94a3b8' : '#64748b', cGr = dark ? '#334155' : '#e2e8f0';
+                if(app.state.chart) app.state.chart.destroy();
+                app.state.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: view.map(d=>d.day),
+                        datasets: [
+                            { label: 'RMg', data: view.map(d=>d.rmg), borderColor: '#10b981', borderWidth: 2, tension: 0.4, yAxisID: 'y' },
+                            { label: 'CMg', data: view.map(d=>d.cmg), borderColor: '#ef4444', borderWidth: 2, tension: 0.4, yAxisID: 'y' },
+                            { label: 'Lucro Acum.', data: view.map(d=>d.accumulatedProfit), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 2, fill: true, yAxisID: 'y1', pointRadius: 0 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                        plugins: { legend: { labels: { color: cTx } }, annotation: { annotations: { line1: { type: 'line', xMin: app.state.simulationData.results.days - 1, xMax: app.state.simulationData.results.days - 1, borderColor: dark?'#fff':'#1e293b', borderWidth: 2, borderDash: [5, 5], label: { content: 'Ponto Ótimo', display: true, position: 'start', backgroundColor: dark?'#334155':'#1e293b', color: 'white' } } } } },
+                        scales: { x: { grid: { color: cGr }, ticks: { color: cTx } }, y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Marginal (R$)', color: cTx }, grid: { color: cGr }, ticks: { color: cTx } }, y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Lucro (R$)', color: '#3b82f6' }, ticks: { color: '#3b82f6' } } }
+                    }
+                });
+            },
+            exportExcel() {
+                if(!app.state.simulationData) return;
+                const wb = XLSX.utils.book_new();
+                const inputs = app.state.simulationData.inputs;
+                const wsData = app.state.simulationData.dailyData.map(row => ({ "Dia": row.day, "Peso Vivo (kg)": row.weightEnd, "GPD (kg)": row.gpd, "CMS (kg)": row.cms, "Custo Dieta (R$)": row.cms * inputs.custoDieta, "Custo Op. (R$)": inputs.custoOperacional, "CMg (R$)": row.cmg, "RMg (R$)": row.rmg, "Lucro Marginal (R$)": row.lmg, "Lucro Acumulado (R$)": row.accumulatedProfit }));
+                const ws = XLSX.utils.json_to_sheet(wsData);
+                XLSX.utils.book_append_sheet(wb, ws, "Evolução Diária");
+                XLSX.writeFile(wb, `Simulacao_Ponto_Otimo_${inputs.fazenda || 'Resultados'}.xlsx`);
+            },
+            exportPDF() {
+                if(!app.state.simulationData) { alert("Calcule primeiro!"); return; }
+                const btn = document.getElementById('btnPdf'); const org = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gerando...'; btn.disabled = true;
+                const c1 = document.createElement('div'); c1.className = 'pdf-page-container'; document.body.appendChild(c1);
+                const c2 = document.createElement('div'); c2.className = 'pdf-page-container'; document.body.appendChild(c2);
+                const data = app.state.simulationData, r = data.results, f = app.utils.formatBr, fm = app.utils.formatMoney;
+                const inp = data.inputs;
+                const dateStr = inp.dataSim ? new Date(inp.dataSim).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
+                const margem = r.revenue > 0 ? (r.profit / r.revenue) * 100 : 0;
+                c1.innerHTML = `
+                    <div class="pdf-header"><div><h1 style="font-size: 18px; font-weight: bold; color: #1e3a8a;">RELATÓRIO DE SIMULAÇÃO</h1><p style="font-size: 12px; color: #666;">Página 1/2</p></div><div style="text-align: right; font-size: 10px;"><p><strong>Fazenda:</strong> ${inp.fazenda || '--'}</p><p><strong>Data:</strong> ${dateStr}</p></div></div>
+                    <div class="pdf-section-title">1. Premissas</div>
+                    <div class="pdf-grid-3">
+                        <div class="pdf-card"><div class="pdf-label">Peso Inicial</div><div class="pdf-value">${f(inp.pvi, 1)} kg</div></div>
+                        <div class="pdf-card"><div class="pdf-label">Preço @</div><div class="pdf-value" style="color:#1e3a8a">${fm(inp.precoArroba)}</div></div>
+                        <div class="pdf-card"><div class="pdf-label">Custo Dieta</div><div class="pdf-value">${fm(inp.custoDieta)} /kg MS</div></div>
+                    </div>
+                    <div class="pdf-section-title">2. Resultados Principais</div>
+                    <div class="pdf-grid-3">
+                        <div class="pdf-card" style="background:#eff6ff; border-color:#bfdbfe;"><div class="pdf-label">Dia Ótimo</div><div class="pdf-kpi-val">${r.days}</div><div class="pdf-label">dias</div></div>
+                        <div class="pdf-card" style="background:#f0fdf4; border-color:#bbf7d0;"><div class="pdf-label">Lucro Máx.</div><div class="pdf-kpi-val" style="color:#15803d; font-size:20px">${fm(r.profit)}</div></div>
+                        <div class="pdf-card"><div class="pdf-label">Peso Final</div><div class="pdf-kpi-val" style="color:#334155; font-size:20px">${f(r.finalWeight, 1)} kg</div></div>
+                    </div>
+                    <div class="pdf-grid-2" style="margin-top:10px">
+                        <div><div class="pdf-section-title" style="margin-top:0">3. Zootécnico</div><ul class="pdf-list">
+                            <li><span>Peso Inicial:</span> <strong>${f(inp.pvi, 1)} kg</strong></li><li><span>GPD Médio:</span> <strong>${f(r.avgGPD, 3)} kg/d</strong></li>
+                            <li><span>Ganho Total:</span> <strong>${f(r.finalWeight - inp.pvi, 1)} kg</strong></li><li><span>CMS Médio:</span> <strong>${f(r.avgCMS, 2)} kg</strong></li>
+                            <li><span>Consumo Total:</span> <strong>${f(r.avgCMS * r.days, 1)} kg</strong></li><li><span>Conversão:</span> <strong>${f(r.feedConversion, 2)}</strong></li>
+                            <li><span>Rend. Carcaça:</span> <strong>${f(inp.rcFinal * 100, 1)} %</strong></li>
+                        </ul></div>
+                        <div><div class="pdf-section-title" style="margin-top:0">4. Econômico</div><ul class="pdf-list">
+                            <li><span>Carcaça Inicial:</span> <strong>${f(r.initialArrobas, 2)} @</strong></li><li><span>Carcaça Final:</span> <strong>${f(r.finalArrobas, 2)} @</strong></li>
+                            <li><span>Arrobas Ganhas:</span> <strong>${f(r.gainedArrobas, 2)} @</strong></li>
+                            <li><span>Custo Total (@):</span> <strong style="color:#dc2626">${fm(r.costTotalArroba)}</strong></li>
+                            <li><span>Custo Total:</span> <strong style="color:#dc2626">${fm(r.totalCost)}</strong></li>
+                            <li><span>Receita Total:</span> <strong style="color:#16a34a">${fm(r.revenue)}</strong></li>
+                            <li><span>Margem Op.:</span> <strong style="color:#16a34a">${f(margem, 1)} %</strong></li>
+                        </ul></div>
+                    </div>
+                    <div class="pdf-section-title">5. Gráfico Marginal</div>
+                    <div style="height: 180px; text-align:center;"><img src="${app.state.chart.toBase64Image()}" style="max-height: 100%; max-width: 100%;" /></div>
+                `;
+                let tableHtml = ''; let idx = 0;
+                data.dailyData.forEach(r => {
+                    const isKey = r.day===1 || r.day%15===0 || r.day===data.results.days || r.day===data.dailyData.length;
+                    if(isKey) {
+                        const isOptimal = r.day===data.results.days;
+                        let rowClass = isOptimal ? 'class="pdf-highlight"' : (idx%2===0 ? 'class="pdf-row-even"' : '');
+                        tableHtml += `<tr ${rowClass}><td>${r.day}</td><td>${f(r.weightEnd, 0)}</td><td>${fm(r.rmg)}</td><td>${fm(r.cmg)}</td><td>${fm(r.accumulatedProfit)}</td></tr>`;
+                        idx++;
+                    }
+                });
+                c2.innerHTML = `
+                    <div class="pdf-header"><div><h1 style="font-size: 18px; font-weight: bold; color: #1e3a8a;">CONTINUAÇÃO</h1><p style="font-size: 12px; color: #666;">Página 2/2</p></div><div style="text-align: right; font-size: 10px;"><p><strong>Técnico:</strong> ${inp.tecnico || '--'}</p></div></div>
+                    <div class="pdf-grid-2">
+                        <div><div class="pdf-section-title">6. Sensibilidade (Tornado)</div><div style="height: 180px; text-align:center;"><img src="${app.state.tornadoChart.toBase64Image()}" style="max-height: 100%; max-width: 100%;" /></div></div>
+                        <div><div class="pdf-section-title">7. Matriz de Sensibilidade</div><div style="transform: scale(0.75); transform-origin: top left;">${document.getElementById('heatmapContainer').innerHTML}</div></div>
+                    </div>
+                    <div class="pdf-section-title" style="margin-top: 15px;">8. Evolução (Resumo)</div>
+                    <table class="pdf-table"><thead><tr><th>Dia</th><th>Peso (kg)</th><th>RMg (R$)</th><th>CMg (R$)</th><th>Lucro Acum. (R$)</th></tr></thead><tbody>${tableHtml}</tbody></table>
+                    <div style="margin-top: 40px; border-top: 1px solid #ccc; padding-top: 10px; text-align: center; font-size: 10px; color: #999;">Simulador Desenvolvido por Prof. Ricardo C. Brumatti - FAMEZ/UFMS</div>
+                `;
+                html2canvas(c1, {scale: 2}).then(cv1 => {
+                    const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+                    const w = pdf.internal.pageSize.getWidth();
+                    pdf.addImage(cv1.toDataURL('image/png'), 'PNG', 0, 0, w, (cv1.height * w) / cv1.width);
+                    pdf.addPage();
+                    html2canvas(c2, {scale: 2}).then(cv2 => {
+                        pdf.addImage(cv2.toDataURL('image/png'), 'PNG', 0, 0, w, (cv2.height * w) / cv2.width);
+                        pdf.save(`Relatorio_${inp.fazenda || 'Confinamento'}.pdf`);
+                        document.body.removeChild(c1); document.body.removeChild(c2);
+                        btn.innerHTML = org; btn.disabled = false;
+                    });
+                });
+            }
+        };
+        document.addEventListener('DOMContentLoaded', app.init);
+    </script>
+
+    <!-- Rodapé Acadêmico/Profissional -->
+    <footer class="no-print mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
+        <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color: #0d9488; text-decoration: none;">ricardobrumatti.pro.br</a> | &copy; 2026</p>
+    </footer>
+</body>
+</html>

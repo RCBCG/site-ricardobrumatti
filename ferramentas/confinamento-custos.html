@@ -1,0 +1,3130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador gratuito: Simulação Econômica de Confinamento. Desenvolvido pelo Prof. Ricardo C. Brumatti (FAMEZ/UFMS) para análise econômica e pecuária de corte.">
+    <title>Simulação Econômica de Confinamento</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <!-- CDNs -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration (Image 2 Colors) -->
+    <script id="tailwind-theme-config">
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            emerald: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c', // Overridden to darker deep teal
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            blue: {
+                                50: '#f8fafc',
+                                100: '#f1f5f9',
+                                200: '#e2e8f0',
+                                300: '#cbd5e1',
+                                400: '#94a3b8',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            teal: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            green: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <!-- Fontes -->
+    <link href="https://fonts.googleapis.com/css?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --light: #f8fafc;
+            --dark: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            color: #334155;
+        }
+
+        /* Animações */
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-focus {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .input-focus:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+            background-color: #ffffff;
+        }
+
+        .btn-hover {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Componentes */
+        .top-nav {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .indicator-card {
+            background-image: linear-gradient(to right, var(--secondary), var(--primary));
+            color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .indicator-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .indicator-card .label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .indicator-card .value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .secondary-indicator-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .secondary-indicator-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Acessibilidade */
+        .high-contrast {
+            background-color: #000 !important;
+            color: #fff !important;
+        }
+
+        .high-contrast .indicator-card,
+        .high-contrast .secondary-indicator-card {
+            background-color: #111 !important;
+            border: 1px solid #fff !important;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 5rem;
+        }
+        .modal.hidden {
+            display: none !important;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 0;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+            font-weight: normal;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Tabs */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Loading */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        /* Cor customizada para o ícone do CEPEA */
+        .cepea-color {
+            color: #d43939; /* Cor aproximada do logo do CEPEA */
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .top-nav {
+                flex-direction: column;
+                padding: 0.5rem 1rem;
+            }
+            .form-buttons-container {
+                flex-direction: column;
+            }
+            .form-buttons-container button {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* CORREÇÃO: Estilização da tabela CEPEA para alternar cores */
+        #cepea-widget-container table tr:nth-child(odd) {
+            background-color: #f3f4f6 !important; /* Cinza claro */
+        }
+        #cepea-widget-container table tr:nth-child(even) {
+            background-color: #ffffff !important; /* Branco */
+        }
+    </style>
+
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+
+<body class="min-h-screen">
+    <script>
+        if (window.self !== window.top) {
+            document.write('<style>.back-btn-container { display: none !important; }</style>');
+        }
+    </script>
+    <div class="back-btn-container no-print" style="padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; width: 100%;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#0d9488'" onmouseout="this.style.color='#64748b'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar ao site
+        </a>
+        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">ricardobrumatti.pro.br</span>
+    </div>
+
+    <!-- Barra de navegação superior -->
+    <nav class="top-nav">
+        <div class="logo font-bold text-xl">Simulação Econômica de Confinamento</div>
+        <div class="flex items-center space-x-4">
+            <button id="helpBtn" class="text-white hover:text-blue-200">
+                <i class="fas fa-question-circle"></i> Ajuda
+            </button>
+            <button id="themeToggle" class="text-white hover:text-blue-200">
+                <i class="fas fa-adjust"></i> Tema
+            </button>
+            <button id="contrastToggle" class="text-white hover:text-blue-200">
+                <i class="fas fa-eye"></i> Alto Contraste
+            </button>
+        </div>
+    </nav>
+
+    <!-- Container principal -->
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 fade-in">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8">
+            <!-- Cabeçalho -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Ferramenta de Planejamento Agropecuário</h1>
+                <p class="text-gray-600 italic">*Aplicação desenvolvida por Prof. Ricardo C. Brumatti - FAMEZ/UFMS - Campo Grande, MS, uso gratuito, sem fins comerciais.*</p>
+                <div class="flex justify-center mt-4 space-x-4">
+                    <button id="tourBtn" class="btn-hover px-4 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+                        <i class="fas fa-route mr-2"></i>Tour Guiado
+                    </button>
+                    <button id="exampleBtn" class="btn-hover px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-medium">
+                        <i class="fas fa-lightbulb mr-2"></i>Ver Exemplo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Abas -->
+            <div class="mb-6">
+                <div class="flex overflow-x-auto">
+                    <button class="tab-btn active px-4 py-2 bg-blue-600 text-white rounded-t-lg font-medium" data-tab="simulation">
+                        <i class="fas fa-calculator mr-2"></i>Simulação
+                    </button>
+                    <button class="tab-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-t-lg font-medium" data-tab="history">
+                        <i class="fas fa-history mr-2"></i>Histórico
+                    </button>
+                    <button class="tab-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-t-lg font-medium" data-tab="comparison">
+                        <i class="fas fa-balance-scale mr-2"></i>Comparação
+                    </button>
+                </div>
+            </div>
+
+            <!-- Conteúdo das abas -->
+            <div id="simulation" class="tab-content active">
+                <!-- Formulário de simulação -->
+                <div class="form-section mb-12">
+                    <h3 class="text-2xl font-bold text-center mb-6 text-gray-800">
+                        <i class="fas fa-edit mr-2"></i>Parâmetros de Simulação
+                    </h3>
+                    <form id="simulacaoForm" class="space-y-6">
+                        <!-- Seção de identificação -->
+                        <div class="bg-blue-50 p-4 rounded-lg mb-6">
+                            <h4 class="font-bold text-blue-800 mb-3 flex items-center">
+                                <i class="fas fa-tractor mr-2"></i>Identificação
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="fazenda" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Fazenda <span class="text-red-500">*</span>
+                                        <span class="tooltip ml-1">
+                                            <i class="fas fa-info-circle text-blue-500"></i>
+                                            <span class="tooltiptext">Nome da propriedade onde será realizado o confinamento</span>
+                                        </span>
+                                    </label>
+                                    <input type="text" id="fazenda" required class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none placeholder-gray-400" placeholder="Nome da Fazenda">
+                                </div>
+                                <div>
+                                    <label for="tecnico" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Técnico Responsável
+                                    </label>
+                                    <input type="text" id="tecnico" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none placeholder-gray-400" placeholder="Nome do Técnico">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
+                                <div>
+                                    <label for="localidade" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Localidade
+                                    </label>
+                                    <input type="text" id="localidade" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none placeholder-gray-400" placeholder="Cidade / Estado">
+                                </div>
+                                <div>
+                                    <label for="data-simulacao" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Data da Simulação
+                                    </label>
+                                    <input type="date" id="data-simulacao" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seção de características dos animais -->
+                        <div class="bg-green-50 p-4 rounded-lg mb-6">
+                            <h4 class="font-bold text-green-800 mb-3 flex items-center">
+                                <i class="fas fa-cow mr-2"></i>Características dos Animais
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                <div>
+                                    <label for="raca" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Raça <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="raca" required class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none">
+                                        <option value="">Selecione...</option>
+                                        <option value="Nelore">Nelore</option>
+                                        <option value="Angus">Angus</option>
+                                        <option value="Brangus">Brangus</option>
+                                        <option value="Outra">Outra</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="sexo" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Sexo <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="sexo" required class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none">
+                                        <option value="">Selecione...</option>
+                                        <option value="Machos Inteiros">Machos Inteiros</option>
+                                        <option value="Machos Castrados">Machos Castrados</option>
+                                        <option value="Fêmeas">Fêmeas</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="categoria-animal" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Categoria <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="categoria-animal" required class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none">
+                                        <option value="">Selecione...</option>
+                                        <option value="Bezerro">Bezerro</option>
+                                        <option value="Garrote">Garrote</option>
+                                        <option value="Novilho">Novilho</option>
+                                        <option value="Novilha">Novilha</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seção de parâmetros técnicos -->
+                        <div class="bg-purple-50 p-4 rounded-lg mb-6">
+                            <h4 class="font-bold text-purple-800 mb-3 flex items-center">
+                                <i class="fas fa-sliders-h mr-2"></i>Parâmetros Técnicos
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="dias" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Dias de Confinamento <span class="text-red-500">*</span>
+                                        <span class="tooltip ml-1">
+                                            <i class="fas fa-info-circle text-blue-500"></i>
+                                            <span class="tooltiptext">Período total que os animais ficarão confinados</span>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="dias" required min="1" value="100" step="1" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none placeholder-gray-400" placeholder="Ex: 100 dias">
+                                </div>
+                                <div>
+                                    <label for="peso" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Peso Inicial (kg) <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" id="peso" required step="0.01" value="370.00" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none placeholder-gray-400" placeholder="Ex: 370.00 kg">
+                                </div>
+                                <div>
+                                    <label for="gmd" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        GMD (kg/dia) <span class="text-red-500">*</span>
+                                        <span class="tooltip ml-1">
+                                            <i class="fas fa-info-circle text-blue-500"></i>
+                                            <span class="tooltiptext">Ganho Médio Diário esperado</span>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="gmd" required step="0.001" value="1.800" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none placeholder-gray-400" placeholder="Ex: 1.800 kg/dia">
+                                </div>
+                                <div>
+                                    <label for="rendimento" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Rendimento de Carcaça (%) <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" id="rendimento" required step="0.01" value="56.50" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none placeholder-gray-400" placeholder="Ex: 56.50%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seção de custos e receitas -->
+                        <div class="bg-yellow-50 p-4 rounded-lg mb-6">
+                            <h4 class="font-bold text-yellow-800 mb-3 flex items-center">
+                                <i class="fas fa-money-bill-wave mr-2"></i>Custos e Receitas
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                <div>
+                                    <label for="custo-aq" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Custo de Aquisição (R$) <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" id="custo-aq" required step="0.01" value="3850.00" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none placeholder-gray-400" placeholder="Ex: 3850.00">
+                                </div>
+                                <div>
+                                    <label for="custo-diaria" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Custo da Diária (R$) <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" id="custo-diaria" required step="0.01" value="16.50" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none placeholder-gray-400" placeholder="Ex: 16.50">
+                                </div>
+                                <div>
+                                    <label for="receita" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Valor Boi Gordo (R$/@) <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" id="receita" required step="0.01" value="310.00" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none placeholder-gray-400" placeholder="Ex: 310.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões de ação -->
+                        <div class="flex flex-wrap gap-4 form-buttons-container">
+                            <button type="submit" class="calculate-btn btn-hover flex-1 py-3 px-6 bg-blue-700 text-white rounded-lg font-bold text-lg shadow-md hover:bg-blue-800 tracking-wide">
+                                <i class="fas fa-calculator mr-2"></i>Calcular Desempenho
+                            </button>
+                            <button type="button" onclick="App.limparFormulario()" class="clear-btn btn-hover flex-1 py-3 px-6 bg-gray-300 text-gray-800 rounded-lg font-bold text-lg shadow-md hover:bg-gray-400 tracking-wide">
+                                <i class="fas fa-broom mr-2"></i>Limpar Formulário
+                            </button>
+                            <button type="button" id="saveBtn" class="btn-hover flex-1 py-3 px-6 bg-green-600 text-white rounded-lg font-bold text-lg shadow-md hover:bg-green-700 tracking-wide">
+                                <i class="fas fa-save mr-2"></i>Salvar Simulação
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Resultados da simulação -->
+                <div id="results-section" class="hidden">
+                    <!-- Indicadores chave -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="indicator-card">
+                            <div class="label">Lucro Bruto</div>
+                            <div id="indicador1-value" class="value">R$ 0</div>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="label">Peso Final</div>
+                            <div id="indicador2-value" class="value">0 kg</div>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="label">Arrobas Totais</div>
+                            <div id="indicador3-value" class="value">0 @</div>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="label">Rendimento</div>
+                            <div id="indicador4-value" class="value">0%</div>
+                        </div>
+                    </div>
+
+                    <!-- Gráficos principais -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="chart-container bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">Fluxo de Caixa Mensal</h3>
+                                <div class="chart-actions">
+                                    <button class="download-chart-btn p-1 text-gray-500 hover:text-blue-600" data-chart="cashFlowChart">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <canvas id="cashFlowChart"></canvas>
+                            <p class="fonte-grafico text-right text-sm text-gray-500 mt-3"></p>
+                        </div>
+                        <div class="chart-container bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">Resultados Econômicos</h3>
+                                <div class="chart-actions">
+                                    <button class="download-chart-btn p-1 text-gray-500 hover:text-blue-600" data-chart="economicChart">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <canvas id="economicChart"></canvas>
+                            <p class="fonte-grafico text-right text-sm text-gray-500 mt-3"></p>
+                        </div>
+                    </div>
+
+                    <!-- Indicadores secundários -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="secondary-indicator-card">
+                            <div class="mr-4 text-blue-500"><i class="fas fa-chart-pie fa-2x"></i></div>
+                            <div>
+                                <div class="label text-sm text-gray-500">Margem Bruta</div>
+                                <div id="indicador5-value" class="value text-xl font-bold">0%</div>
+                            </div>
+                        </div>
+                        <div class="secondary-indicator-card">
+                            <div class="mr-4 text-green-500"><i class="fas fa-percentage fa-2x"></i></div>
+                            <div>
+                                <div class="label text-sm text-gray-500">TIR</div>
+                                <div id="indicador6-value" class="value text-xl font-bold">0%</div>
+                            </div>
+                        </div>
+                        <div class="secondary-indicator-card">
+                            <div class="mr-4 text-purple-500"><i class="fas fa-dollar-sign fa-2x"></i></div>
+                            <div>
+                                <div class="label text-sm text-gray-500">Custo Total R$/@</div>
+                                <div id="indicador7-value" class="value text-xl font-bold">R$ 0,00</div>
+                            </div>
+                        </div>
+                        <div class="secondary-indicator-card">
+                            <div class="mr-4 text-yellow-500"><i class="fas fa-balance-scale-right fa-2x"></i></div>
+                            <div>
+                                <div class="label text-sm text-gray-500">Custo @ Produzida</div>
+                                <div id="indicador8-value" class="value text-xl font-bold">R$ 0,00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resultados detalhados -->
+                    <div class="mt-12">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-2xl font-bold text-gray-800">Resultados Detalhados</h3>
+                            <div class="flex space-x-2">
+                                <button id="printButton" class="btn-hover px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">
+                                    <i class="fas fa-print mr-2"></i>Imprimir
+                                </button>
+                                <button id="exportExcelBtn" class="btn-hover px-4 py-2 bg-green-600 text-white rounded-lg font-medium">
+                                    <i class="fas fa-file-excel mr-2"></i>Excel
+                                </button>
+                            </div>
+                        </div>
+                        <table class="w-full border-collapse bg-white rounded-xl shadow-lg overflow-hidden result-table">
+                            <thead>
+                                <tr>
+                                    <th class="p-4 text-left text-base font-semibold">Indicador</th>
+                                    <th class="p-4 text-left text-base font-semibold">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-body" class="text-gray-800"></tbody>
+                        </table>
+                        <p id="fonte-tabela" class="text-right text-sm text-gray-500 mt-3"></p>
+                    </div>
+
+                    <!-- Ponto de equilíbrio -->
+                    <div id="breakEvenCard" class="mt-12 bg-gradient-to-r from-emerald-50 to-teal-100 p-6 rounded-2xl shadow-lg border border-emerald-200 flex-wrap items-center justify-center text-center sm:flex sm:text-left sm:justify-start" style="display: none;">
+                        <div class="flex-shrink-0 mb-4 sm:mb-0 sm:mr-6">
+                            <svg class="h-16 w-16 text-emerald-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52v16.5m-13.5-16.5v16.5m13.5 0a48.416 48.416 0 0 1-13.5 0m13.5 0c-1.01.143-2.01.317-3 .52m-10.5-17.02a48.416 48.416 0 0 1 13.5 0m-13.5 0c-1.01.143-2.01.317-3 .52m3-.52c2.206.308 4.453.468 6.75.468m0 0a48.416 48.416 0 0 1-13.5 0m13.5 0c-1.01.143-2.01.317-3 .52" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-emerald-800">Ponto de Equilíbrio Arrobas Totais</h3>
+                            <p id="break-even-value" class="text-4xl font-extrabold text-emerald-700 mt-1">0,00 @</p>
+                            <p class="text-sm text-emerald-600 mt-2">Arrobas mínimas que o animal precisa produzir.</p>
+                        </div>
+                    </div>
+
+                    <!-- Gráficos de simulação -->
+                    <div class="mt-12 charts-section space-y-8">
+                        <div class="chart-container bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">Simulação Econômica - Oscilação do Valor da Arroba do Boi Gordo</h3>
+                                <div class="chart-actions">
+                                    <button class="download-chart-btn p-1 text-gray-500 hover:text-blue-600" data-chart="simulacaoLucroChart">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <canvas id="simulacaoLucroChart"></canvas>
+                            <p class="fonte-grafico text-right text-sm text-gray-500 mt-3"></p>
+                        </div>
+                        <div class="chart-container bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">Simulação Econômica - Oscilação do GMD (kg/dia)</h3>
+                                <div class="chart-actions">
+                                    <button class="download-chart-btn p-1 text-gray-500 hover:text-blue-600" data-chart="simulacaoGMDChart">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <canvas id="simulacaoGMDChart"></canvas>
+                            <p class="fonte-grafico text-right text-sm text-gray-500 mt-3"></p>
+                        </div>
+                        <div class="chart-container bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">Simulação Econômica - Oscilação Simultânea do Valor da Arroba Boi Gordo e GMD</h3>
+                                <div class="chart-actions">
+                                    <button class="download-chart-btn p-1 text-gray-500 hover:text-blue-600" data-chart="simulacaoReceitaGMDChart">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <canvas id="simulacaoReceitaGMDChart"></canvas>
+                            <p class="fonte-grafico text-right text-sm text-gray-500 mt-3"></p>
+                        </div>
+                        <div class="chart-container bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">Análise de Sensibilidade do Lucro</h3>
+                                <div class="chart-actions">
+                                    <button class="download-chart-btn p-1 text-gray-500 hover:text-blue-600" data-chart="simulacaoCustoReceitaChart">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <canvas id="simulacaoCustoReceitaChart"></canvas>
+                            <p class="fonte-grafico text-right text-sm text-gray-500 mt-3"></p>
+                        </div>
+                        <!-- Diagrama de Tornado -->
+                        <div id="tornadoContainer" class="chart-container bg-white rounded-2xl shadow-xl p-6 sm:p-8" style="display: none;">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">Diagrama de Tornado - Sensibilidade do Lucro Bruto</h3>
+                                <div class="chart-actions">
+                                    <button class="download-chart-btn p-1 text-gray-500 hover:text-blue-600" data-chart="tornadoChart">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <canvas id="tornadoChart"></canvas>
+                            <p class="fonte-grafico text-right text-sm text-gray-500 mt-3"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba de histórico -->
+            <div id="history" class="tab-content">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">
+                        <i class="fas fa-history mr-2"></i>Histórico de Simulações
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="p-3 text-left">Data</th>
+                                    <th class="p-3 text-left">Fazenda</th>
+                                    <th class="p-3 text-left">Lucro</th>
+                                    <th class="p-3 text-left">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-body">
+                                <!-- Histórico será preenchido via JavaScript -->
+                                <tr>
+                                    <td colspan="4" class="p-4 text-center text-gray-500">Nenhuma simulação salva ainda</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba de comparação -->
+            <div id="comparison" class="tab-content">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">
+                        <i class="fas fa-balance-scale mr-2"></i>Comparar Simulações
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-blue-800 mb-3">Simulação 1</h4>
+                            <select id="compare-sim1" class="w-full p-2 border rounded">
+                                <option value="">Selecione uma simulação...</option>
+                            </select>
+                            <div id="sim1-details" class="mt-3 hidden">
+                                <!-- Detalhes serão preenchidos via JavaScript -->
+                            </div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-green-800 mb-3">Simulação 2</h4>
+                            <select id="compare-sim2" class="w-full p-2 border rounded">
+                                <option value="">Selecione uma simulação...</option>
+                            </select>
+                            <div id="sim2-details" class="mt-3 hidden">
+                                <!-- Detalhes serão preenchidos via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    <div id="comparison-results" class="hidden">
+                        <h4 class="text-xl font-bold mb-4 text-center">Resultado da Comparação</h4>
+                        <div id="comparison-charts-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="bg-white rounded-xl shadow-lg p-4"><canvas id="comparisonLucroChart"></canvas></div>
+                            <div class="bg-white rounded-xl shadow-lg p-4"><canvas id="comparisonPercentChart"></canvas></div>
+                            <div class="bg-white rounded-xl shadow-lg p-4"><canvas id="comparisonPesoChart"></canvas></div>
+                            <div class="bg-white rounded-xl shadow-lg p-4"><canvas id="comparisonArrobasChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Cotações CEPEA -->
+        <div class="max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 fade-in">
+            <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8">
+                <div class="flex flex-col sm:flex-row items-center justify-between mb-4 pb-4 border-b border-gray-200">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-3 sm:mb-0 text-center sm:text-left">
+                        <i class="fas fa-chart-line mr-2 cepea-color"></i>Cotações de Mercado
+                    </h3>
+                    <a href="https://www.cepea.esalq.usp.br/br/" target="_blank" rel="noopener noreferrer" class="shrink-0">
+                        <img src="https://www.cepea.esalq.usp.br/br/images/logo-cepea.png" alt="Logo CEPEA" class="h-10" onerror="this.style.display='none'">
+                    </a>
+                </div>
+                <div id="cepea-widget-container">
+                    <!-- Widget de cotação é inserido aqui -->
+                    <script type="text/javascript" src="https://www.cepea.org.br/br/widgetproduto.js.php?fonte=Inter&tamanho=12&largura=100%25&corfundo=ffffff&cortexto=334155&corlinha=f3f4f6&id_indicador%5B%5D=2&id_indicador%5B%5D=8&id_indicador%5B%5D=3&id_indicador%5B%5D=77&id_indicador%5B%5D=12&id_indicador%5B%5D=92"></script>
+                </div>
+                <p class="text-xs text-gray-500 mt-4 text-center">
+                    Fonte: CEPEA - Centro de Estudos Avançados em Economia Aplicada, ESALQ/USP. As cotações são atualizadas diretamente pela fonte.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de ajuda -->
+    <div id="helpModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-question-circle mr-2"></i>Ajuda - Simulação Econômica de Confinamento
+            </h2>
+            <div class="text-gray-700 text-base leading-relaxed space-y-4">
+                <div>
+                    <h3 class="font-bold text-lg">Como usar esta ferramenta:</h3>
+                    <ol class="list-decimal pl-5 space-y-2">
+                        <li>Preencha todos os campos obrigatórios (marcados com *) no formulário de simulação</li>
+                        <li>Clique em "Calcular Desempenho" para ver os resultados</li>
+                        <li>Analise os gráficos e indicadores gerados</li>
+                        <li>Use os botões de exportação para salvar ou compartilhar seus resultados</li>
+                    </ol>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg">Termos técnicos:</h3>
+                    <dl class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div class="bg-gray-50 p-2 rounded">
+                            <dt class="font-semibold">GMD</dt>
+                            <dd class="text-sm">Ganho Médio Diário - ganho de peso diário do animal</dd>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded">
+                            <dt class="font-semibold">TIR</dt>
+                            <dd class="text-sm">Taxa Interna de Retorno - rentabilidade do investimento</dd>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded">
+                            <dt class="font-semibold">@</dt>
+                            <dd class="text-sm">Arroba - unidade equivalente a 15kg</dd>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded">
+                            <dt class="font-semibold">Ponto de Equilíbrio</dt>
+                            <dd class="text-sm">Quantidade mínima para cobrir custos</dd>
+                        </div>
+                    </dl>
+                </div>
+                <div class="bg-blue-50 p-3 rounded border border-blue-200">
+                    <h3 class="font-bold text-blue-800">Dúvidas?</h3>
+                    <p>Entre em contato com o desenvolvedor: <a href="mailto:ricardo.brumatti@ufms.br" class="text-blue-600 hover:underline">ricardo.brumatti@ufms.br</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de tour -->
+    <div id="tourModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-route mr-2"></i>Tour Guiado
+            </h2>
+            <div id="tour-content" class="text-gray-700 text-base leading-relaxed">
+                <!-- Conteúdo será preenchido via JavaScript -->
+            </div>
+            <div class="flex justify-between mt-6">
+                <button id="prev-step" class="px-4 py-2 bg-gray-300 rounded-lg">
+                    <i class="fa fa-arrow-left mr-2"></i>Anterior
+                </button>
+                <button id="next-step" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                    Próximo<i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para respostas do LLM -->
+    <div id="llmModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="modalTitle" class="text-xl font-bold text-gray-800 mb-4"></h2>
+            <div id="modalContent" class="text-gray-700 text-base leading-relaxed"></div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmação -->
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal-content max-w-md">
+            <h2 id="confirmTitle" class="text-xl font-bold text-gray-800 mb-4"></h2>
+            <div id="confirmContent" class="text-gray-700 mb-6"></div>
+            <div class="flex justify-end space-x-4">
+                <button id="confirmCancel" class="px-4 py-2 bg-gray-300 rounded-lg">
+                    Cancelar
+                </button>
+                <button id="confirmOk" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-gray-600">Simulação Econômica de Confinamento</p>
+                    <p class="text-sm text-gray-500">Desenvolvido por Prof. Ricardo C. Brumatti - FAMEZ/UFMS</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="mailto:ricardo.brumatti@ufms.br" class="text-gray-500 hover:text-blue-600">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                    <a href="http://www.ricardobrumatti.pro.br/confinamento" target="_blank" class="text-gray-500 hover:text-blue-600">
+                        <i class="fas fa-globe"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+                <p>Esta ferramenta oferece análise econômica com base nos dados informados pelo usuário. Os resultados são apenas uma referência, sendo o uso das informações de inteira responsabilidade do usuário.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Módulo principal da aplicação
+        const App = (function() {
+            // Estado da aplicação
+            let state = {
+                currentSimulation: null,
+                savedSimulations: JSON.parse(localStorage.getItem('savedSimulations')) || [],
+                chartInstances: {},
+                theme: 'light',
+                highContrast: false,
+                tourStep: 0
+            };
+
+            // Elementos do DOM
+            const dom = {
+                form: document.getElementById('simulacaoForm'),
+                resultsSection: document.getElementById('results-section'),
+                helpModal: document.getElementById('helpModal'),
+                tourModal: document.getElementById('tourModal'),
+                llmModal: document.getElementById('llmModal'),
+                confirmModal: document.getElementById('confirmModal'),
+                themeToggle: document.getElementById('themeToggle'),
+                contrastToggle: document.getElementById('contrastToggle'),
+                helpBtn: document.getElementById('helpBtn'),
+                tourBtn: document.getElementById('tourBtn'),
+                exampleBtn: document.getElementById('exampleBtn'),
+                printButton: document.getElementById('printButton'),
+                exportExcelBtn: document.getElementById('exportExcelBtn'),
+                saveBtn: document.getElementById('saveBtn'),
+                tabContents: document.querySelectorAll('.tab-content'),
+                tabButtons: document.querySelectorAll('.tab-btn')
+            };
+
+            // Inicialização
+            function init() {
+                setupEventListeners();
+                loadSavedSimulations();
+                updateUI();
+                // Verificar preferência de tema
+                if (localStorage.getItem('theme') === 'dark') {
+                    toggleTheme();
+                }
+                // Verificar preferência de alto contraste
+                if (localStorage.getItem('highContrast') === 'true') {
+                    toggleContrast();
+                }
+            }
+            
+            // Configurar event listeners
+            function setupEventListeners() {
+                // Formulário
+                dom.form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    calcular();
+                });
+
+                // Botões de tema
+                dom.themeToggle.addEventListener('click', toggleTheme);
+                dom.contrastToggle.addEventListener('click', toggleContrast);
+
+                // Botões de ajuda
+                dom.helpBtn.addEventListener('click', () => dom.helpModal.classList.remove('hidden'));
+                dom.tourBtn.addEventListener('click', startTour);
+                dom.exampleBtn.addEventListener('click', loadExample);
+
+                // Botões de exportação
+                dom.printButton.addEventListener('click', generatePrintView);
+                dom.exportExcelBtn.addEventListener('click', exportToExcel);
+                dom.saveBtn.addEventListener('click', saveSimulation);
+
+                // Fechar modais
+                document.querySelectorAll('.close-button').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        this.closest('.modal').classList.add('hidden');
+                    });
+                });
+
+                // Modal de confirmação
+                document.getElementById('confirmCancel').addEventListener('click', () => dom.confirmModal.classList.add('hidden'));
+
+                // Abas
+                dom.tabButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const tabId = this.getAttribute('data-tab');
+                        switchTab(tabId);
+                    });
+                });
+
+                // Download de gráficos
+                document.querySelectorAll('.download-chart-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const chartId = this.getAttribute('data-chart');
+                        downloadChart(chartId);
+                    });
+                });
+
+                // Tour
+                document.getElementById('next-step').addEventListener('click', nextTourStep);
+                document.getElementById('prev-step').addEventListener('click', prevTourStep);
+
+                // Fechar modais ao clicar fora
+                window.addEventListener('click', (event) => {
+                    if (event.target.classList.contains('modal')) {
+                        event.target.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Alternar entre abas
+            function switchTab(tabId) {
+                // Atualizar botões das abas
+                dom.tabButtons.forEach(button => {
+                    if (button.getAttribute('data-tab') === tabId) {
+                        button.classList.remove('bg-gray-200', 'text-gray-700');
+                        button.classList.add('bg-blue-600', 'text-white', 'active');
+                    } else {
+                        button.classList.remove('bg-blue-600', 'text-white', 'active');
+                        button.classList.add('bg-gray-200', 'text-gray-700');
+                    }
+                });
+                // Mostrar conteúdo da aba selecionada
+                dom.tabContents.forEach(content => {
+                    if (content.id === tabId) {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+            }
+
+            // Alternar tema claro/escuro
+            function toggleTheme() {
+                if (state.theme === 'light') {
+                    document.documentElement.classList.add('dark');
+                    document.body.classList.add('bg-gray-900', 'text-gray-100');
+                    state.theme = 'dark';
+                    dom.themeToggle.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.body.classList.remove('bg-gray-900', 'text-gray-100');
+                    state.theme = 'light';
+                    dom.themeToggle.innerHTML = '<i class="fas fa-moon"></i> Tema Escuro';
+                }
+                localStorage.setItem('theme', state.theme);
+                updateChartsTheme();
+            }
+
+            // Alternar modo de alto contraste
+            function toggleContrast() {
+                state.highContrast = !state.highContrast;
+                if (state.highContrast) {
+                    document.body.classList.add('high-contrast');
+                    dom.contrastToggle.innerHTML = '<i class="fas fa-eye-slash"></i> Contraste Normal';
+                } else {
+                    document.body.classList.remove('high-contrast');
+                    dom.contrastToggle.innerHTML = '<i class="fas fa-eye"></i> Alto Contraste';
+                }
+                localStorage.setItem('highContrast', state.highContrast);
+                updateChartsTheme();
+            }
+
+            // Atualizar tema dos gráficos
+            function updateChartsTheme() {
+                const textColor = state.theme === 'dark' ? '#f3f4f6' : '#374151';
+                const gridColor = state.theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                Object.values(state.chartInstances).forEach(chart => {
+                    if (chart) {
+                        chart.options.scales.x.ticks.color = textColor;
+                        chart.options.scales.y.ticks.color = textColor;
+                        chart.options.scales.x.grid.color = gridColor;
+                        chart.options.scales.y.grid.color = gridColor;
+                        chart.update();
+                    }
+                });
+            }
+
+            // Carregar simulações salvas
+            function loadSavedSimulations() {
+                const historyBody = document.getElementById('history-body');
+                const compareSelect1 = document.getElementById('compare-sim1');
+                const compareSelect2 = document.getElementById('compare-sim2');
+
+                // Limpar seleções
+                historyBody.innerHTML = '';
+                compareSelect1.innerHTML = '<option value="">Selecione uma simulação...</option>';
+                compareSelect2.innerHTML = '<option value="">Selecione uma simulação...</option>';
+
+                if (state.savedSimulations.length === 0) {
+                    historyBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Nenhuma simulação salva ainda</td></tr>';
+                    return;
+                }
+
+                // Preencher histórico
+                state.savedSimulations.forEach((sim, index) => {
+                    const date = new Date(sim.timestamp);
+                    const formattedDate = date.toLocaleDateString('pt-BR');
+                    // Adicionar ao histórico
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="p-3">${formattedDate}</td>
+                        <td class="p-3">${sim.inputs.fazenda || 'Sem nome'}</td>
+                        <td class="p-3 ${sim.resultados.lucroBruto >= 0 ? 'text-green-600' : 'text-red-600'}">
+                            ${formatBRL(sim.resultados.lucroBruto)}
+                        </td>
+                        <td class="p-3">
+                            <button class="view-sim-btn px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm mr-2" data-id="${index}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="delete-sim-btn px-2 py-1 bg-red-100 text-red-800 rounded text-sm" data-id="${index}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    historyBody.appendChild(row);
+
+                    // Adicionar às opções de comparação
+                    const option1 = document.createElement('option');
+                    option1.value = index;
+                    option1.textContent = `${formattedDate} - ${sim.inputs.fazenda || 'Sem nome'}`;
+                    compareSelect1.appendChild(option1.cloneNode(true));
+                    compareSelect2.appendChild(option1);
+                });
+
+                // Adicionar event listeners aos botões
+                document.querySelectorAll('.view-sim-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        loadSimulation(id);
+                    });
+                });
+                document.querySelectorAll('.delete-sim-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        confirmDeleteSimulation(id);
+                    });
+                });
+
+                // Event listeners para comparação
+                compareSelect1.addEventListener('change', function() {
+                    const id = this.value;
+                    if (id) {
+                        showSimulationDetails(id, 'sim1-details');
+                        updateComparison();
+                    } else {
+                        document.getElementById('sim1-details').classList.add('hidden');
+                    }
+                });
+                compareSelect2.addEventListener('change', function() {
+                    const id = this.value;
+                    if (id) {
+                        showSimulationDetails(id, 'sim2-details');
+                        updateComparison();
+                    } else {
+                        document.getElementById('sim2-details').classList.add('hidden');
+                    }
+                });
+            }
+
+            // Mostrar detalhes da simulação para comparação
+            function showSimulationDetails(id, elementId) {
+                const sim = state.savedSimulations[id];
+                const detailsDiv = document.getElementById(elementId);
+                detailsDiv.innerHTML = `
+                    <div class="bg-white p-3 rounded shadow">
+                        <p><strong>Fazenda:</strong> ${sim.inputs.fazenda || 'Não informado'}</p>
+                        <p><strong>Data:</strong> ${new Date(sim.timestamp).toLocaleDateString('pt-BR')}</p>
+                        <p><strong>Dias:</strong> ${sim.inputs.dias}</p>
+                        <p><strong>GMD:</strong> ${sim.inputs.gmd} kg/dia</p>
+                        <p><strong>Lucro:</strong> <span class="${sim.resultados.lucroBruto >= 0 ? 'text-green-600' : 'text-red-600'}">
+                            ${formatBRL(sim.resultados.lucroBruto)}
+                        </span></p>
+                    </div>
+                `;
+                detailsDiv.classList.remove('hidden');
+            }
+
+            // Atualizar comparação
+            function updateComparison() {
+                const sim1Id = document.getElementById('compare-sim1').value;
+                const sim2Id = document.getElementById('compare-sim2').value;
+                const resultsDiv = document.getElementById('comparison-results');
+
+                if (sim1Id && sim2Id && sim1Id !== sim2Id) {
+                    const sim1 = state.savedSimulations[sim1Id];
+                    const sim2 = state.savedSimulations[sim2Id];
+                    renderComparisonCharts(sim1, sim2);
+                    resultsDiv.classList.remove('hidden');
+                } else {
+                    resultsDiv.classList.add('hidden');
+                }
+            }
+
+            // Renderizar gráficos de comparação
+            function renderComparisonCharts(sim1, sim2) {
+                const chartsToCreate = [{
+                    id: 'comparisonLucroChart',
+                    title: 'Lucro Bruto (R$)',
+                    labels: ['Lucro Bruto'],
+                    data1: [sim1.resultados.lucroBruto],
+                    data2: [sim2.resultados.lucroBruto],
+                    yCallback: (value) => formatBRL(value)
+                }, {
+                    id: 'comparisonPercentChart',
+                    title: 'Indicadores (%)',
+                    labels: ['Margem Bruta', 'TIR'],
+                    data1: [sim1.resultados.margemBruta, sim1.resultados.tir || 0],
+                    data2: [sim2.resultados.margemBruta, sim2.resultados.tir || 0],
+                    yCallback: (value) => `${value.toFixed(2)}%`
+                }, {
+                    id: 'comparisonPesoChart',
+                    title: 'Peso Final (kg)',
+                    labels: ['Peso Final'],
+                    data1: [sim1.resultados.pesoFinal],
+                    data2: [sim2.resultados.pesoFinal],
+                    yCallback: (value) => `${value.toFixed(2)} kg`
+                }, {
+                    id: 'comparisonArrobasChart',
+                    title: 'Arrobas Totais (@)',
+                    labels: ['Arrobas Totais'],
+                    data1: [sim1.resultados.arrobasTotais],
+                    data2: [sim2.resultados.arrobasTotais],
+                    yCallback: (value) => `${value.toFixed(2)} @`
+                }];
+
+                chartsToCreate.forEach(chartConfig => {
+                    const ctx = document.getElementById(chartConfig.id).getContext('2d');
+                    if (state.chartInstances[chartConfig.id]) {
+                        state.chartInstances[chartConfig.id].destroy();
+                    }
+                    state.chartInstances[chartConfig.id] = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: chartConfig.labels,
+                            datasets: [{
+                                label: sim1.inputs.fazenda || 'Simulação 1',
+                                data: chartConfig.data1,
+                                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }, {
+                                label: sim2.inputs.fazenda || 'Simulação 2',
+                                data: chartConfig.data2,
+                                backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                                borderColor: 'rgba(16, 185, 129, 1)',
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: chartConfig.title,
+                                    font: {
+                                        size: 16,
+                                        weight: 'bold'
+                                    }
+                                },
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: chartConfig.yCallback
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            // Iniciar tour guiado
+            function startTour() {
+                state.tourStep = 0;
+                updateTourContent();
+                dom.tourModal.classList.remove('hidden');
+            }
+
+            // Atualizar conteúdo do tour
+            function updateTourContent() {
+                const steps = [{
+                    title: "Bem-vindo ao Tour Guiado",
+                    content: "Este tour irá guiá-lo pelas principais funcionalidades da ferramenta de simulação econômica de confinamento."
+                }, {
+                    title: "Formulário de Simulação",
+                    content: "Preencha todos os campos obrigatórios com os parâmetros do seu confinamento. Use os ícones de informação para obter ajuda sobre cada campo."
+                }, {
+                    title: "Cálculo e Resultados",
+                    content: "Após preencher o formulário, clique em 'Calcular Desempenho' para ver os resultados da simulação."
+                }, {
+                    title: "Gráficos e Indicadores",
+                    content: "Analise os diversos gráficos e indicadores gerados para entender a viabilidade econômica do seu confinamento."
+                }, {
+                    title: "Salvar e Exportar",
+                    content: "Você pode salvar suas simulações para consulta futura ou exportar os resultados em diferentes formatos (PDF, Excel, etc.)."
+                }, {
+                    title: "Comparação de Cenários",
+                    content: "Na aba 'Comparação', você pode comparar diferentes simulações para avaliar qual cenário é mais vantajoso."
+                }, {
+                    title: "Tour Concluído",
+                    content: "Agora você está pronto para usar todas as funcionalidades da ferramenta. Para mais ajuda, clique no ícone de interrogação no canto superior direito."
+                }];
+
+                const currentStep = steps[state.tourStep];
+                const tourContent = document.getElementById('tour-content');
+                tourContent.innerHTML = `
+                    <h3 class="text-lg font-bold mb-2">${currentStep.title}</h3>
+                    <p>${currentStep.content}</p>
+                    <div class="text-center mt-4 text-sm text-gray-500">
+                        Passo ${state.tourStep + 1} de ${steps.length}
+                    </div>
+                `;
+                // Atualizar botões
+                document.getElementById('prev-step').disabled = state.tourStep === 0;
+                document.getElementById('next-step').textContent = state.tourStep === steps.length - 1 ? 'Concluir' : 'Próximo';
+            }
+
+            // Próximo passo do tour
+            function nextTourStep() {
+                if (state.tourStep < 6) { // Total de passos - 1
+                    state.tourStep++;
+                    updateTourContent();
+                } else {
+                    dom.tourModal.classList.add('hidden');
+                }
+            }
+
+            // Passo anterior do tour
+            function prevTourStep() {
+                if (state.tourStep > 0) {
+                    state.tourStep--;
+                    updateTourContent();
+                }
+            }
+
+            // Carregar exemplo pré-preenchido
+            function loadExample() {
+                document.getElementById('fazenda').value = "Fazenda Modelo";
+                document.getElementById('tecnico').value = "Técnico Exemplo";
+                document.getElementById('localidade').value = "Campo Grande/MS";
+                document.getElementById('raca').value = "Nelore";
+                document.getElementById('sexo').value = "Machos Inteiros";
+                document.getElementById('categoria-animal').value = "Novilho";
+                document.getElementById('dias').value = "100";
+                document.getElementById('peso').value = "370.00";
+                document.getElementById('gmd').value = "1.800";
+                document.getElementById('rendimento').value = "56.50";
+                document.getElementById('custo-aq').value = "3850.00";
+                document.getElementById('custo-diaria').value = "16.50";
+                document.getElementById('receita').value = "310.00";
+                showModal("Exemplo Carregado", "Os campos foram preenchidos com valores de exemplo. Agora você pode clicar em 'Calcular Desempenho' para ver os resultados.");
+            }
+
+            // Mostrar modal
+            function showModal(title, content) {
+                document.getElementById('modalTitle').textContent = title;
+                document.getElementById('modalContent').innerHTML = content;
+                document.getElementById('llmModal').classList.remove('hidden');
+            }
+
+            // Mostrar modal de confirmação
+            function showConfirmModal(title, content, callback) {
+                document.getElementById('confirmTitle').textContent = title;
+                document.getElementById('confirmContent').textContent = content;
+                document.getElementById('confirmOk').onclick = callback;
+                dom.confirmModal.classList.remove('hidden');
+            }
+
+            // Atualizar UI com base no estado
+            function updateUI() {
+                // Atualizar tema
+                if (state.theme === 'dark') {
+                    dom.themeToggle.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
+                } else {
+                    dom.themeToggle.innerHTML = '<i class="fas fa-moon"></i> Tema Escuro';
+                }
+                // Atualizar alto contraste
+                if (state.highContrast) {
+                    dom.contrastToggle.innerHTML = '<i class="fas fa-eye-slash"></i> Contraste Normal';
+                } else {
+                    dom.contrastToggle.innerHTML = '<i class="fas fa-eye"></i> Alto Contraste';
+                }
+            }
+
+            // Formatar moeda BRL
+            function formatBRL(value) {
+                return new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                }).format(value);
+            }
+
+            // Formatar número
+            function formatNumber(value, decimals) {
+                return isNaN(value) ? '0,00' : value.toFixed(decimals).replace('.', ',');
+            }
+
+            // Calcular TIR
+            function calcularTIR(fluxoCaixa) {
+                const maxIteracoes = 1000;
+                const tolerancia = 0.0001;
+                let taxa = 0.1;
+
+                for (let i = 0; i < maxIteracoes; i++) {
+                    let vpl = 0;
+                    let derivada = 0;
+                    for (let t = 0; t < fluxoCaixa.length; t++) {
+                        vpl += fluxoCaixa[t] / Math.pow(1 + taxa, t);
+                        derivada -= t * fluxoCaixa[t] / Math.pow(1 + taxa, t + 1);
+                    }
+                    if (derivada === 0) return NaN;
+                    const novaTaxa = taxa - vpl / derivada;
+                    if (Math.abs(novaTaxa - taxa) < tolerancia) {
+                        return taxa * 100;
+                    }
+                    taxa = novaTaxa;
+                    if (Math.abs(taxa) > 1000) {
+                        return NaN;
+                    }
+                }
+                return NaN;
+            }
+
+            // Calcular valores da simulação
+            function calcularValores(inputs) {
+                const pesoFinal = inputs.peso + (inputs.dias * inputs.gmd);
+                const pesoCarcaca = pesoFinal * (inputs.rendimento / 100);
+                const arrobasTotais = pesoCarcaca / 15;
+                const receitaTotal = arrobasTotais * inputs.receita;
+                const custoTotalDiarias = inputs.dias * inputs.custoDiaria;
+                const custoTotal = custoTotalDiarias + inputs.custoAq;
+                const lucroBruto = receitaTotal - custoTotal;
+                const margemBruta = (receitaTotal !== 0) ? (lucroBruto / receitaTotal) * 100 : 0;
+                const custoTotalPorArroba = arrobasTotais !== 0 ? custoTotal / arrobasTotais : 0;
+
+                // Arrobas produzidas e ponto de equilíbrio
+                const arrobasIniciaisEstimadas = (inputs.peso * 0.5) / 15;
+                const arrobasProduzidas = arrobasTotais - arrobasIniciaisEstimadas;
+                const custoArrobaProduzida = arrobasProduzidas > 0 ? custoTotalDiarias / arrobasProduzidas : 0;
+
+                // Ponto de equilíbrio
+                const custoVariavelPorArrobaProduzida = arrobasProduzidas > 0 ? custoTotalDiarias / arrobasProduzidas : 0;
+                const margemContribuicaoTotal = inputs.receita - custoVariavelPorArrobaProduzida;
+                let pontoDeEquilibrioArrobas = NaN;
+                if (margemContribuicaoTotal > 0) {
+                    pontoDeEquilibrioArrobas = ((inputs.custoAq / arrobasIniciaisEstimadas) / margemContribuicaoTotal) + arrobasIniciaisEstimadas;
+                }
+
+                // Fluxo de caixa e TIR
+                const fluxoCaixa = [];
+                fluxoCaixa.push(-inputs.custoAq);
+                let diasRestantes = inputs.dias;
+                const totalMeses = Math.ceil(inputs.dias / 30);
+                for (let mes = 1; mes <= totalMeses; mes++) {
+                    if (diasRestantes <= 0) break;
+                    const diasMes = Math.min(30, diasRestantes);
+                    fluxoCaixa.push(-(diasMes * inputs.custoDiaria));
+                    diasRestantes -= diasMes;
+                }
+                if (fluxoCaixa.length > 1) {
+                    fluxoCaixa[fluxoCaixa.length - 1] += receitaTotal;
+                }
+                const tir = calcularTIR(fluxoCaixa);
+
+                return {
+                    pesoFinal,
+                    pesoCarcaca,
+                    arrobasTotais,
+                    receitaTotal,
+                    custoTotal,
+                    lucroBruto,
+                    margemBruta,
+                    custoTotalPorArroba,
+                    arrobasProduzidas,
+                    custoArrobaProduzida,
+                    fluxoCaixa,
+                    tir,
+                    pontoDeEquilibrioArrobas
+                };
+            }
+
+            // Função principal de cálculo
+            function calcular() {
+                try {
+                    // Obter valores do formulário
+                    const inputs = {
+                        fazenda: document.getElementById('fazenda').value,
+                        tecnico: document.getElementById('tecnico').value,
+                        localidade: document.getElementById('localidade').value,
+                        raca: document.getElementById('raca').value,
+                        sexo: document.getElementById('sexo').value,
+                        categoriaAnimal: document.getElementById('categoria-animal').value,
+                        dias: parseFloat(document.getElementById('dias').value.replace(',', '.')),
+                        peso: parseFloat(document.getElementById('peso').value.replace(',', '.')),
+                        gmd: parseFloat(document.getElementById('gmd').value.replace(',', '.')),
+                        rendimento: parseFloat(document.getElementById('rendimento').value.replace(',', '.')),
+                        custoAq: parseFloat(document.getElementById('custo-aq').value.replace(',', '.')),
+                        custoDiaria: parseFloat(document.getElementById('custo-diaria').value.replace(',', '.')),
+                        receita: parseFloat(document.getElementById('receita').value.replace(',', '.'))
+                    };
+
+                    // Validar campos obrigatórios
+                    if (!inputs.fazenda || !inputs.raca || !inputs.sexo || !inputs.categoriaAnimal ||
+                        isNaN(inputs.dias) || isNaN(inputs.peso) || isNaN(inputs.gmd) ||
+                        isNaN(inputs.rendimento) || isNaN(inputs.custoAq) ||
+                        isNaN(inputs.custoDiaria) || isNaN(inputs.receita)) {
+                        showModal("Erro", "Por favor, preencha todos os campos obrigatórios (marcados com *) corretamente.");
+                        return;
+                    }
+
+                    // Calcular resultados
+                    const resultados = calcularValores(inputs);
+
+                    // Atualizar estado
+                    state.currentSimulation = {
+                        inputs: inputs,
+                        resultados: resultados,
+                        timestamp: new Date().getTime()
+                    };
+
+                    // Atualizar UI com resultados
+                    updateResultsUI(inputs, resultados);
+
+                    // Mostrar seção de resultados
+                    dom.resultsSection.classList.remove('hidden');
+
+                } catch (error) {
+                    console.error('Erro:', error);
+                    showModal("Erro", `Ocorreu um erro ao calcular a simulação: ${error.message}`);
+                }
+            }
+
+            // Atualizar UI com resultados
+            function updateResultsUI(inputs, resultados) {
+                const {
+                    pesoFinal,
+                    pesoCarcaca,
+                    arrobasTotais,
+                    receitaTotal,
+                    custoTotal,
+                    lucroBruto,
+                    margemBruta,
+                    custoTotalPorArroba,
+                    arrobasProduzidas,
+                    custoArrobaProduzida,
+                    fluxoCaixa,
+                    tir,
+                    pontoDeEquilibrioArrobas
+                } = resultados;
+
+                // Atualizar indicadores
+                document.getElementById('indicador1-value').innerHTML = `<span class="${lucroBruto >= 0 ? 'text-green-300' : 'text-red-300'}">${formatBRL(lucroBruto)}</span>`;
+                document.getElementById('indicador2-value').textContent = formatNumber(pesoFinal, 2) + ' kg';
+                document.getElementById('indicador3-value').textContent = formatNumber(arrobasTotais, 2) + ' @';
+                document.getElementById('indicador4-value').textContent = formatNumber(inputs.rendimento, 2) + '%';
+                document.getElementById('indicador5-value').innerHTML = `<span class="${margemBruta >= 0 ? 'text-green-800' : 'text-red-800'}">${formatNumber(margemBruta, 2)}%</span>`;
+                document.getElementById('indicador6-value').innerHTML = isNaN(tir) ? 'N/A' : `<span class="${tir >= 0 ? 'text-green-800' : 'text-red-800'}">${formatNumber(tir, 2)}%</span>`;
+                document.getElementById('indicador7-value').textContent = formatBRL(custoTotalPorArroba);
+                document.getElementById('indicador8-value').textContent = formatBRL(custoArrobaProduzida);
+
+                // Atualizar tabela de resultados detalhados
+                const resultadosDetalhes = [
+                    ['Peso Final (kg)', formatNumber(pesoFinal, 2) + ' kg'],
+                    ['Peso Carcaça (kg)', formatNumber(pesoCarcaca, 2) + ' kg'],
+                    ['Arrobas Produzidas', formatNumber(arrobasProduzidas, 2) + ' @'],
+                    ['Arrobas Totais', formatNumber(arrobasTotais, 2) + ' @'],
+                    ['Receita Total', formatBRL(receitaTotal)],
+                    ['Custo Total', formatBRL(custoTotal)],
+                    ['Lucro Bruto', `<span class="${lucroBruto >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}">${formatBRL(lucroBruto)}</span>`],
+                    ['Margem Bruta', `<span class="${margemBruta >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}">${formatNumber(margemBruta, 2)}%</span>`],
+                    ['Custo Total por Arroba (R$/@)', formatBRL(custoTotalPorArroba)],
+                    ['Custo @ Produzida', formatBRL(custoArrobaProduzida)],
+                    ['TIR (% ao mês)', isNaN(tir) ? 'Não convergiu' : `<span class="${tir >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}">${formatNumber(tir, 2)}%</span>`]
+                ];
+                const tbody = document.getElementById('results-body');
+                tbody.innerHTML = resultadosDetalhes.map(row =>
+                    `<tr class="border-b border-gray-200 last:border-0">
+                        <td class="p-4 text-sm sm:text-base">${row[0]}</td>
+                        <td class="p-4 text-sm sm:text-base font-medium">${row[1]}</td>
+                    </tr>`
+                ).join("");
+
+                // Atualizar ponto de equilíbrio
+                const breakEvenCard = document.getElementById('breakEvenCard');
+                const breakEvenValueEl = document.getElementById('break-even-value');
+                breakEvenCard.style.display = 'flex';
+
+                if (isNaN(pontoDeEquilibrioArrobas) || pontoDeEquilibrioArrobas < 0) {
+                    breakEvenValueEl.textContent = 'Inatingível';
+                    breakEvenValueEl.classList.remove('text-emerald-700');
+                    breakEvenValueEl.classList.add('text-red-600');
+                } else {
+                    breakEvenValueEl.textContent = formatNumber(pontoDeEquilibrioArrobas, 2) + ' @';
+                    breakEvenValueEl.classList.add('text-emerald-700');
+                    breakEvenValueEl.classList.remove('text-red-600');
+                }
+
+                // Atualizar gráficos
+                updateCharts(inputs, resultados);
+
+                // Atualizar fonte
+                updateSource();
+            }
+
+            // Atualizar gráficos
+            function updateCharts(inputs, resultados) {
+                const isMobile = window.innerWidth < 640;
+                const chartFontSize = isMobile ? 10 : 12;
+                const chartTitleFontSize = isMobile ? 13 : 15;
+                const chartAspectRatio = isMobile ? 1.2 : 2;
+
+                // Gráfico econômico
+                updateEconomicChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio);
+                // Fluxo de caixa
+                updateCashFlowChart(resultados, chartFontSize, chartTitleFontSize, chartAspectRatio);
+                // Simulação de lucro
+                updateProfitSimulationChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio);
+                // Simulação de GMD
+                updateGmdSimulationChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio);
+                // Simulação combinada
+                updateCombinedSimulationChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio);
+                // Análise de sensibilidade
+                updateSensitivityAnalysisChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio);
+                // Diagrama de tornado
+                updateTornadoChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio);
+            }
+
+            // Atualizar fonte
+            function updateSource() {
+                const anoAtual = new Date().getFullYear();
+                const fonteText = `Fonte: Prof. Ricardo C. Brumatti (${anoAtual})`;
+                document.getElementById('fonte-tabela').textContent = fonteText;
+                document.querySelectorAll('.fonte-grafico').forEach(el => {
+                    el.textContent = fonteText;
+                });
+            }
+
+            // Limpar formulário
+            function limparFormulario() {
+                dom.form.reset();
+                dom.resultsSection.classList.add('hidden');
+                // Resetar indicadores
+                document.getElementById('indicador1-value').textContent = 'R$ 0';
+                document.getElementById('indicador2-value').textContent = '0 kg';
+                document.getElementById('indicador3-value').textContent = '0 @';
+                document.getElementById('indicador4-value').textContent = '0%';
+                document.getElementById('indicador5-value').textContent = '0%';
+                document.getElementById('indicador6-value').textContent = '0%';
+                document.getElementById('indicador7-value').textContent = 'R$ 0,00';
+                document.getElementById('indicador8-value').textContent = 'R$ 0,00';
+                // Ocultar ponto de equilíbrio
+                document.getElementById('breakEvenCard').style.display = 'none';
+                // Limpar tabela
+                document.getElementById('results-body').innerHTML = '';
+                // Limpar gráficos
+                Object.values(state.chartInstances).forEach(chart => {
+                    if (chart) chart.destroy();
+                });
+                state.chartInstances = {};
+                state.currentSimulation = null;
+            }
+
+            // Salvar simulação
+            function saveSimulation() {
+                if (!state.currentSimulation) {
+                    showModal("Erro", "Nenhuma simulação para salvar. Por favor, calcule primeiro.");
+                    return;
+                }
+                // Adicionar data e ID único
+                const simulationToSave = {
+                    ...state.currentSimulation,
+                    id: Date.now().toString(),
+                    timestamp: new Date().getTime()
+                };
+                // Verificar se já existe (atualizar)
+                const existingIndex = state.savedSimulations.findIndex(sim => sim.id === simulationToSave.id);
+                if (existingIndex >= 0) {
+                    state.savedSimulations[existingIndex] = simulationToSave;
+                } else {
+                    state.savedSimulations.unshift(simulationToSave); // Adicionar no início
+                }
+                // Limitar a 50 simulações salvas
+                if (state.savedSimulations.length > 50) {
+                    state.savedSimulations.pop();
+                }
+                // Salvar no localStorage
+                localStorage.setItem('savedSimulations', JSON.stringify(state.savedSimulations));
+                // Atualizar UI
+                loadSavedSimulations();
+                showModal("Sucesso", "Simulação salva com sucesso! Você pode acessá-la na aba 'Histórico'.<br><br><small class='text-yellow-700'><b>Atenção:</b> As simulações são salvas localmente e serão apagadas se o histórico do seu navegador for limpo.</small>");
+            }
+
+            // Carregar simulação salva
+            function loadSimulation(id) {
+                const sim = state.savedSimulations[id];
+                if (!sim) {
+                    showModal("Erro", "Simulação não encontrada.");
+                    return;
+                }
+                // Preencher formulário
+                document.getElementById('fazenda').value = sim.inputs.fazenda || '';
+                document.getElementById('tecnico').value = sim.inputs.tecnico || '';
+                document.getElementById('localidade').value = sim.inputs.localidade || '';
+                document.getElementById('raca').value = sim.inputs.raca || '';
+                document.getElementById('sexo').value = sim.inputs.sexo || '';
+                document.getElementById('categoria-animal').value = sim.inputs.categoriaAnimal || '';
+                document.getElementById('dias').value = sim.inputs.dias || '';
+                document.getElementById('peso').value = sim.inputs.peso || '';
+                document.getElementById('gmd').value = sim.inputs.gmd || '';
+                document.getElementById('rendimento').value = sim.inputs.rendimento || '';
+                document.getElementById('custo-aq').value = sim.inputs.custoAq || '';
+                document.getElementById('custo-diaria').value = sim.inputs.custoDiaria || '';
+                document.getElementById('receita').value = sim.inputs.receita || '';
+                // Atualizar estado e UI
+                state.currentSimulation = sim;
+                updateResultsUI(sim.inputs, sim.resultados);
+                dom.resultsSection.classList.remove('hidden');
+                // Mudar para aba de simulação
+                switchTab('simulation');
+            }
+
+            // Confirmar exclusão de simulação
+            function confirmDeleteSimulation(id) {
+                showConfirmModal(
+                    "Confirmar Exclusão",
+                    "Tem certeza que deseja excluir esta simulação? Esta ação não pode ser desfeita.",
+                    () => deleteSimulation(id)
+                );
+            }
+
+            // Excluir simulação
+            function deleteSimulation(id) {
+                state.savedSimulations.splice(id, 1);
+                localStorage.setItem('savedSimulations', JSON.stringify(state.savedSimulations));
+                loadSavedSimulations();
+                dom.confirmModal.classList.add('hidden');
+            }
+
+            // Gerar relatório para impressão
+            function generatePrintView() {
+                if (!state.currentSimulation) {
+                    showModal("Erro", "Nenhuma simulação para imprimir. Por favor, calcule primeiro.");
+                    return;
+                }
+                const {
+                    inputs,
+                    resultados
+                } = state.currentSimulation;
+                const today = new Date();
+                const dataRelatorio = today.toLocaleDateString('pt-BR');
+
+                // Obter imagens dos gráficos
+                const chartImages = {};
+                Object.keys(state.chartInstances).forEach(key => {
+                    if (state.chartInstances[key]) {
+                        chartImages[key] = state.chartInstances[key].toBase64Image();
+                    }
+                });
+
+                // HTML para impressão
+                const printWindowHTML = `
+                <!DOCTYPE html>
+                <html lang="pt-BR">
+                <head>
+                    <title>Relatório de Simulação - Confinamento</title>
+                    <link href="https://fonts.googleapis.com/css?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+                    <style>
+                        :root {
+                            --primary: #1e3a8a; --secondary: #3b82f6; --success: #10b981;
+                            --danger: #ef4444; --light-gray: #f3f4f6; --medium-gray: #6b7280; --dark-gray: #374151;
+                        }
+                        body {
+                            font-family: 'Inter', sans-serif; font-size: 9pt; color: var(--dark-gray);
+                            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+                        }
+                        @page { size: A4 portrait; margin: 1.0cm; }
+                        .card {
+                            page-break-inside: avoid; border: 1px solid #e5e7eb; padding: 0.8rem;
+                            margin-bottom: 1rem; border-radius: 0.5rem; background-color: #ffffff;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                        }
+                        .section-title {
+                            font-size: 13pt; font-weight: 700; color: var(--primary);
+                            border-bottom: 1px solid var(--light-gray); padding-bottom: 0.4rem; margin-bottom: 0.8rem;
+                        }
+                        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+                        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; }
+                        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.8rem; }
+                        .info-item { display: flex; flex-direction: column; }
+                        .info-item strong { font-size: 7pt; color: var(--medium-gray); text-transform: uppercase; margin-bottom: 0.15rem; }
+                        .info-item span { font-size: 9pt; font-weight: 500; }
+                        .indicator-grid-item { background-color: var(--light-gray); padding: 0.5rem; border-radius: 0.5rem; text-align: center; }
+                        .indicator-grid-item.lucro { background-color: #e6f9f2; }
+                        .indicator-grid-item.lucro .indicator-value { color: #059669; }
+                        .indicator-grid-item.prejuizo { background-color: #fee2e2; }
+                        .indicator-grid-item.prejuizo .indicator-value { color: #dc2626; }
+                        .indicator-label { font-size: 7pt; color: var(--medium-gray); margin-bottom: 0.25rem; }
+                        .indicator-value { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { padding: 0.4rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+                        th { background-color: #f9fafb; font-weight: 600; font-size: 8pt; }
+                        tbody tr:nth-child(even) { background-color: #f9fafb; }
+                        .chart-page-break { page-break-before: always; }
+                        .chart-container { page-break-inside: avoid; margin-bottom: 1rem; text-align: center; }
+                        .chart-container h3 { font-size: 10pt; font-weight: 600; margin-bottom: 0.5rem; color: var(--dark-gray); }
+                        .chart-container img { max-width: 100%; border: 1px solid #e5e7eb; border-radius: 0.5rem; }
+                    </style>
+                
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+                <body>
+                    <main>
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <h1 style="font-size: 20pt; font-weight: 800; color: var(--primary); margin: 0;">Relatório de Simulação</h1>
+                            <p style="font-size: 10pt; color: var(--medium-gray); margin: 0;">Simulação Econômica de Confinamento</p>
+                        </div>
+                        <div class="card">
+                            <h2 class="section-title">Dados da Simulação</h2>
+                            <div class="grid-2">
+                                <div class="info-item"><strong>Fazenda:</strong> <span>${inputs.fazenda || 'Não informado'}</span></div>
+                                <div class="info-item"><strong>Técnico:</strong> <span>${inputs.tecnico || 'Não informado'}</span></div>
+                                <div class="info-item"><strong>Localidade:</strong> <span>${inputs.localidade || 'Não informado'}</span></div>
+                                <div class="info-item"><strong>Data:</strong> <span>${dataRelatorio}</span></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2 class="section-title">Parâmetros Utilizados</h2>
+                            <div class="grid-3">
+                                <div class="info-item"><strong>Dias de Confinamento:</strong> <span>${inputs.dias}</span></div>
+                                <div class="info-item"><strong>Peso Inicial:</strong> <span>${inputs.peso} kg</span></div>
+                                <div class="info-item"><strong>GMD:</strong> <span>${inputs.gmd} kg/dia</span></div>
+                                <div class="info-item"><strong>Rendimento Carcaça:</strong> <span>${inputs.rendimento}%</span></div>
+                                <div class="info-item"><strong>Custo Aquisição:</strong> <span>${formatBRL(inputs.custoAq)}</span></div>
+                                <div class="info-item"><strong>Custo Diária:</strong> <span>${formatBRL(inputs.custoDiaria)}</span></div>
+                                <div class="info-item"><strong>Valor Boi Gordo:</strong> <span>${formatBRL(inputs.receita)}/@</span></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2 class="section-title">Indicadores Chave</h2>
+                            <div class="grid-4">
+                                <div class="indicator-grid-item ${resultados.lucroBruto >= 0 ? 'lucro' : 'prejuizo'}">
+                                    <div class="indicator-label">Lucro Bruto</div>
+                                    <div class="indicator-value">${formatBRL(resultados.lucroBruto)}</div>
+                                </div>
+                                <div class="indicator-grid-item">
+                                    <div class="indicator-label">Margem Bruta</div>
+                                    <div class="indicator-value">${formatNumber(resultados.margemBruta, 2)}%</div>
+                                </div>
+                                <div class="indicator-grid-item">
+                                    <div class="indicator-label">Custo @ Produzida</div>
+                                    <div class="indicator-value">${formatBRL(resultados.custoArrobaProduzida)}</div>
+                                </div>
+                                <div class="indicator-grid-item">
+                                    <div class="indicator-label">TIR Mensal</div>
+                                    <div class="indicator-value">${isNaN(resultados.tir) ? 'N/A' : formatNumber(resultados.tir, 2)}%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h2 class="section-title">Resultados Detalhados</h2>
+                            <table>
+                                <thead><tr><th>Indicador</th><th>Valor</th></tr></thead>
+                                <tbody>
+                                    <tr><td>Peso Final (kg)</td><td>${formatNumber(resultados.pesoFinal, 2)} kg</td></tr>
+                                    <tr><td>Peso Carcaça (kg)</td><td>${formatNumber(resultados.pesoCarcaca, 2)} kg</td></tr>
+                                    <tr><td>Arrobas Totais</td><td>${formatNumber(resultados.arrobasTotais, 2)} @</td></tr>
+                                    <tr><td>Receita Total</td><td>${formatBRL(resultados.receitaTotal)}</td></tr>
+                                    <tr><td>Custo Total</td><td>${formatBRL(resultados.custoTotal)}</td></tr>
+                                    <tr><td>Custo Total por Arroba (R$/@)</td><td>${formatBRL(resultados.custoTotalPorArroba)}</td></tr>
+                                    <tr><td>Ponto de Equilíbrio</td><td>${isNaN(resultados.pontoDeEquilibrioArrobas) || resultados.pontoDeEquilibrioArrobas < 0 ? 'Inatingível' : formatNumber(resultados.pontoDeEquilibrioArrobas, 2) + ' @'}</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="chart-page-break">
+                            <h2 class="section-title">Análise Gráfica e de Sensibilidade</h2>
+                            <div class="grid-2">
+                                ${chartImages.economicChart ? `<div class="chart-container"><h3>Resultados Econômicos</h3><img src="${chartImages.economicChart}"></div>` : ""}
+                                ${chartImages.cashFlowChart ? `<div class="chart-container"><h3>Fluxo de Caixa Mensal</h3><img src="${chartImages.cashFlowChart}"></div>` : ""}
+                                ${chartImages.simulacaoLucroChart ? `<div class="chart-container"><h3>Simulação por Preço da Arroba</h3><img src="${chartImages.simulacaoLucroChart}"></div>` : ''}
+                                ${chartImages.simulacaoGMDChart ? `<div class="chart-container"><h3>Simulação por GMD</h3><img src="${chartImages.simulacaoGMDChart}"></div>` : ""}
+                                ${chartImages.simulacaoCustoReceitaChart ? `<div class="chart-container"><h3>Análise de Sensibilidade do Lucro</h3><img src="${chartImages.simulacaoCustoReceitaChart}"></div>` : ''}
+                                ${chartImages.tornadoChart ? `<div class="chart-container"><h3>Diagrama de Tornado</h3><img src="${chartImages.tornadoChart}"></div>` : ''}
+                                ${chartImages.simulacaoReceitaGMDChart ? `<div class="chart-container"><h3>Simulação Combinada</h3><img src="${chartImages.simulacaoReceitaGMDChart}"></div>` : ""}
+                            </div>
+                        </div>
+                    </main>
+                
+    <!-- Rodapé Acadêmico/Profissional -->
+    <footer class="no-print mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
+        <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color: #0d9488; text-decoration: none;">ricardobrumatti.pro.br</a> | &copy; 2026</p>
+    </footer>
+</body>
+                </html>
+                `;
+
+                const printWindow = window.open("", '_blank');
+                if (printWindow) {
+                    printWindow.document.write(printWindowHTML);
+                    printWindow.document.close();
+                    // Adiciona um pequeno delay para garantir que o conteúdo foi renderizado antes de imprimir
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 500);
+                } else {
+                    showModal("Erro", "Abertura de nova janela bloqueada. Por favor, permita pop-ups para este site.");
+                }
+            }
+
+            // Exportar para Excel
+            function exportToExcel() {
+                if (!state.currentSimulation) {
+                    showModal("Erro", "Nenhuma simulação para exportar. Por favor, calcule primeiro.");
+                    return;
+                }
+                const {
+                    inputs,
+                    resultados
+                } = state.currentSimulation;
+                const data = [
+                    ['Fazenda', inputs.fazenda || 'Não informado'],
+                    ['Técnico', inputs.tecnico || 'Não informado'],
+                    ['Localidade', inputs.localidade || 'Não informado'],
+                    ['Raça', inputs.raca || 'Não informado'],
+                    ['Sexo', inputs.sexo || 'Não informado'],
+                    ['Categoria Animal', inputs.categoriaAnimal || 'Não informado'],
+                    ['Dias de Confinamento', inputs.dias],
+                    ['Peso Inicial (kg)', inputs.peso],
+                    ['GMD (kg/dia)', inputs.gmd],
+                    ['Rendimento de Carcaça (%)', inputs.rendimento],
+                    ['Custo de Aquisição (R$)', inputs.custoAq],
+                    ['Custo da Diária (R$)', inputs.custoDiaria],
+                    ['Valor Boi Gordo (R$/@)', inputs.receita],
+                    [],
+                    ['RESULTADOS'],
+                    ['Peso Final (kg)', resultados.pesoFinal],
+                    ['Peso Carcaça (kg)', resultados.pesoCarcaca],
+                    ['Arrobas Produzidas', resultados.arrobasProduzidas],
+                    ['Arrobas Totais', resultados.arrobasTotais],
+                    ['Receita Total (R$)', resultados.receitaTotal],
+                    ['Custo Total (R$)', resultados.custoTotal],
+                    ['Lucro Bruto (R$)', resultados.lucroBruto],
+                    ['Margem Bruta (%)', resultados.margemBruta],
+                    ['Custo Total por Arroba (R$/@)', resultados.custoTotalPorArroba],
+                    ['Custo @ Produzida (R$)', resultados.custoArrobaProduzida],
+                    ['TIR (% ao mês)', isNaN(resultados.tir) ? 'Não convergiu' : resultados.tir],
+                    ['Ponto de Equilíbrio (Arrobas)', isNaN(resultados.pontoDeEquilibrioArrobas) || resultados.pontoDeEquilibrioArrobas < 0 ? 'Inatingível' : resultados.pontoDeEquilibrioArrobas]
+                ];
+
+                // Criar conteúdo CSV
+                let csvContent = "data:text/csv;charset=utf-8,";
+                data.forEach(row => {
+                    csvContent += row.join(",") + "\r\n";
+                });
+
+                // Criar link de download
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `simulacao_confinamento_${new Date().toISOString().slice(0, 10)}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            // Exportar para PDF
+            function exportToPDF() {
+                if (!state.currentSimulation) {
+                    showModal("Erro", "Nenhuma simulação para exportar. Por favor, calcule primeiro.");
+                    return;
+                }
+                showModal("Aviso", "Esta funcionalidade está em desenvolvimento. Por enquanto, use a opção de impressão (Ctrl+P) para gerar um PDF.");
+            }
+
+            // Baixar gráfico como imagem
+            function downloadChart(chartId) {
+                if (!state.chartInstances[chartId]) {
+                    showModal("Erro", "Gráfico não disponível para download.");
+                    return;
+                }
+                const link = document.createElement('a');
+                link.download = `${chartId}_${new Date().toISOString().slice(0, 10)}.png`;
+                link.href = state.chartInstances[chartId].toBase64Image();
+                link.click();
+            }
+
+            // Atualizar gráfico econômico
+            function updateEconomicChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio) {
+                const {
+                    receitaTotal,
+                    custoTotal,
+                    lucroBruto
+                } = resultados;
+                const ctx = document.getElementById('economicChart').getContext('2d');
+                // Destruir instância anterior se existir
+                if (state.chartInstances.economicChart) {
+                    state.chartInstances.economicChart.destroy();
+                }
+                // Criar novo gráfico
+                state.chartInstances.economicChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Receita Total', 'Custo Total', 'Lucro Bruto'],
+                        datasets: [{
+                            label: 'Resultados Econômicos (R$)',
+                            data: [receitaTotal, custoTotal, lucroBruto],
+                            backgroundColor: ['#3b82f6', '#ef4444', lucroBruto >= 0 ? '#10b981' : '#ef4444'],
+                            borderColor: ['#2563eb', '#dc2626', lucroBruto >= 0 ? '#059669' : '#dc2626'],
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            hoverBackgroundColor: ['#2563eb', '#dc2626', lucroBruto >= 0 ? '#059669' : '#dc2626']
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Valor (R$)',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    callback: (value) => 'R$ ' + value.toLocaleString('pt-BR'),
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Indicadores',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) label += ': ';
+                                        label += new Intl.NumberFormat('pt-BR', {
+                                            style: 'currency',
+                                            currency: 'BRL'
+                                        }).format(context.parsed.y);
+                                        return label;
+                                    }
+                                },
+                                bodyFont: {
+                                    size: chartFontSize
+                                },
+                                titleFont: {
+                                    size: chartFontSize + 2,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: chartAspectRatio,
+                        barPercentage: 0.5,
+                        categoryPercentage: 0.8
+                    }
+                });
+            }
+
+            // Atualizar gráfico de fluxo de caixa
+            function updateCashFlowChart(resultados, chartFontSize, chartTitleFontSize, chartAspectRatio) {
+                const {
+                    fluxoCaixa,
+                    lucroBruto
+                } = resultados;
+                // Calcular saldo acumulado
+                const saldoAcumulado = [];
+                let acumulado = 0;
+                fluxoCaixa.forEach((valor) => {
+                    acumulado += valor;
+                    saldoAcumulado.push(acumulado);
+                });
+                // Criar labels
+                const labels = Array.from({
+                    length: fluxoCaixa.length
+                }, (_, i) => i === 0 ? 'Investimento' : `Mês ${i}`);
+                // Obter contexto do canvas
+                const ctx = document.getElementById('cashFlowChart').getContext('2d');
+                // Destruir instância anterior se existir
+                if (state.chartInstances.cashFlowChart) {
+                    state.chartInstances.cashFlowChart.destroy();
+                }
+                // Criar novo gráfico
+                state.chartInstances.cashFlowChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Saldo Acumulado (R$)',
+                            type: 'line',
+                            data: saldoAcumulado,
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#2563eb',
+                            pointBorderColor: '#1d4ed8',
+                            pointBorderWidth: 2,
+                            order: 1
+                        }, {
+                            label: 'Fluxo de Caixa (R$)',
+                            data: fluxoCaixa,
+                            backgroundColor: fluxoCaixa.map(value => value >= 0 ? '#10b981' : '#ef4444'),
+                            borderColor: fluxoCaixa.map(value => value >= 0 ? '#059669' : '#dc2626'),
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            barPercentage: 0.6,
+                            order: 2
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Fluxo de Caixa (R$)',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    callback: (value) => 'R$ ' + value.toLocaleString('pt-BR'),
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                },
+                                grid: {
+                                    drawOnChartArea: false
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Período',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) label += ': ';
+                                        label += new Intl.NumberFormat('pt-BR', {
+                                            style: 'currency',
+                                            currency: 'BRL'
+                                        }).format(context.parsed.y);
+                                        return label;
+                                    }
+                                },
+                                bodyFont: {
+                                    size: chartFontSize
+                                },
+                                titleFont: {
+                                    size: chartFontSize + 2,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: chartAspectRatio
+                    }
+                });
+            }
+
+            // Atualizar gráfico de simulação de lucro
+            function updateProfitSimulationChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio) {
+                const {
+                    arrobasTotais,
+                    custoTotal
+                } = resultados;
+                // Gerar dados para simulação
+                const receitaMin = Math.floor(inputs.receita * 0.85 * 2) / 2;
+                const receitaMax = Math.ceil(inputs.receita * 1.15 * 2) / 2;
+                const receitas = [];
+                const lucros = [];
+                for (let r = receitaMin; r <= receitaMax + 0.001; r += 0.5) {
+                    const receitaTotalSim = arrobasTotais * r;
+                    const lucroBrutoSim = receitaTotalSim - custoTotal;
+                    receitas.push(r.toFixed(2).replace('.', ','));
+                    lucros.push(lucroBrutoSim);
+                }
+                // Obter contexto do canvas
+                const ctx = document.getElementById('simulacaoLucroChart').getContext('2d');
+                // Destruir instância anterior se existir
+                if (state.chartInstances.simulacaoLucroChart) {
+                    state.chartInstances.simulacaoLucroChart.destroy();
+                }
+                // Criar novo gráfico
+                state.chartInstances.simulacaoLucroChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: receitas.map(r => `R$ ${r}`),
+                        datasets: [{
+                            label: 'Lucro Bruto (R$)',
+                            data: lucros,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                            pointBackgroundColor: lucros.map(v => v >= 0 ? '#10b981' : '#ef4444'),
+                            pointBorderColor: lucros.map(v => v >= 0 ? '#059669' : '#dc2626'),
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            fill: true,
+                            tension: 0.25
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Lucro Bruto (R$)',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    callback: (value) => 'R$ ' + value.toLocaleString('pt-BR'),
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Valor Arroba Boi Gordo (R$/@)',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => 'Lucro Bruto: ' + new Intl.NumberFormat('pt-BR', {
+                                        style: 'currency',
+                                        currency: 'BRL'
+                                    }).format(context.parsed.y)
+                                },
+                                bodyFont: {
+                                    size: chartFontSize
+                                },
+                                titleFont: {
+                                    size: chartFontSize + 2,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: chartAspectRatio
+                    }
+                });
+            }
+
+            // Atualizar gráfico de simulação de GMD
+            function updateGmdSimulationChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio) {
+                const {
+                    custoTotal
+                } = resultados;
+                // Gerar dados para simulação
+                const gmdMin = Math.max(0, (inputs.gmd - 0.35));
+                const gmdMax = (inputs.gmd + 0.35);
+                const gmdValues = [];
+                const lucrosGMD = [];
+                for (let g = gmdMin; g <= gmdMax + 0.0001; g += 0.05) {
+                    const pesoFinalSim = inputs.peso + (inputs.dias * g);
+                    const pesoCarcacaSim = pesoFinalSim * (inputs.rendimento / 100);
+                    const arrobasSim = pesoCarcacaSim / 15;
+                    const receitaTotalSim = arrobasSim * inputs.receita;
+                    const lucroBrutoSim = receitaTotalSim - custoTotal;
+                    gmdValues.push(g.toFixed(3).replace('.', ','));
+                    lucrosGMD.push(lucroBrutoSim);
+                }
+                // Obter contexto do canvas
+                const ctx = document.getElementById('simulacaoGMDChart').getContext('2d');
+                // Destruir instância anterior se existir
+                if (state.chartInstances.simulacaoGMDChart) {
+                    state.chartInstances.simulacaoGMDChart.destroy();
+                }
+                // Criar novo gráfico
+                state.chartInstances.simulacaoGMDChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: gmdValues.map(g => `${g} kg/dia`),
+                        datasets: [{
+                            label: 'Lucro Bruto (R$)',
+                            data: lucrosGMD,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                            pointBackgroundColor: lucrosGMD.map(v => v >= 0 ? '#10b981' : '#ef4444'),
+                            pointBorderColor: lucrosGMD.map(v => v >= 0 ? '#059669' : '#dc2626'),
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            fill: true,
+                            tension: 0.25
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Lucro Bruto (R$)',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    callback: (value) => 'R$ ' + value.toLocaleString('pt-BR'),
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Ganho Médio Diário (kg/dia)',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => `GMD: ${gmdValues[context.dataIndex]} kg/dia | Lucro: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y)}`
+                                },
+                                bodyFont: {
+                                    size: chartFontSize
+                                },
+                                titleFont: {
+                                    size: chartFontSize + 2,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: chartAspectRatio
+                    }
+                });
+            }
+
+            // Atualizar gráfico de simulação combinada
+            function updateCombinedSimulationChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio) {
+                const {
+                    custoTotal
+                } = resultados;
+                // Gerar dados para simulação
+                const numPassos = 15;
+                const receitaMinSim = inputs.receita * 0.85;
+                const receitaMaxSim = inputs.receita * 1.15;
+                const gmdMinSim = Math.max(0, inputs.gmd - 0.35);
+                const gmdMaxSim = inputs.gmd + 0.35;
+                const incrementoReceita = (receitaMaxSim - receitaMinSim) / (numPassos - 1);
+                const incrementoGMD = (gmdMaxSim - gmdMinSim) / (numPassos - 1);
+                const receitasSim = Array.from({
+                    length: numPassos
+                }, (_, i) => receitaMinSim + i * incrementoReceita);
+                const gmdSim = Array.from({
+                    length: numPassos
+                }, (_, i) => gmdMinSim + i * incrementoGMD);
+                const lucrosSim = receitasSim.map((receita, i) => {
+                    const gmd = gmdSim[i];
+                    const pesoFinalSim = inputs.peso + (inputs.dias * gmd);
+                    const pesoCarcacaSim = pesoFinalSim * (inputs.rendimento / 100);
+                    const arrobasSim = pesoCarcacaSim / 15;
+                    const receitaTotalSim = arrobasSim * receita;
+                    return receitaTotalSim - custoTotal;
+                });
+                // Obter contexto do canvas
+                const ctx = document.getElementById('simulacaoReceitaGMDChart').getContext('2d');
+                // Destruir instância anterior se existir
+                if (state.chartInstances.simulacaoReceitaGMDChart) {
+                    state.chartInstances.simulacaoReceitaGMDChart.destroy();
+                }
+                // Criar novo gráfico
+                state.chartInstances.simulacaoReceitaGMDChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: receitasSim.map((r, i) => `R$ ${r.toFixed(2).replace('.', ',')} / ${gmdSim[i].toFixed(3).replace('.', ',')} kg/dia`),
+                        datasets: [{
+                            label: 'Lucro Bruto (R$)',
+                            data: lucrosSim,
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                            pointBackgroundColor: lucrosSim.map(v => v >= 0 ? '#10b981' : '#ef4444'),
+                            pointBorderColor: lucrosSim.map(v => v >= 0 ? '#059669' : '#dc2626'),
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            fill: true,
+                            tension: 0.25
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Lucro Bruto (R$)',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    callback: (value) => 'R$ ' + value.toLocaleString('pt-BR'),
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Valor Arroba Boi Gordo (R$/@) / GMD (kg/dia)',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const index = context.dataIndex;
+                                        return `Receita: R$ ${receitasSim[index].toFixed(2).replace('.', ',')} | GMD: ${gmdSim[index].toFixed(3).replace('.', ',')} kg/dia | Lucro: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y)}`;
+                                    }
+                                },
+                                bodyFont: {
+                                    size: chartFontSize
+                                },
+                                titleFont: {
+                                    size: chartFontSize + 2,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: chartAspectRatio
+                    }
+                });
+            }
+
+            // Atualizar gráfico de análise de sensibilidade
+            function updateSensitivityAnalysisChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio) {
+                const numPassosSensibilidade = 21;
+                const receitaSensMin = inputs.receita * 0.85;
+                const receitaSensMax = inputs.receita * 1.15;
+                const gmdSensMin = Math.max(0, inputs.gmd * 0.85);
+                const gmdSensMax = inputs.gmd * 1.15;
+                const custoDiariaSensMin = inputs.custoDiaria * 0.85;
+                const custoDiariaSensMax = inputs.custoDiaria * 1.15;
+                const custoAqSensMin = inputs.custoAq * 0.85;
+                const custoAqSensMax = inputs.custoAq * 1.15;
+
+                const incReceita = (receitaSensMax - receitaSensMin) / (numPassosSensibilidade - 1);
+                const incGmd = (gmdSensMax - gmdSensMin) / (numPassosSensibilidade - 1);
+                const incCustoDiaria = (custoDiariaSensMin - custoDiariaSensMax) / (numPassosSensibilidade - 1);
+                const incCustoAq = (custoAqSensMin - custoAqSensMax) / (numPassosSensibilidade - 1);
+
+                const lucrosSensibilidade = [],
+                    receitasTotaisOsciladas = [],
+                    gmdsOscilados = [],
+                    diariasTotaisOsciladas = [],
+                    aquisicoesOsciladas = [],
+                    labelsSensibilidade = [];
+                const receitasUnitarias = [],
+                    diariasUnitarias = [],
+                    aquisicoesPorKg = [];
+
+                for (let i = 0; i < numPassosSensibilidade; i++) {
+                    const receitaAtual = receitaSensMin + (i * incReceita);
+                    const gmdAtual = gmdSensMin + (i * incGmd);
+                    const custoDiariaAtual = custoDiariaSensMax + (i * incCustoDiaria);
+                    const custoAqAtual = custoAqSensMax + (i * incCustoAq);
+
+                    const pesoFinalSim = inputs.peso + (inputs.dias * gmdAtual);
+                    const pesoCarcacaSim = pesoFinalSim * (inputs.rendimento / 100);
+                    const arrobasSim = pesoCarcacaSim / 15;
+                    const receitaTotalSim = arrobasSim * receitaAtual;
+                    const custoTotalDiariasSim = inputs.dias * custoDiariaAtual;
+                    const custoTotalSim = custoTotalDiariasSim + custoAqAtual;
+                    const lucroBrutoSim = receitaTotalSim - custoTotalSim;
+
+                    lucrosSensibilidade.push(lucroBrutoSim);
+                    receitasTotaisOsciladas.push(receitaTotalSim);
+                    gmdsOscilados.push(gmdAtual);
+                    diariasTotaisOsciladas.push(custoTotalDiariasSim);
+                    aquisicoesOsciladas.push(custoAqAtual);
+                    labelsSensibilidade.push(`Cenário ${i - 10}`);
+                    receitasUnitarias.push(receitaAtual);
+                    diariasUnitarias.push(custoDiariaAtual);
+                    aquisicoesPorKg.push(custoAqAtual / inputs.peso);
+                }
+
+                // Plugin para linha zero
+                const zeroLinePlugin = {
+                    id: 'zeroLine',
+                    afterDraw: chart => {
+                        const yAxis = chart.scales.y1;
+                        const ctx = chart.ctx;
+                        const yZero = yAxis.getPixelForValue(0);
+                        if (yZero >= yAxis.top && yZero <= yAxis.bottom) {
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.strokeStyle = '#000000';
+                            ctx.lineWidth = 2;
+                            ctx.moveTo(chart.chartArea.left, yZero);
+                            ctx.lineTo(chart.chartArea.right, yZero);
+                            ctx.stroke();
+                            ctx.restore();
+                        }
+                    }
+                };
+
+                // Obter contexto do canvas
+                const ctx = document.getElementById('simulacaoCustoReceitaChart').getContext('2d');
+                // Destruir instância anterior se existir
+                if (state.chartInstances.simulacaoCustoReceitaChart) {
+                    state.chartInstances.simulacaoCustoReceitaChart.destroy();
+                }
+                // Criar novo gráfico
+                state.chartInstances.simulacaoCustoReceitaChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labelsSensibilidade,
+                        datasets: [{
+                            label: 'Receita Total',
+                            data: receitasTotaisOsciladas,
+                            borderColor: '#10b981',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            tension: 0.3,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Custo Total Diárias',
+                            data: diariasTotaisOsciladas,
+                            borderColor: '#ef4444',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            tension: 0.3,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'Custo Aquisição',
+                            data: aquisicoesOsciladas,
+                            borderColor: '#f59e0b',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            tension: 0.3,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'GMD',
+                            data: gmdsOscilados,
+                            borderColor: '#84cc16',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            tension: 0.3,
+                            yAxisID: 'y2'
+                        }, {
+                            label: 'Lucro Total',
+                            data: lucrosSensibilidade,
+                            borderColor: '#3b82f6',
+                            borderWidth: 4,
+                            pointBackgroundColor: lucrosSensibilidade.map(v => v >= 0 ? '#3b82f6' : '#ef4444'),
+                            pointBorderColor: lucrosSensibilidade.map(v => v >= 0 ? '#2563eb' : '#dc2626'),
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    plugins: [zeroLinePlugin],
+                    options: {
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Variação do Cenário',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Receita e Custos (R$)',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    font: {
+                                        size: chartFontSize
+                                    },
+                                    callback: (value) => new Intl.NumberFormat('pt-BR', {
+                                        style: 'currency',
+                                        currency: 'BRL'
+                                    }).format(value)
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Lucro (R$)',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    color: '#3b82f6',
+                                    font: {
+                                        size: chartFontSize
+                                    },
+                                    callback: (value) => new Intl.NumberFormat('pt-BR', {
+                                        style: 'currency',
+                                        currency: 'BRL'
+                                    }).format(value)
+                                },
+                                grid: {
+                                    drawOnChartArea: false
+                                }
+                            },
+                            y2: {
+                                type: 'linear',
+                                display: false
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        const index = context.dataIndex;
+                                        let label = context.dataset.label || '';
+                                        if (label) label += ': ';
+                                        switch (context.dataset.label) {
+                                            case 'Receita Total':
+                                                label += `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(receitasUnitarias[index])} / @`;
+                                                break;
+                                            case 'Custo Total Diárias':
+                                                label += `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(diariasUnitarias[index])} / dia`;
+                                                break;
+                                            case 'Custo Aquisição':
+                                                label += `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(aquisicoesPorKg[index])} / kg`;
+                                                break;
+                                            case 'GMD':
+                                                label += `${gmdsOscilados[index].toFixed(3).replace('.', ',')} kg/dia`;
+                                                break;
+                                            default:
+                                                label += new Intl.NumberFormat('pt-BR', {
+                                                    style: 'currency',
+                                                    currency: 'BRL'
+                                                }).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                },
+                                bodyFont: {
+                                    size: chartFontSize
+                                },
+                                titleFont: {
+                                    size: chartFontSize + 2,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: chartAspectRatio
+                    }
+                });
+            }
+
+            // Atualizar diagrama de tornado
+            function updateTornadoChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio) {
+                const resultadoBase = resultados.lucroBruto;
+                const variaveisParaAnalisar = [{
+                    id: 'receita',
+                    label: 'Preço da Arroba (R$/@)'
+                }, {
+                    id: 'custoAq',
+                    label: 'Custo de Aquisição (R$)'
+                }, {
+                    id: 'custoDiaria',
+                    label: 'Custo da Diária (R$)'
+                }, {
+                    id: 'gmd',
+                    label: 'Ganho de Peso (GMD)'
+                }, {
+                    id: 'rendimento',
+                    label: 'Rendimento de Carcaça (%)'
+                }];
+
+                const variacaoPercentualGeral = 0.10;
+                const variacaoPercentualRendimento = 0.05;
+                let resultadosSensibilidade = [];
+
+                // Calcular sensibilidade para cada variável
+                for (const variavel of variaveisParaAnalisar) {
+                    const valorOriginal = inputs[variavel.id];
+                    const variacaoAtual = (variavel.id === 'rendimento') ? variacaoPercentualRendimento : variacaoPercentualGeral;
+
+                    // Cenário otimista
+                    const inputsOtimista = { ...inputs
+                    };
+                    if (variavel.id.includes('custo')) {
+                        inputsOtimista[variavel.id] = valorOriginal * (1 - variacaoAtual);
+                    } else {
+                        inputsOtimista[variavel.id] = valorOriginal * (1 + variacaoAtual);
+                    }
+                    const lucroOtimista = calcularValores(inputsOtimista).lucroBruto;
+
+                    // Cenário pessimista
+                    const inputsPessimista = { ...inputs
+                    };
+                    if (variavel.id.includes('custo')) {
+                        inputsPessimista[variavel.id] = valorOriginal * (1 + variacaoAtual);
+                    } else {
+                        inputsPessimista[variavel.id] = valorOriginal * (1 - variacaoAtual);
+                    }
+                    const lucroPessimista = calcularValores(inputsPessimista).lucroBruto;
+
+                    resultadosSensibilidade.push({
+                        label: variavel.label,
+                        faixa: [lucroPessimista, lucroOtimista],
+                        impacto: Math.abs(lucroOtimista - lucroPessimista)
+                    });
+                }
+
+                // Ordenar por impacto
+                resultadosSensibilidade.sort((a, b) => b.impacto - a.impacto);
+                const labelsTornado = resultadosSensibilidade.map(r => r.label);
+                const dataTornado = resultadosSensibilidade.map(r => r.faixa.sort((a, b) => a - b));
+
+                // Mostrar container
+                const tornadoContainer = document.getElementById('tornadoContainer');
+                tornadoContainer.style.display = 'block';
+
+                // Obter contexto do canvas
+                const ctx = document.getElementById('tornadoChart').getContext('2d');
+                // Destruir instância anterior se existir
+                if (state.chartInstances.tornadoChart) {
+                    state.chartInstances.tornadoChart.destroy();
+                }
+
+                // Criar novo gráfico
+                state.chartInstances.tornadoChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labelsTornado,
+                        datasets: [{
+                            label: 'Faixa de Variação do Lucro Bruto',
+                            data: dataTornado,
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            borderRadius: 5,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `Lucro Base: R$ ${resultadoBase.toFixed(2).replace('.', ',')}`,
+                                font: {
+                                    size: 16
+                                },
+                                padding: {
+                                    bottom: 20
+                                }
+                            },
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const range = context.raw;
+                                        return `Impacto no Lucro: de R$ ${range[0].toFixed(2).replace('.', ',')} a R$ ${range[1].toFixed(2).replace('.', ',')}`;
+                                    }
+                                },
+                                bodyFont: {
+                                    size: chartFontSize
+                                },
+                                titleFont: {
+                                    size: chartFontSize + 2,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Lucro Bruto por Animal (R$)',
+                                    font: {
+                                        size: chartTitleFontSize,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    callback: (value) => 'R$ ' + value.toLocaleString('pt-BR'),
+                                    font: {
+                                        size: chartFontSize
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Retornar métodos públicos
+            return {
+                init: init,
+                calcular: calcular,
+                limparFormulario: limparFormulario,
+                saveSimulation: saveSimulation,
+                loadSimulation: loadSimulation,
+                deleteSimulation: deleteSimulation,
+                generatePrintView: generatePrintView,
+                exportToExcel: exportToExcel,
+                exportToPDF: exportToPDF,
+                downloadChart: downloadChart,
+                showModal: showModal,
+                showConfirmModal: showConfirmModal
+            };
+        })();
+
+        // Inicializar aplicação quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', () => {
+            App.init();
+        });
+    </script>
+</body>
+
+</html>

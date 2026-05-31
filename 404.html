@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página não encontrada — 404 — Prof. Ricardo C. Brumatti</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <style>
+    :root {
+      --bg:        #f8fafc;
+      --white: #ffffff;
+      --border:    #e2e8f0;
+      --text:      #0f172a;
+      --muted:     #475569;
+      --green:     #064e65;
+      --green-mid: #0d6b83;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --serif: Georgia, serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--sans);
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      text-align: center;
+    }
+    .container {
+      max-width: 480px;
+      padding: 3rem 2rem;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+    .code {
+      font-family: var(--serif);
+      font-size: 6rem;
+      font-weight: bold;
+      color: var(--green);
+      line-height: 1;
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-family: var(--serif);
+      font-size: 1.75rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--green);
+      color: var(--white);
+      text-decoration: none;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:hover {
+      background: var(--green-mid);
+      transform: translateY(-1px);
+    }
+    .countdown {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="code">404</div>
+    <h1>Página Não Encontrada</h1>
+    <p>O simulador ou página que você está procurando não existe ou foi movido. Você será redirecionado para a página inicial em <span id="secs">5</span> segundos...</p>
+    <a href="index.html" class="btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Voltar ao início
+    </a>
+    <div class="countdown" id="redirect-msg">Redirecionando automaticamente...</div>
+  </div>
+
+  <script>
+    let seconds = 5;
+    const counterSpan = document.getElementById('secs');
+    const interval = setInterval(() => {
+      seconds--;
+      counterSpan.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(interval);
+        window.location.href = "index.html";
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

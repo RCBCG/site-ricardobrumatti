@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador gratuito: Dashboard de Planejamento Pecuário - Prof. Ricardo C. Brumatti. Desenvolvido pelo Prof. Ricardo C. Brumatti (FAMEZ/UFMS) para análise econômica e pecuária de corte.">
+    <title>Dashboard de Planejamento Pecuário - Prof. Ricardo C. Brumatti</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration (Image 2 Colors) -->
+    <script id="tailwind-theme-config">
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            emerald: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c', // Overridden to darker deep teal
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            blue: {
+                                50: '#f8fafc',
+                                100: '#f1f5f9',
+                                200: '#e2e8f0',
+                                300: '#cbd5e1',
+                                400: '#94a3b8',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            teal: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            green: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .modal-enter { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-body::-webkit-scrollbar { width: 8px; }
+        .modal-body::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        .modal-body::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .modal-body::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .kpi-card {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+        }
+        .kpi-icon {
+            font-size: 1.5rem;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            color: white;
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .kpi-label {
+            font-size: 0.875rem; /* 14px */
+            font-weight: 500;
+            color: #4b5563;
+        }
+        .kpi-value {
+            font-size: 1.625rem; /* 26px */
+            font-weight: 700;
+            color: #1f2937;
+            margin-top: 0.25rem;
+            line-height: 1.2;
+        }
+
+        .chart-wrapper {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            border: 1px solid #e5e7eb;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 26rem; /* Altura ajustada para caber a fonte */
+        }
+        .chart-wrapper:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 12px 20px -5px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .chart-canvas-container {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .initial-state-bg {
+             background-image:
+                radial-gradient(at 27% 37%, hsla(215, 98%, 61%, 0.05) 0px, transparent 50%),
+                radial-gradient(at 97% 21%, hsla(125, 98%, 72%, 0.05) 0px, transparent 50%),
+                radial-gradient(at 52% 99%, hsla(355, 98%, 76%, 0.05) 0px, transparent 50%);
+            border: 1px solid #e5e7eb;
+        }
+
+        .details-table tbody tr:nth-child(odd) { background-color: #f9fafb; }
+        
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details .summary-icon { transition: transform 0.3s; }
+        details[open] .summary-icon { transform: rotate(90deg); }
+
+        .form-input {
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: #f8fafc;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+    </style>
+
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+<body class="text-gray-800">
+    <script>
+        if (window.self !== window.top) {
+            document.write('<style>.back-btn-container { display: none !important; }</style>');
+        }
+    </script>
+    <div class="back-btn-container no-print" style="padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; width: 100%;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#0d9488'" onmouseout="this.style.color='#64748b'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar ao site
+        </a>
+        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">ricardobrumatti.pro.br</span>
+    </div>
+
+
+    <div class="container mx-auto p-4 md:p-6 lg:p-8">
+
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Dashboard de Planejamento Pecuário</h1>
+            <p class="text-gray-500 text-lg">Planeje, Analise e Simule Seu Ano Pecuário</p>
+            <p class="text-gray-500 text-sm italic mt-1">Aplicação desenvolvida por Prof. Ricardo C. Brumatti - FAMEZ/UFMS - Campo Grande, MS, uso gratuito, sem fins comerciais.</p>
+        </header>
+
+        <!-- Seção de Controle Principal -->
+        <div class="bg-white p-4 rounded-2xl shadow-lg mb-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            <div class="flex flex-col md:flex-row justify-center items-center gap-4">
+                <button id="openPlanningModalButton" class="bg-green-600 text-white px-5 py-2.5 rounded-lg hover:bg-green-700 transition-all shadow-md font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-pencil"></i>
+                    Planejar Ano
+                </button>
+                 <button id="clearDataButton" class="bg-yellow-500 text-white px-5 py-2.5 rounded-lg hover:bg-yellow-600 transition-all shadow-md font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-eraser"></i>
+                    Limpar Tela
+                </button>
+                <button id="printReportButton" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-all shadow-md font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-print"></i>
+                    Relatório
+                </button>
+            </div>
+        </div>
+
+        <div id="resultsDashboard" class="space-y-10 hidden">
+            <!-- Layout dos KPIs com grid responsivo e ordem lógica -->
+            <section>
+                <h3 class="text-xl font-bold text-gray-700 mb-4 pb-2 border-b">Resultados Consolidados</h3>
+                <div id="kpiGridContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    <!-- Cards de KPI serão injetados aqui -->
+                </div>
+            </section>
+
+            <!-- Seção de gráficos com novos gráficos de barra -->
+            <section>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 pt-4 border-t">Análise Gráfica</h2>
+                <div class="grid grid-cols-1 gap-8">
+                    <!-- Gráficos com a nova estrutura para a fonte -->
+                    <div class="chart-wrapper">
+                        <div class="chart-canvas-container"><canvas id="cashFlowChart"></canvas></div>
+                        <p class="chart-source text-xs text-gray-400 text-right pt-2 flex-shrink-0"></p>
+                    </div>
+                     <div class="chart-wrapper">
+                        <div class="chart-canvas-container"><canvas id="costProportionsChart"></canvas></div>
+                        <p class="chart-source text-xs text-gray-400 text-right pt-2 flex-shrink-0"></p>
+                    </div>
+                     <div class="chart-wrapper">
+                        <div class="chart-canvas-container"><canvas id="revenueProportionsChart"></canvas></div>
+                        <p class="chart-source text-xs text-gray-400 text-right pt-2 flex-shrink-0"></p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <details class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <summary class="text-lg font-bold text-gray-800 cursor-pointer hover:bg-gray-50 p-6 flex justify-between items-center">
+                        Ver Detalhamento Mensal (Tabelas)
+                        <i class="fa-solid fa-chevron-right summary-icon"></i>
+                    </summary>
+                    <div class="p-6 border-t border-gray-200 space-y-8">
+                        <div>
+                            <h3 class="font-semibold text-blue-800 mb-3 text-xl">Detalhamento de Receitas</h3>
+                            <div class="overflow-x-auto rounded-lg border"><table id="salesTable" class="min-w-full text-xs details-table"></table></div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-red-800 mb-3 text-xl">Detalhamento de Custos</h3>
+                             <div class="overflow-x-auto rounded-lg border"><table id="costsTable" class="min-w-full text-xs details-table"></table></div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+        </div>
+
+        <div id="initialState" class="text-center p-10 md:p-20 rounded-2xl initial-state-bg hidden">
+             <div class="mx-auto bg-green-100 h-16 w-16 flex items-center justify-center rounded-full mb-4">
+                 <i class="fa-solid fa-chart-line text-3xl text-green-700"></i>
+             </div>
+            <h2 class="text-2xl font-bold text-gray-800">Bem-vindo ao seu Dashboard Pecuário</h2>
+            <p class="text-gray-600 text-lg mt-2 mb-6 max-w-2xl mx-auto">Clique em <strong>"Planejar Ano"</strong> para inserir seus dados e iniciar uma nova simulação ou veja os resultados com nossos dados de exemplo.</p>
+        </div>
+    </div>
+
+    <!-- Modal de Planejamento -->
+    <div id="planningModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-full max-h-[95vh] flex flex-col modal-enter">
+            <div class="flex justify-between items-center p-5 border-b">
+                <h3 class="text-2xl font-bold text-green-800">Planejamento Anual</h3>
+                <button id="closePlanningModalButton" class="text-gray-500 hover:text-red-600 text-3xl font-bold">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto modal-body flex-grow bg-gray-50/50">
+                <!-- Conteúdo do formulário será injetado aqui -->
+            </div>
+            <div class="p-5 border-t bg-gray-50 rounded-b-2xl flex justify-end items-center gap-4">
+                 <button id="savePlanningButton" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition shadow-md font-semibold text-base">Salvar Planejamento</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modais de Notificação e Confirmação -->
+    <div id="notificationModal" class="fixed top-5 right-5 text-white py-3 px-6 rounded-lg shadow-xl z-[100] hidden transition-transform transform translate-x-[120%]" role="alert">
+        <p id="notificationMessage"></p>
+    </div>
+    <div id="confirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-[99] hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center modal-enter">
+            <div class="mx-auto bg-yellow-100 h-16 w-16 flex items-center justify-center rounded-full mb-4">
+                 <i id="confirmIcon" class="fa-solid fa-triangle-exclamation text-3xl text-yellow-500"></i>
+             </div>
+            <h3 id="confirmTitle" class="text-2xl font-bold text-gray-800 mb-2">Você tem certeza?</h3>
+            <p id="confirmMessage" class="text-gray-600 mb-8">Esta ação não pode ser desfeita.</p>
+            <div class="flex justify-center gap-4">
+                <button id="confirmCancel" class="bg-gray-200 text-gray-800 px-6 py-2.5 rounded-lg hover:bg-gray-300 transition font-semibold">Cancelar</button>
+                <button id="confirmOk" class="bg-yellow-500 text-white px-6 py-2.5 rounded-lg hover:bg-yellow-600 transition font-semibold">Sim, continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Configuração e Constantes ---
+        Chart.register(ChartDataLabels);
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.plugins.title.font.size = 18;
+        Chart.defaults.plugins.title.font.weight = 'bold';
+        Chart.defaults.plugins.title.padding = { top: 10, bottom: 20 };
+        Chart.defaults.plugins.datalabels.display = false;
+
+        const MONTHS = ['Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+        const FULL_MONTHS = ['Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'];
+
+        const REVENUE_ITEMS = {
+            animalsSlaughter: { label: 'Animais p/ Abate (cab)', tooltip: 'Número de cabeças vendidas para abate.' },
+            weightSlaughter: { label: 'Peso @/cab (Abate)', tooltip: 'Peso médio em arrobas por cabeça para abate.' },
+            priceSlaughter: { label: 'Preço R$/@ (Abate)', tooltip: 'Preço de venda da arroba para abate.' },
+            animalsLive: { label: 'Animais Vivos (cab)', tooltip: 'Número de cabeças vendidas vivas (ex: para recria).'},
+            weightLiveKg: { label: 'Peso Médio kg/cab (Vivos)', tooltip: 'Peso médio em kg por cabeça vendida viva.'},
+            priceLive: { label: 'Preço R$/cab (Vivos)', tooltip: 'Preço de venda por cabeça de animal vivo.'}
+        };
+
+        const COST_ITEMS = {
+            costFattening: { label: 'Aquisição de Animais', type: 'variable', tooltip: 'Custo total com a compra de animais para engorda.' },
+            costNutrition: { label: 'Nutrição', type: 'variable', tooltip: 'Gastos com suplementos, sal mineral, ração, etc.' },
+            costAgricultural: { label: 'Insumos Agrícolas', type: 'variable', tooltip: 'Custos com adubos, sementes, defensivos para pastagens.' },
+            costSanitary: { label: 'Sanidade', type: 'variable', tooltip: 'Custos com vacinas, vermífugos e medicamentos.' },
+            costReproductive: { label: 'Reprodução', type: 'variable', tooltip: 'Inseminação, protocolos, etc. (se aplicável).'},
+            costPayroll: { label: 'Folha de Pagamento', type: 'fixed', tooltip: 'Salários, encargos e benefícios dos funcionários.' },
+            costMaintenance: { label: 'Manutenções', type: 'fixed', tooltip: 'Manutenção de cercas, máquinas, currais, etc.' },
+            costFuel: { label: 'Combustíveis', type: 'variable', tooltip: 'Gastos com diesel, gasolina, etc., para máquinas e veículos.' },
+            costConsulting: { label: 'Consultorias', type: 'fixed', tooltip: 'Honorários de veterinários, agrônomos, contadores.' },
+            costTaxes: { label: 'Impostos e Taxas', type: 'variable', tooltip: 'Funrural, GTA, e outros impostos sobre a operação.' },
+            costAdmin: { label: 'Desp. Administrativas', type: 'fixed', tooltip: 'Contas de luz, água, telefone, material de escritório.' },
+            costCommercial: { label: 'Desp. Comerciais', type: 'variable', tooltip: 'Comissões de venda, fretes, etc.' },
+            costFinancial: { label: 'Desp. Financeiras', type: 'variable', tooltip: 'Juros de financiamentos, taxas bancárias.' },
+            costDepreciation: { label: 'Depreciação', type: 'fixed', tooltip: 'Perda de valor de máquinas, benfeitorias, etc.' },
+            costAmortization: { label: 'Amortizações', type: 'fixed', tooltip: 'Amortização de investimentos em reformas, etc.' }
+        };
+
+        const CHART_COLORS = {
+            revenue: 'rgba(59, 130, 246, 0.8)',
+            costs: 'rgba(239, 68, 68, 0.8)',
+            profit: 'rgba(34, 197, 94, 0.8)',
+            accumulated: '#166534'
+        };
+
+        // --- Estado da Aplicação ---
+        let appState = { 
+            farmData: {}, 
+            monthlyData: {}, 
+            userId: null 
+        };
+        let chartInstances = {};
+
+        const sum = arr => arr ? arr.reduce((a, b) => a + (Number(b) || 0), 0) : 0;
+
+        const getInitialFarmData = () => ({
+            name: '',
+            location: '',
+            technician: '',
+            system: '',
+            area: 0,
+            herd: 0
+        });
+
+        const exampleData = {
+            farmData: { name: 'Fazenda Exemplo', location: 'Campo Grande - MS', technician: 'Fulano de tal', system: 'Recria e Engorda a Pasto', area: 1000, herd: 1200 },
+            monthlyData: FULL_MONTHS.reduce((acc, month) => {
+                const base = { animalsSlaughter: 0, weightSlaughter: 0, priceSlaughter: 310, animalsLive: 0, weightLiveKg: 0, priceLive: 2800, costFattening: 0, costNutrition: 15000, costAgricultural: 20000, costSanitary: 3000, costReproductive: 500, costPayroll: 15000, costMaintenance: 5000, costFuel: 4000, costConsulting: 2000, costTaxes: 1000, costAdmin: 3000, costCommercial: 500, costFinancial: 1000, costDepreciation: 8000, costAmortization: 1000 };
+                if (month === 'Julho') { base.costFattening = 50000; }
+                if (['Julho', 'Agosto', 'Setembro', 'Outubro'].includes(month)) { base.costNutrition = [25000, 38000, 30000, 32000][['Julho', 'Agosto', 'Setembro', 'Outubro'].indexOf(month)]; }
+                if (month === 'Outubro') { base.animalsSlaughter = 100; base.weightSlaughter = 20; base.priceSlaughter = 310; base.costTaxes = 2320; }
+                if (['Novembro', 'Maio'].includes(month)) { base.costSanitary = 8000; }
+                if (month === 'Março') { base.animalsSlaughter = 100; base.weightSlaughter = 20.5; base.priceSlaughter = 310; base.costTaxes = 2717; }
+                if (month === 'Maio') { base.animalsLive = 50; base.weightLiveKg = 210; base.priceLive = 2850; base.costTaxes = 1250; }
+                acc[month] = base;
+                return acc;
+            }, {})
+        };
+
+        const clearedData = {
+            farmData: getInitialFarmData(),
+            monthlyData: FULL_MONTHS.reduce((acc, month) => {
+                const base = {};
+                const allKeys = [...Object.keys(REVENUE_ITEMS), ...Object.keys(COST_ITEMS)];
+                allKeys.forEach(key => { base[key] = 0; });
+                acc[month] = base;
+                return acc;
+            }, {})
+        };
+        
+        // --- Firebase ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'simulador-gado-corte-default';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID" };
+
+        let app = null, auth = null, db = null;
+        if (firebaseConfig && firebaseConfig.apiKey !== "YOUR_API_KEY" && firebaseConfig.apiKey !== "") {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+            } catch (e) {
+                console.error("Erro ao inicializar Firebase:", e);
+            }
+        }
+
+        // --- UI Elements ---
+        const ui = {
+            resultsDashboard: document.getElementById('resultsDashboard'),
+            initialState: document.getElementById('initialState'),
+            kpiGridContainer: document.getElementById('kpiGridContainer'),
+            planningModal: document.getElementById('planningModal'),
+            planningModalBody: document.querySelector('#planningModal .modal-body'),
+            notificationModal: document.getElementById('notificationModal'),
+            notificationMessage: document.getElementById('notificationMessage'),
+            confirmModal: document.getElementById('confirmModal'),
+            confirmTitle: document.getElementById('confirmTitle'),
+            confirmMessage: document.getElementById('confirmMessage'),
+            confirmOkBtn: document.getElementById('confirmOk'),
+            confirmCancelBtn: document.getElementById('confirmCancel'),
+        };
+
+        // --- UI & Notificação ---
+        function loadExampleData() {
+            appState.farmData = JSON.parse(JSON.stringify(exampleData.farmData));
+            appState.monthlyData = JSON.parse(JSON.stringify(exampleData.monthlyData));
+        }
+
+        function updateUIOnLoad() {
+            runSimulationAndRender();
+        }
+
+        function showNotification(message, isError = false) {
+            ui.notificationMessage.textContent = message;
+            ui.notificationModal.className = `fixed top-5 right-5 text-white py-3 px-6 rounded-lg shadow-xl z-[100] transition-transform transform ${isError ? 'bg-red-600' : 'bg-green-600'}`;
+            ui.notificationModal.classList.remove('hidden', 'translate-x-[120%]');
+            ui.notificationModal.classList.add('translate-x-0');
+            setTimeout(() => {
+                ui.notificationModal.classList.replace('translate-x-0', 'translate-x-[120%]');
+            }, 3000);
+        }
+
+        function openModal(modal) { modal.classList.remove('hidden'); }
+        function closeModal(modal) { modal.classList.add('hidden'); }
+
+        function confirmAction({ title, message, onOk }) {
+            ui.confirmTitle.textContent = title;
+            ui.confirmMessage.textContent = message;
+            openModal(ui.confirmModal);
+            const okHandler = () => { onOk(); cleanup(); };
+            const cancelHandler = () => { cleanup(); };
+            const cleanup = () => {
+                closeModal(ui.confirmModal);
+                ui.confirmOkBtn.removeEventListener('click', okHandler);
+                ui.confirmCancelBtn.removeEventListener('click', cancelHandler);
+            };
+            ui.confirmOkBtn.addEventListener('click', okHandler, { once: true });
+            ui.confirmCancelBtn.addEventListener('click', cancelHandler, { once: true });
+        }
+
+        function handleClearUI() {
+            confirmAction({
+                title: 'Limpar Simulação e Dados',
+                message: 'Isso irá zerar todos os dados na tela e os salvos no navegador/nuvem. Deseja continuar?',
+                onOk: async () => {
+                    appState.farmData = JSON.parse(JSON.stringify(clearedData.farmData));
+                    appState.monthlyData = JSON.parse(JSON.stringify(clearedData.monthlyData));
+                    if (typeof firebaseConfig === 'undefined' || firebaseConfig.apiKey === "YOUR_API_KEY") {
+                        localStorage.removeItem('fluxo_caixa_dados');
+                        showNotification("Dados locais foram limpos com sucesso.");
+                    } else if (appState.userId) {
+                        const docRef = doc(db, "artifacts", appId, "users", appState.userId, "livestockSimulation", "data");
+                        try {
+                            await deleteDoc(docRef);
+                            showNotification("Dados salvos e da tela foram limpos com sucesso.");
+                        } catch (error) {
+                            console.error("Erro ao apagar os dados do Firestore:", error);
+                            showNotification("Erro ao apagar os dados salvos.", true);
+                        }
+                    } else {
+                        showNotification("Tela limpa. Pronta para uma nova simulação.");
+                    }
+                    updateUIOnLoad();
+                }
+            });
+        }
+
+        // --- Lógica do Modal de Planejamento ---
+        function createPlanningInputs() {
+            ui.planningModalBody.innerHTML = ''; // Limpa o corpo do modal
+            const createSection = (title, content, gridClass = '', isOpen = false) => `
+                <details class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-4" ${isOpen ? 'open' : ''}>
+                    <summary class="py-4 px-5 font-semibold text-lg cursor-pointer flex justify-between items-center hover:bg-gray-50">
+                        <span>${title}</span>
+                        <i class="fa-solid fa-chevron-right summary-icon"></i>
+                    </summary>
+                    <div class="p-4 bg-white border-t border-gray-200 ${gridClass || 'space-y-4'}">
+                        ${content}
+                    </div>
+                </details>`;
+
+            // Seção de Dados da Propriedade
+            const farmDataContent = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="plan-farmName" class="block text-sm font-medium text-gray-700">Fazenda</label>
+                        <input type="text" id="plan-farmName" class="form-input mt-1 block w-full" placeholder="Nome da Fazenda">
+                    </div>
+                    <div>
+                        <label for="plan-farmLocation" class="block text-sm font-medium text-gray-700">Localidade</label>
+                        <input type="text" id="plan-farmLocation" class="form-input mt-1 block w-full" placeholder="Cidade - UF">
+                    </div>
+                    <div>
+                        <label for="plan-technician" class="block text-sm font-medium text-gray-700">Técnico Responsável</label>
+                        <input type="text" id="plan-technician" class="form-input mt-1 block w-full" placeholder="Nome do Técnico">
+                    </div>
+                    <div>
+                        <label for="plan-system" class="block text-sm font-medium text-gray-700">Sistema Produtivo</label>
+                        <input type="text" id="plan-system" class="form-input mt-1 block w-full" placeholder="Ex: Recria e Engorda">
+                    </div>
+                    <div>
+                        <label for="plan-farmArea" class="block text-sm font-medium text-gray-700">Área da Fazenda (ha)</label>
+                        <input type="number" id="plan-farmArea" class="form-input mt-1 block w-full" placeholder="Ex: 1500.00" step="0.01">
+                    </div>
+                    <div>
+                        <label for="plan-herd" class="block text-sm font-medium text-gray-700">Rebanho Total (cab.)</label>
+                        <input type="number" id="plan-herd" class="form-input mt-1 block w-full" placeholder="Ex: 2000" step="1">
+                    </div>
+                </div>`;
+            ui.planningModalBody.innerHTML += createSection('Dados da Propriedade', farmDataContent, '', true);
+
+            const createInputGroup = (id, { label, tooltip }, type) => {
+                const tooltipIcon = `<i class="fa-regular fa-circle-question text-gray-400 ml-1" title="${tooltip}"></i>`;
+                if (type === 'fixed') {
+                    return `<div class="p-2">
+                                <label class="block text-sm font-medium text-gray-600 mb-1">${label} ${tooltipIcon}</label>
+                                <input type="number" id="plan-${id}" class="form-input mt-1 block w-full text-sm" placeholder="R$ 0,00" step="any">
+                            </div>`;
+                }
+                const headerHtml = MONTHS.map(m => `<th class="w-1/12 px-1 pb-2 text-center text-xs font-medium text-gray-500">${m}</th>`).join('');
+                const inputsHtml = FULL_MONTHS.map((_, i) => `<td class="p-1"><input type="number" id="plan-${id}-${i}" class="form-input w-full text-sm text-center" placeholder="0" step="any"></td>`).join('');
+                return `<div class="p-2 bg-gray-50 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">${label} ${tooltipIcon}</label>
+                            <div class="overflow-x-auto">
+                               <table class="w-full border-collapse"><thead><tr>${headerHtml}</tr></thead><tbody><tr>${inputsHtml}</tr></tbody></table>
+                            </div>
+                        </div>`;
+            };
+            const revenueContent = Object.entries(REVENUE_ITEMS).map(([id, config]) => createInputGroup(id, config, 'variable')).join('');
+            const fixedCostsContent = Object.entries(COST_ITEMS).filter(([,c]) => c.type === 'fixed').map(([id, c]) => createInputGroup(id, c, 'fixed')).join('');
+            const variableCostsContent = Object.entries(COST_ITEMS).filter(([,c]) => c.type === 'variable').map(([id, c]) => createInputGroup(id, c, 'variable')).join('');
+            
+            ui.planningModalBody.innerHTML += createSection('Receitas', revenueContent, '', true);
+            ui.planningModalBody.innerHTML += createSection('Custos Fixos (Valor Mensal Fixo)', fixedCostsContent, 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4');
+            ui.planningModalBody.innerHTML += createSection('Custos Variáveis (Valor por Mês)', variableCostsContent);
+        }
+
+        function populatePlanningModal() {
+            // Popula os dados da fazenda
+            const farmData = appState.farmData || {};
+            document.getElementById('plan-farmName').value = farmData.name || '';
+            document.getElementById('plan-farmLocation').value = farmData.location || '';
+            document.getElementById('plan-technician').value = farmData.technician || '';
+            document.getElementById('plan-system').value = farmData.system || '';
+            document.getElementById('plan-farmArea').value = farmData.area || '';
+            document.getElementById('plan-herd').value = farmData.herd || '';
+
+            // Popula os dados mensais
+            Object.entries({...REVENUE_ITEMS, ...COST_ITEMS}).forEach(([id, config]) => {
+                if (config.type === 'fixed') {
+                    const input = document.getElementById(`plan-${id}`);
+                    if (input) input.value = appState.monthlyData[FULL_MONTHS[0]]?.[id] || '';
+                } else {
+                    FULL_MONTHS.forEach((month, i) => {
+                        const input = document.getElementById(`plan-${id}-${i}`);
+                        if (input) input.value = appState.monthlyData[month]?.[id] || '';
+                    });
+                }
+            });
+        }
+
+        async function saveDataToFirestore() {
+            if (typeof firebaseConfig === 'undefined' || firebaseConfig.apiKey === "YOUR_API_KEY") {
+                localStorage.setItem('fluxo_caixa_dados', JSON.stringify({ farmData: appState.farmData, monthlyData: appState.monthlyData }));
+                showNotification("Planejamento salvo localmente no seu navegador!");
+                return;
+            }
+            if (!appState.userId) return;
+            const docRef = doc(db, "artifacts", appId, "users", appState.userId, "livestockSimulation", "data");
+            try {
+                // Salva farmData e monthlyData
+                await setDoc(docRef, { farmData: appState.farmData, monthlyData: appState.monthlyData });
+                showNotification("Planejamento salvo com sucesso!");
+            } catch (error) {
+                console.error("Error saving data:", error);
+                showNotification("Erro ao salvar o planejamento.", true);
+            }
+        }
+
+        async function handleSavePlanning() {
+            // Salva os dados da fazenda
+            appState.farmData = {
+                name: document.getElementById('plan-farmName').value,
+                location: document.getElementById('plan-farmLocation').value,
+                technician: document.getElementById('plan-technician').value,
+                system: document.getElementById('plan-system').value,
+                area: parseFloat(document.getElementById('plan-farmArea').value) || 0,
+                herd: parseInt(document.getElementById('plan-herd').value) || 0,
+            };
+
+            const newMonthlyData = {};
+            FULL_MONTHS.forEach(month => { newMonthlyData[month] = {}; });
+            
+            Object.entries({...REVENUE_ITEMS, ...COST_ITEMS}).forEach(([id, config]) => {
+                if (config.type === 'fixed') {
+                    const value = parseFloat(document.getElementById(`plan-${id}`).value) || 0;
+                    FULL_MONTHS.forEach(month => newMonthlyData[month][id] = value);
+                } else {
+                    FULL_MONTHS.forEach((month, i) => {
+                        newMonthlyData[month][id] = parseFloat(document.getElementById(`plan-${id}-${i}`).value) || 0;
+                    });
+                }
+            });
+            appState.monthlyData = newMonthlyData;
+
+            await saveDataToFirestore();
+            runSimulationAndRender();
+            closeModal(ui.planningModal);
+        }
+
+        // --- Simulação e Renderização ---
+        function runSimulationAndRender() {
+            const hasData = appState.monthlyData && Object.keys(appState.monthlyData).length > 0 && sum(Object.values(appState.monthlyData).map(m => sum(Object.values(m)))) > 0;
+            if (!hasData) {
+                ui.resultsDashboard.classList.add('hidden');
+                ui.initialState.classList.remove('hidden');
+                return;
+            }
+            ui.resultsDashboard.classList.remove('hidden');
+            ui.initialState.classList.add('hidden');
+
+            const sales = {}, costs = {};
+            [...Object.keys(REVENUE_ITEMS), 'totalRevenue', 'arrobasSlaughter', 'arrobasLive', 'totalArrobas'].forEach(key => sales[key] = []);
+            [...Object.keys(COST_ITEMS), 'operationalCosts', 'totalCosts', 'grossProfit', 'accumulatedBalance'].forEach(key => costs[key] = []);
+
+            FULL_MONTHS.forEach(month => {
+                const data = appState.monthlyData[month] || {};
+                const s = {};
+                Object.keys(REVENUE_ITEMS).forEach(key => s[key] = data[key] || 0);
+                s.arrobasSlaughter = s.animalsSlaughter * s.weightSlaughter;
+                s.arrobasLive = (s.animalsLive * s.weightLiveKg) / 30;
+                s.totalArrobas = s.arrobasSlaughter + s.arrobasLive;
+                s.totalRevenue = (s.arrobasSlaughter * s.priceSlaughter) + (s.animalsLive * s.priceLive);
+                Object.keys(s).forEach(key => sales[key].push(s[key]));
+                
+                const c = {};
+                Object.keys(COST_ITEMS).forEach(key => c[key] = data[key] || 0);
+                c.operationalCosts = Object.keys(COST_ITEMS).filter(k => k !== 'costDepreciation' && k !== 'costAmortization').reduce((acc, k) => acc + (c[k] || 0), 0);
+                c.totalCosts = c.operationalCosts + (c.costDepreciation || 0) + (c.costAmortization || 0);
+                c.grossProfit = s.totalRevenue - c.totalCosts;
+                Object.keys(c).forEach(key => costs[key].push(c[key]));
+            });
+
+            costs.accumulatedBalance = costs.grossProfit.reduce((acc, profit, i) => {
+                acc.push(i === 0 ? profit : (acc[i-1] || 0) + profit);
+                return acc;
+            }, []);
+
+            const annual = {
+                totalRevenue: sum(sales.totalRevenue),
+                totalArrobas: sum(sales.totalArrobas),
+                totalCosts: sum(costs.totalCosts),
+                grossProfit: sum(costs.grossProfit),
+            };
+            
+            const farmArea = appState.farmData.area || 0;
+            const indicators = {
+                totalRevenue: annual.totalRevenue,
+                totalCosts: annual.totalCosts,
+                totalProfit: annual.grossProfit,
+                grossMarginPercent: annual.totalRevenue ? (annual.grossProfit / annual.totalRevenue) * 100 : 0,
+                revenuePerArroba: annual.totalArrobas ? annual.totalRevenue / annual.totalArrobas : 0,
+                costPerArroba: annual.totalArrobas ? annual.totalCosts / annual.totalArrobas : 0,
+                profitPerArroba: annual.totalArrobas ? annual.grossProfit / annual.totalArrobas : 0,
+                revenuePerHa: farmArea ? annual.totalRevenue / farmArea : 0,
+                costPerHa: farmArea ? annual.totalCosts / farmArea : 0,
+                profitPerHa: farmArea ? annual.grossProfit / farmArea : 0,
+            };
+
+            renderKPIs(indicators);
+            renderCharts({ sales, costs });
+            renderDetailedTables({ sales, costs });
+        }
+
+        const formatCurrency = (val, decimals = 1) => (val || 0).toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+        });
+        const formatNumber = (val, decimals = 2) => (val || 0).toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+
+        function renderKPIs(indicators) {
+            const createKpiCard = (kpi) => `
+                <div class="kpi-card">
+                    <div class="kpi-icon ${kpi.color}"><i class="${kpi.icon}"></i></div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="kpi-label">${kpi.label}</h4>
+                        <p class="kpi-value truncate">${kpi.value}</p>
+                    </div>
+                </div>`;
+
+            const allKpis = [
+                { label: 'Receita Total', value: formatCurrency(indicators.totalRevenue), icon: 'fa-solid fa-chart-line', color: 'bg-blue-600' },
+                { label: 'Custo Total', value: formatCurrency(indicators.totalCosts), icon: 'fa-solid fa-file-invoice-dollar', color: 'bg-red-600' },
+                { label: 'Lucro Bruto Total', value: formatCurrency(indicators.totalProfit), icon: 'fa-solid fa-sack-dollar', color: 'bg-green-600' },
+                { label: 'Margem Bruta', value: `${formatNumber(indicators.grossMarginPercent, 1)}%`, icon: 'fa-solid fa-percent', color: 'bg-teal-500' },
+                { label: 'Receita/@', value: formatCurrency(indicators.revenuePerArroba, 2), icon: 'fa-solid fa-at', color: 'bg-blue-500' },
+                { label: 'Custo/@', value: formatCurrency(indicators.costPerArroba, 2), icon: 'fa-solid fa-at', color: 'bg-red-500' },
+                { label: 'Lucro/@', value: formatCurrency(indicators.profitPerArroba, 2), icon: 'fa-solid fa-at', color: 'bg-green-500' },
+                { html: `<div class="hidden xl:block"></div>` },
+                { label: 'Receita/ha', value: formatCurrency(indicators.revenuePerHa), icon: 'fa-solid fa-cow', color: 'bg-blue-700' },
+                { label: 'Custo/ha', value: formatCurrency(indicators.costPerHa), icon: 'fa-solid fa-cow', color: 'bg-red-700' },
+                { label: 'Lucro/ha', value: formatCurrency(indicators.profitPerHa), icon: 'fa-solid fa-cow', color: 'bg-green-700' },
+            ];
+
+            const container = ui.kpiGridContainer;
+            container.innerHTML = '';
+            allKpis.forEach(kpi => {
+                if(kpi.html) {
+                    container.innerHTML += kpi.html;
+                } else {
+                    container.innerHTML += createKpiCard(kpi);
+                }
+            });
+        }
+
+        function renderChart(id, type, data, options) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (chartInstances[id]) chartInstances[id].destroy();
+            chartInstances[id] = new Chart(ctx, { type, data, options });
+        }
+        
+        function renderCharts({ sales, costs }) {
+            const compactCurrencyFormatter = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(value);
+            
+            renderChart('cashFlowChart', 'bar', {
+                labels: MONTHS,
+                datasets: [
+                    { label: 'Receitas', data: sales.totalRevenue, backgroundColor: CHART_COLORS.revenue, borderRadius: 4, order: 2 },
+                    { label: 'Custos', data: costs.totalCosts, backgroundColor: CHART_COLORS.costs, borderRadius: 4, order: 2 },
+                    { label: 'Lucro', data: costs.grossProfit, backgroundColor: CHART_COLORS.profit, borderRadius: 4, order: 2 },
+                    {
+                        type: 'line',
+                        label: 'Saldo Acumulado',
+                        data: costs.accumulatedBalance,
+                        borderColor: CHART_COLORS.accumulated,
+                        backgroundColor: 'transparent',
+                        yAxisID: 'y1',
+                        order: 1,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: CHART_COLORS.accumulated
+                    }
+                ]
+            }, {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Fluxo de Caixa Mensal e Saldo Acumulado', font: {size: 16} },
+                    tooltip: {
+                        callbacks: { label: (c) => `${c.dataset.label}: ${formatCurrency(c.raw, 2)}` },
+                        backgroundColor: '#1f2937', titleFont: { size: 14 }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 8
+                    },
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        ticks: { 
+                            callback: compactCurrencyFormatter,
+                            font: { size: 10 }
+                        },
+                        grid: { color: '#e5e7eb' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            callback: compactCurrencyFormatter,
+                            font: { size: 10 }
+                        }
+                    }
+                }
+            });
+
+            const costProportionsData = Object.keys(COST_ITEMS)
+                .map(key => ({ label: COST_ITEMS[key].label, value: sum(costs[key]) }))
+                .filter(item => item.value > 0)
+                .sort((a, b) => a.value - b.value);
+            const totalCosts = sum(costProportionsData.map(d => d.value));
+
+            renderChart('costProportionsChart', 'bar', {
+                labels: costProportionsData.map(d => d.label),
+                datasets: [{ 
+                    label: '% do Custo Total',
+                    data: costProportionsData.map(d => totalCosts > 0 ? (d.value / totalCosts) * 100 : 0),
+                    backgroundColor: '#ef4444',
+                    borderColor: '#dc2626',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            }, {
+                indexAxis: 'y',
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Composição dos Custos Anuais (%)', font: { size: 16 } },
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (c) => {
+                                const index = c.dataIndex;
+                                const originalValue = costProportionsData[index].value;
+                                return `${c.dataset.label}: ${c.raw.toFixed(1)}% (${formatCurrency(originalValue, 2)})`;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: true,
+                        anchor: 'end',
+                        align: 'end',
+                        color: '#374151',
+                        font: { weight: 'bold' },
+                        formatter: (value) => `${value.toFixed(1)}%`
+                    }
+                },
+                scales: {
+                    x: {
+                        max: 100,
+                        min: 0,
+                        ticks: { callback: (value) => value + '%' }
+                    },
+                    y: {
+                        ticks: { font: { size: 10 } }
+                    }
+                }
+            });
+
+            const totalRevenueSlaughter = sum(sales.totalRevenue.map((_, i) => sales.arrobasSlaughter[i] * sales.priceSlaughter[i]));
+            const totalRevenueLive = sum(sales.totalRevenue.map((_, i) => sales.animalsLive[i] * sales.priceLive[i]));
+            const totalRevenue = totalRevenueSlaughter + totalRevenueLive;
+            
+            const revenueData = [
+                { label: 'Venda para Abate', value: totalRevenueSlaughter },
+                { label: 'Venda de Animais Vivos', value: totalRevenueLive }
+            ];
+
+            renderChart('revenueProportionsChart', 'bar', {
+                labels: revenueData.map(d => d.label),
+                datasets: [{ 
+                    label: '% da Receita Total',
+                    data: revenueData.map(d => totalRevenue > 0 ? (d.value / totalRevenue) * 100 : 0),
+                    backgroundColor: ['#2563eb', '#3b82f6'],
+                    borderRadius: 4
+                }]
+            }, {
+                indexAxis: 'y',
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Composição da Receita Anual (%)', font: { size: 16 } },
+                    legend: { display: false },
+                     tooltip: {
+                        callbacks: {
+                            label: (c) => {
+                                const index = c.dataIndex;
+                                const originalValue = revenueData[index].value;
+                                return `${c.dataset.label}: ${c.raw.toFixed(1)}% (${formatCurrency(originalValue, 2)})`;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: true,
+                        anchor: 'end',
+                        align: 'end',
+                        color: 'white',
+                        font: { weight: 'bold', size: 14 },
+                        formatter: (value) => value > 0 ? `${value.toFixed(1)}%` : ''
+                    }
+                },
+                 scales: {
+                    x: {
+                        max: 100,
+                        min: 0,
+                        ticks: { callback: (value) => value + '%' }
+                    },
+                    y: {
+                        ticks: { font: { size: 12 } }
+                    }
+                }
+            });
+
+            const currentYear = new Date().getFullYear();
+            const sourceText = `Fonte: Ricardo C. Brumatti (${currentYear})`;
+            document.querySelectorAll('.chart-source').forEach(el => el.textContent = sourceText);
+        }
+        
+        function renderDetailedTables({ sales, costs }) {
+            const tableHeader = `<thead><tr class="bg-gray-100"><th class="px-3 py-2 text-left font-semibold text-gray-600">Item</th>${MONTHS.map(m => `<th class="px-2 py-2 text-right font-semibold text-gray-600 w-24">${m}</th>`).join('')}<th class="px-3 py-2 text-right font-bold text-gray-800 w-32">Total</th></tr></thead>`;
+            
+            const createSalesTableRows = (items, sourceData) => {
+                return Object.entries(items)
+                    .map(([key, config]) => {
+                        const values = sourceData[key] || [];
+                        const total = sum(values);
+                        if (total === 0 && values.every(v => v === 0)) return '';
+                        const formatFn = (v) => formatNumber(v, 1);
+                        return `<tr class="border-b border-gray-200"><td class="px-3 py-1.5 font-medium text-gray-600">${config.label}</td>
+                            ${values.map(v => `<td class="px-2 py-1.5 text-right">${formatFn(v)}</td>`).join('')}
+                            <td class="px-3 py-1.5 text-right font-bold">${formatFn(total)}</td>
+                        </tr>`;
+                    })
+                    .join('');
+            };
+            
+            const createCostsTableRows = (items, sourceData) => {
+                return Object.entries(items)
+                    .map(([key, config]) => {
+                        const values = sourceData[key] || [];
+                        const total = sum(values);
+                        if (total === 0 && values.every(v => v === 0)) return '';
+                        const formatFn = (v) => formatNumber(v, 0); 
+                        return `<tr class="border-b border-gray-200"><td class="px-3 py-1.5 font-medium text-gray-600">${config.label}</td>
+                            ${values.map(v => `<td class="px-2 py-1.5 text-right">${formatFn(v)}</td>`).join('')}
+                            <td class="px-3 py-1.5 text-right font-bold">${formatFn(total)}</td>
+                        </tr>`;
+                    })
+                    .join('');
+            };
+
+            document.getElementById('salesTable').innerHTML = `${tableHeader}<tbody>
+                ${createSalesTableRows(REVENUE_ITEMS, sales)}
+                <tr class="border-t-2 border-blue-200 bg-blue-50"><td class="px-3 py-2 font-bold text-blue-800">Receita Total</td>
+                    ${sales.totalRevenue.map(v => `<td class="px-2 py-2 text-right font-bold text-blue-800">${formatCurrency(v, 1)}</td>`).join('')}
+                    <td class="px-3 py-2 text-right font-extrabold text-blue-900">${formatCurrency(sum(sales.totalRevenue), 1)}</td>
+                </tr>
+            </tbody>`;
+            document.getElementById('costsTable').innerHTML = `${tableHeader}<tbody>
+                ${createCostsTableRows(COST_ITEMS, costs)}
+                <tr class="border-t-2 border-red-200 bg-red-50"><td class="px-3 py-2 font-bold text-red-800">Custo Total</td>
+                    ${costs.totalCosts.map(v => `<td class="px-2 py-2 text-right font-bold text-red-800">${formatCurrency(v, 0)}</td>`).join('')}
+                    <td class="px-3 py-2 text-right font-extrabold text-red-900">${formatCurrency(sum(costs.totalCosts), 0)}</td>
+                </tr>
+                 <tr class="border-t border-gray-200 bg-green-50"><td class="px-3 py-2 font-bold text-green-800">Lucro Bruto</td>
+                    ${costs.grossProfit.map(v => `<td class="px-2 py-2 text-right font-bold text-green-800">${formatCurrency(v, 0)}</td>`).join('')}
+                    <td class="px-3 py-2 text-right font-extrabold text-green-900">${formatCurrency(sum(costs.grossProfit), 0)}</td>
+                </tr>
+            </tbody>`;
+        }
+        
+        // --- Relatório de Impressão ---
+        function generatePrintReport() {
+            if (ui.initialState.checkVisibility()) {
+                showNotification("Por favor, execute uma simulação antes de gerar o relatório.", true);
+                return;
+            }
+
+            const chartImages = [
+                { instance: chartInstances['cashFlowChart'], title: "Fluxo de Caixa Mensal e Saldo Acumulado" },
+                { instance: chartInstances['costProportionsChart'], title: "Composição dos Custos Anuais (%)" },
+                { instance: chartInstances['revenueProportionsChart'], title: "Composição da Receita Anual (%)" }
+            ].map(chart => ({
+                img: chart.instance ? chart.instance.toBase64Image() : '',
+                title: chart.title
+            }));
+
+            const kpiData = [];
+            document.querySelectorAll('#kpiGridContainer .kpi-card').forEach(card => {
+                const label = card.querySelector('.kpi-label')?.textContent || '';
+                const value = card.querySelector('.kpi-value')?.textContent || '';
+                if (label && value) {
+                    kpiData.push({ label, value });
+                }
+            });
+
+            let kpisHTML = '<div class="grid grid-cols-2 gap-x-8 gap-y-2">';
+            kpiData.forEach(kpi => {
+                kpisHTML += `<div><strong>${kpi.label}:</strong> ${kpi.value}</div>`;
+            });
+            kpisHTML += '</div>';
+
+            const farm = appState.farmData || {};
+            const fonte = `Fonte: Ricardo C. Brumatti (${new Date().getFullYear()})`;
+            const generationDate = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+            const printWindowHTML = `
+                <html>
+                    <head>
+                        <title>Relatório - Dashboard de Planejamento Pecuário</title>
+                        <script src="https://cdn.tailwindcss.com"><\/script>
+                        <script id="tailwind-theme-config">
+                            if (typeof tailwind !== 'undefined') {
+                                tailwind.config = {
+                                    darkMode: 'class',
+                                    theme: {
+                                        extend: {
+                                            colors: {
+                                                emerald: {
+                                                    50: '#f0fdfa',
+                                                    100: '#ccfbf1',
+                                                    200: '#99f6e4',
+                                                    300: '#5eead4',
+                                                    400: '#2dd4bf',
+                                                    500: '#0d6b83',
+                                                    600: '#064e65',
+                                                    700: '#043b4c',
+                                                    800: '#032c39',
+                                                    900: '#022029',
+                                                },
+                                                blue: {
+                                                    50: '#f8fafc',
+                                                    100: '#f1f5f9',
+                                                    200: '#e2e8f0',
+                                                    300: '#cbd5e1',
+                                                    400: '#94a3b8',
+                                                    500: '#0d6b83',
+                                                    600: '#064e65',
+                                                    700: '#043b4c',
+                                                    800: '#032c39',
+                                                    900: '#022029',
+                                                },
+                                                teal: {
+                                                    50: '#f0fdfa',
+                                                    100: '#ccfbf1',
+                                                    200: '#99f6e4',
+                                                    300: '#5eead4',
+                                                    400: '#2dd4bf',
+                                                    500: '#0d6b83',
+                                                    600: '#064e65',
+                                                    700: '#043b4c',
+                                                    800: '#032c39',
+                                                    900: '#022029',
+                                                },
+                                                green: {
+                                                    50: '#f0fdfa',
+                                                    100: '#ccfbf1',
+                                                    200: '#99f6e4',
+                                                    300: '#5eead4',
+                                                    400: '#2dd4bf',
+                                                    500: '#0d6b83',
+                                                    600: '#064e65',
+                                                    700: '#043b4c',
+                                                }
+                                            }
+                                        }
+                                    }
+                                };
+                            }
+                        <\/script>
+                        <style>
+                            body { font-family: sans-serif; font-size: 10pt; }
+                            @media print {
+                                @page { size: A4 portrait; margin: 1.5cm; }
+                                body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                                .print-card { page-break-inside: avoid; border: 1px solid #e5e7eb; padding: 1rem; margin-bottom: 1rem; border-radius: .5rem; }
+                                h1, h2, h3 { page-break-after: avoid; }
+                                footer { position: fixed; bottom: 0; left: 1cm; right: 1cm; text-align: center; font-size: 8pt; color: #6b7280; }
+                                .charts-page { page-break-before: always; }
+                            }
+                        </style>
+                    
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+                    <body class="p-4">
+                        <header class="text-center mb-6">
+                            <h1 class="text-xl font-bold">Relatório - Dashboard de Planejamento Pecuário</h1>
+                             <p class="text-sm italic mt-1">Aplicação desenvolvida por Prof. Ricardo C. Brumatti - FAMEZ/UFMS - Campo Grande, MS, uso gratuito, sem fins comerciais.</p>
+                             <p class="text-xs mt-1">Gerado em: ${generationDate}</p>
+                        </header>
+                        <main>
+                            <div class="print-card">
+                                <h2 class="text-lg font-bold border-b pb-1 mb-3">Dados da Propriedade</h2>
+                                <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                                    <div><strong>Fazenda:</strong> ${farm.name || 'Não informado'}</div>
+                                    <div><strong>Localidade:</strong> ${farm.location || 'Não informado'}</div>
+                                    <div><strong>Técnico Responsável:</strong> ${farm.technician || 'Não informado'}</div>
+                                    <div><strong>Sistema Produtivo:</strong> ${farm.system || 'Não informado'}</div>
+                                    <div><strong>Área (ha):</strong> ${formatNumber(farm.area, 2) || '0,00'}</div>
+                                    <div><strong>Rebanho (cab.):</strong> ${formatNumber(farm.herd, 0) || '0'}</div>
+                                </div>
+                            </div>
+                            <div class="print-card">
+                                <h2 class="text-lg font-bold border-b pb-1 mb-3">Resultados Consolidados</h2>
+                                ${kpisHTML}
+                            </div>
+                            <div class="charts-page print-card">
+                                <h2 class="text-lg font-bold border-b pb-1 mb-3">Análise Gráfica</h2>
+                                <div class="space-y-6">
+                                    ${chartImages.map(chart => chart.img ? `
+                                        <div class="text-center">
+                                            <h3 class="font-bold mb-1">${chart.title}</h3>
+                                            <img src="${chart.img}" style="max-width: 90%; margin: auto; border: 1px solid #eee;">
+                                            <p class="text-right text-xs mt-1 pr-10">${fonte}</p>
+                                        </div>` : '').join('')}
+                                </div>
+                            </div>
+                        </main>
+                        <footer class="mt-8 pt-2 border-t">
+                            <p class="italic">* Este dashboard oferece análise econômica com base nos dados informados pelo usuário. Os resultados são apenas uma referência, sendo o uso das informações de inteira responsabilidade do usuário.</p>
+                        </footer>
+                    
+    <!-- Rodapé Acadêmico/Profissional -->
+    <footer class="no-print mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
+        <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color: #0d9488; text-decoration: none;">ricardobrumatti.pro.br</a> | &copy; 2026</p>
+    </footer>
+</body>
+                </html>`;
+            
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(printWindowHTML);
+                printWindow.document.close();
+            } else {
+                showNotification('Abertura de nova janela bloqueada. Por favor, permita pop-ups para este site.', true);
+            }
+        }
+        
+        // --- Inicialização e Autenticação ---
+        async function initializeAppWithUser(user) {
+            if (typeof firebaseConfig === 'undefined' || firebaseConfig.apiKey === "YOUR_API_KEY") {
+                appState.userId = null;
+                const localData = localStorage.getItem('fluxo_caixa_dados');
+                if (localData) {
+                    try {
+                        const parsed = JSON.parse(localData);
+                        appState.farmData = parsed.farmData || getInitialFarmData();
+                        appState.monthlyData = parsed.monthlyData || {};
+                    } catch (e) {
+                        loadExampleData();
+                    }
+                } else {
+                    loadExampleData();
+                }
+            } else if (user) {
+                appState.userId = user.uid;
+                const docRef = doc(db, "artifacts", appId, "users", appState.userId, "livestockSimulation", "data");
+                try {
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists() && docSnap.data().monthlyData) {
+                        const data = docSnap.data();
+                        // Compatibilidade com dados antigos
+                        if(data.farmArea && !data.farmData) {
+                            appState.farmData = { ...getInitialFarmData(), area: data.farmArea };
+                        } else {
+                            appState.farmData = data.farmData || getInitialFarmData();
+                        }
+                        appState.monthlyData = data.monthlyData;
+                    } else {
+                        loadExampleData(); // Carrega exemplo se não houver dados
+                    }
+                } catch (error) {
+                    console.error("Error loading Firestore data, using example data.", error);
+                    showNotification("Erro ao carregar dados salvos.", true);
+                    loadExampleData();
+                }
+            } else {
+                appState.userId = null;
+                loadExampleData(); // Carrega exemplo para usuários anônimos
+            }
+            updateUIOnLoad();
+        }
+
+        window.onload = function() {
+            createPlanningInputs(); // Cria a estrutura do modal uma vez
+            document.getElementById('openPlanningModalButton').addEventListener('click', () => {
+                populatePlanningModal();
+                openModal(ui.planningModal);
+            });
+            document.getElementById('closePlanningModalButton').addEventListener('click', () => closeModal(ui.planningModal));
+            document.getElementById('savePlanningButton').addEventListener('click', handleSavePlanning);
+            document.getElementById('clearDataButton').addEventListener('click', handleClearUI);
+            document.getElementById('printReportButton').addEventListener('click', generatePrintReport);
+
+            if (typeof firebaseConfig === 'undefined' || firebaseConfig.apiKey === "YOUR_API_KEY") {
+                console.log("Firebase rodando em modo offline (chaves fictícias). Carregando aplicação localmente.");
+                initializeAppWithUser(null);
+            } else {
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        await initializeAppWithUser(user);
+                    } else {
+                        try {
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                await signInWithCustomToken(auth, __initial_auth_token);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (error) {
+                            console.error("Authentication failed, loading app without user.", error);
+                            await initializeAppWithUser(null);
+                        }
+                    }
+                });
+            }
+        };
+    </script>
+</body>
+</html>

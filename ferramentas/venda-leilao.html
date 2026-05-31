@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador gratuito: Simulador de Venda em Leilão. Desenvolvido pelo Prof. Ricardo C. Brumatti (FAMEZ/UFMS) para análise econômica e pecuária de corte.">
+    <title>Simulador de Venda em Leilão</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <!-- CDNs -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration (Image 2 Colors) -->
+    <script id="tailwind-theme-config">
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            emerald: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c', // Overridden to darker deep teal
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            blue: {
+                                50: '#f8fafc',
+                                100: '#f1f5f9',
+                                200: '#e2e8f0',
+                                300: '#cbd5e1',
+                                400: '#94a3b8',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            teal: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            green: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <!-- Fontes e Ícones -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            color: #334155;
+        }
+
+        /* Animações e Efeitos */
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .input-focus, .btn-hover { transition: all 0.3s ease-in-out; }
+        .input-focus:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+        }
+        .btn-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Componentes */
+        .form-section, .result-card {
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .interactive-card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .analysis-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+        .yellow-card { background-color: #facc15; }
+        .yellow-card .label { color: #422006; font-weight: 600; }
+        .yellow-card .value { color: #1c6434; font-weight: 700; }
+
+        .result-table th { background-color: #4a5568; color: #ffffff; }
+        .result-table tr:nth-child(even) td { background-color: #f8fafc; }
+        .result-table tr:hover td { background-color: #e2e8f0; }
+
+        .chart-container { position: relative; width: 100%; height: 350px; }
+        @media (min-width: 1024px) { .chart-container { height: 450px; } }
+
+        /* Abas */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s ease-out; }
+        .tab-btn.active { background-color: var(--primary); color: white; }
+
+        /* Modal */
+        .modal {
+            position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal.hidden {
+            display: none !important;
+        }
+        .modal-content {
+            background-color: #fefefe; margin: auto; padding: 25px; border-radius: 0.75rem;
+            width: 90%; max-width: 700px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .close-button {
+            position: absolute; top: 10px; right: 20px; color: #aaa;
+            font-size: 28px; font-weight: bold; cursor: pointer;
+        }
+
+        /* Tooltips */
+        .tooltip { position: relative; display: inline-block; cursor: help; }
+        .tooltip .tooltiptext {
+            visibility: hidden; width: 220px; background-color: #333; color: #fff;
+            text-align: center; border-radius: 6px; padding: 8px; position: absolute;
+            z-index: 1; bottom: 125%; left: 50%; transform: translateX(-50%);
+            opacity: 0; transition: opacity 0.3s; font-size: 0.875rem; font-weight: normal;
+        }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+    </style>
+
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+    <script>
+        if (window.self !== window.top) {
+            document.write('<style>.back-btn-container { display: none !important; }</style>');
+        }
+    </script>
+    <div class="back-btn-container no-print" style="padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; width: 100%;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#0d9488'" onmouseout="this.style.color='#64748b'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar ao site
+        </a>
+        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">ricardobrumatti.pro.br</span>
+    </div>
+
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 fade-in">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 mb-8">
+            <!-- Cabeçalho -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-[#1e3a8a] mb-2">Simulador de Venda em Leilão</h1>
+                <p class="text-lg font-semibold text-[#4a5568]">Prof. Ricardo C. Brumatti - FAMEZ/UFMS - Campo Grande, MS</p>
+                <p class="text-sm italic mt-1 sm:text-base text-[#4a5568]">*Aplicação desenvolvida para uso gratuito, sem fins comerciais.*</p>
+                <div class="flex justify-center mt-4 space-x-4">
+                    <button id="tourBtn" class="btn-hover px-4 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+                        <i class="fas fa-route mr-2"></i>Tour Guiado
+                    </button>
+                    <button id="exampleBtn" class="btn-hover px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-medium">
+                        <i class="fas fa-lightbulb mr-2"></i>Ver Exemplo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Abas -->
+            <div class="mb-6 border-b border-gray-200">
+                <div class="flex overflow-x-auto -mb-px">
+                    <button class="tab-btn active px-4 py-3 font-medium text-center" data-tab="simulation">
+                        <i class="fas fa-calculator mr-2"></i>Simulação
+                    </button>
+                    <button class="tab-btn px-4 py-3 font-medium text-center" data-tab="history">
+                        <i class="fas fa-history mr-2"></i>Histórico
+                    </button>
+                    <button class="tab-btn px-4 py-3 font-medium text-center" data-tab="comparison">
+                        <i class="fas fa-balance-scale mr-2"></i>Comparação
+                    </button>
+                </div>
+            </div>
+
+            <!-- Conteúdo da Aba de Simulação -->
+            <div id="simulation" class="tab-content active">
+                <form id="calcForm" class="space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Seção de Informações Financeiras -->
+                        <fieldset class="form-section space-y-4">
+                            <legend class="text-xl font-bold text-gray-800 -mt-2 mb-4">Informações Financeiras</legend>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="valorTotal">Valor Total da Venda (R$):</label>
+                                <input type="text" id="valorTotal" required data-type="monetario" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="custoProducao">Custo de Produção (R$):</label>
+                                <input type="text" id="custoProducao" required data-type="monetario" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="despesaComercial">Despesa Comercial (R$):</label>
+                                <input type="text" id="despesaComercial" required data-type="monetario" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="descontoVista">Desconto à Vista (%):</label>
+                                <input type="text" id="descontoVista" value="0" required data-type="percentual" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="custoOportunidade">Custo de Oportunidade (% a.a.):</label>
+                                <input type="text" id="custoOportunidade" required data-type="percentual" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                            </div>
+                        </fieldset>
+                        
+                        <!-- Seção de Dados do Leilão -->
+                        <fieldset class="form-section space-y-4">
+                            <legend class="text-xl font-bold text-gray-800 -mt-2 mb-4">Dados do Leilão</legend>
+                             <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="totalParcelas">Total de Parcelas:</label>
+                                <input type="number" id="totalParcelas" min="0" required class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="parcelasDuplas">Parcelas Duplas:</label>
+                                <input type="number" id="parcelasDuplas" value="0" min="0" required class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="parcelasTriplas">Parcelas Triplas:</label>
+                                <input type="number" id="parcelasTriplas" value="0" min="0" required class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                            </div>
+
+                            <hr class="border-gray-300 my-4">
+                            <legend class="text-xl font-bold text-gray-800 -mt-2 mb-4">Caracterização do Produto</legend>
+                             <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="raca">Raça:</label>
+                                <input type="text" id="raca" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm" placeholder="Ex: Nelore">
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="categoriaVenda">Categoria:</label>
+                                <select id="categoriaVenda" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                                    <option value="">Selecione</option>
+                                    <option value="Touros">Touros</option>
+                                    <option value="Matrizes">Matrizes</option>
+                                    <option value="Novilhas">Novilhas</option>
+                                    <option value="Embrioes">Embriões</option>
+                                    <option value="Prenhes">Prenhez</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="sexo">Sexo:</label>
+                                <select id="sexo" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                                    <option value="">Selecione</option>
+                                    <option value="Macho">Macho</option>
+                                    <option value="Femea">Fêmea</option>
+                                    <option value="Nao se aplica">Não se aplica</option>
+                                </select>
+                            </div>
+                             <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="idade">Idade (anos):</label>
+                                <input type="number" id="idade" min="0" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm" placeholder="Ex: 3">
+                            </div>
+                            
+                            <hr class="border-gray-200 my-2">
+
+                            <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="fazenda">Fazenda:</label>
+                                <input type="text" id="fazenda" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                            </div>
+                             <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="tecnico">Técnico Responsável:</label>
+                                <input type="text" id="tecnico" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                            </div>
+                             <div class="flex flex-col sm:flex-row sm:items-center">
+                                <label class="w-full sm:w-64 font-medium text-gray-700" for="localLeilao">Local do Leilão:</label>
+                                <input type="text" id="localLeilao" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm">
+                            </div>
+                        </fieldset>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
+                        <button type="submit" id="calcularBtn" class="btn-hover flex-1 py-3 px-6 bg-blue-700 text-white rounded-lg font-bold shadow-md hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-calculator mr-2"></i>Calcular
+                        </button>
+                        <button type="button" id="limparBtn" class="btn-hover flex-1 py-3 px-6 bg-gray-300 text-gray-800 rounded-lg font-bold shadow-md hover:bg-gray-400">
+                            <i class="fas fa-broom mr-2"></i>Limpar
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Seção de Resultados (inicialmente oculta) -->
+                <div id="results-section" class="hidden mt-12">
+                     <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-800">Resultados da Simulação</h2>
+                         <div class="flex space-x-2">
+                            <button id="saveBtn" class="btn-hover px-4 py-2 bg-green-600 text-white rounded-lg font-medium">
+                                <i class="fas fa-save mr-2"></i>Salvar
+                            </button>
+                            <button id="printButton" class="btn-hover px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">
+                                <i class="fas fa-print mr-2"></i>Imprimir
+                            </button>
+                            <button id="exportExcelBtn" class="btn-hover px-4 py-2 bg-green-700 text-white rounded-lg font-medium">
+                                <i class="fas fa-file-excel mr-2"></i>Excel
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Tabela de Resultados -->
+                    <div class="overflow-x-auto result-card interactive-card-hover mb-8">
+                        <table id="resultsTable" class="w-full border-collapse result-table">
+                            <thead>
+                                <tr>
+                                    <th class="p-3 text-left rounded-tl-lg">Métrica</th>
+                                    <th class="p-3 text-right">Nominal</th>
+                                    <th class="p-3 text-right">À Vista</th>
+                                    <th class="p-3 text-right rounded-tr-lg">Corrigido</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Receita</td><td id="receitaNominal" class="text-right font-medium"></td><td id="receitaVista" class="text-right font-medium"></td><td id="receitaCorrigida" class="text-right font-medium"></td></tr>
+                                <tr><td>Custo Total</td><td id="custoNominal" class="text-right font-medium"></td><td id="custoVista" class="text-right font-medium"></td><td id="custoCorrigido" class="text-right font-medium"></td></tr>
+                                <tr><td>Lucro Bruto</td><td id="lucroNominal" class="text-right font-medium"></td><td id="lucroVista" class="text-right font-medium"></td><td id="lucroCorrigido" class="text-right font-medium"></td></tr>
+                                <tr><td>Margem Bruta (%)</td><td id="margemNominal" class="text-right font-medium"></td><td id="margemVista" class="text-right font-medium"></td><td id="margemCorrigida" class="text-right font-medium"></td></tr>
+                            </tbody>
+                        </table>
+                        <p id="fonte-tabela" class="text-right text-xs text-gray-500 p-2 bg-white"></p>
+                    </div>
+                    <!-- Cards de Análise -->
+                    <h3 class="text-2xl font-bold text-gray-800 mt-12 mb-4">Análise Financeira</h3>
+                    <div id="analysisCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    <!-- Gráficos -->
+                    <div class="grid grid-cols-1 gap-8 mt-12">
+                        <div class="result-card p-4 interactive-card-hover">
+                            <div class="chart-container"><canvas id="desvalorizacaoChart"></canvas></div>
+                            <p class="fonte-grafico text-right text-xs text-gray-500 mt-2"></p>
+                        </div>
+                        <div class="result-card p-4 interactive-card-hover">
+                            <div class="chart-container"><canvas id="fluxoCaixaChart"></canvas></div>
+                            <p class="fonte-grafico text-right text-xs text-gray-500 mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteúdo da Aba de Histórico -->
+            <div id="history" class="tab-content">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6"><i class="fas fa-history mr-2"></i>Histórico de Simulações</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="p-3 text-left">Data</th>
+                                    <th class="p-3 text-left">Fazenda</th>
+                                    <th class="p-3 text-left">Lucro Corrigido</th>
+                                    <th class="p-3 text-left">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteúdo da Aba de Comparação -->
+            <div id="comparison" class="tab-content">
+                 <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6"><i class="fas fa-balance-scale mr-2"></i>Comparar Simulações</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-blue-800 mb-3">Simulação 1</h4>
+                            <select id="compare-sim1" class="w-full p-2 border rounded bg-white"></select>
+                            <div id="sim1-details" class="mt-3 hidden"></div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-green-800 mb-3">Simulação 2</h4>
+                            <select id="compare-sim2" class="w-full p-2 border rounded bg-white"></select>
+                            <div id="sim2-details" class="mt-3 hidden"></div>
+                        </div>
+                    </div>
+                    <div id="comparison-results" class="hidden">
+                        <h4 class="text-xl font-bold mb-4 text-center">Resultado da Comparação</h4>
+                        <div id="comparison-charts-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="bg-white rounded-xl shadow-lg p-4"><canvas id="comparisonLucroChart"></canvas></div>
+                            <div class="bg-white rounded-xl shadow-lg p-4"><canvas id="comparisonMargemChart"></canvas></div>
+                            <div class="bg-white rounded-xl shadow-lg p-4 md:col-span-2"><canvas id="comparisonSaldoChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modais -->
+    <div id="helpModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fas fa-question-circle mr-2"></i>Ajuda</h2>
+            <p>Preencha os campos e clique em 'Calcular' para ver a análise. Salve e compare diferentes cenários nas outras abas.</p>
+        </div>
+    </div>
+    <div id="tourModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fas fa-route mr-2"></i>Tour Guiado</h2>
+            <div id="tour-content" class="text-gray-700 text-base leading-relaxed"></div>
+            <div class="flex justify-between mt-6">
+                <button id="prev-step" class="btn-hover px-4 py-2 bg-gray-300 rounded-lg"><i class="fa fa-arrow-left mr-2"></i>Anterior</button>
+                <button id="next-step" class="btn-hover px-4 py-2 bg-blue-600 text-white rounded-lg">Próximo<i class="fas fa-arrow-right ml-2"></i></button>
+            </div>
+        </div>
+    </div>
+     <div id="messageModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="messageTitle" class="text-xl font-bold text-gray-800 mb-4"></h2>
+            <div id="messageContent" class="text-gray-700 text-base leading-relaxed"></div>
+        </div>
+    </div>
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal-content max-w-md">
+            <h2 id="confirmTitle" class="text-xl font-bold text-gray-800 mb-4"></h2>
+            <div id="confirmContent" class="text-gray-700 mb-6"></div>
+            <div class="flex justify-end space-x-4">
+                <button id="confirmCancel" class="btn-hover px-4 py-2 bg-gray-300 rounded-lg">Cancelar</button>
+                <button id="confirmOk" class="btn-hover px-4 py-2 bg-red-600 text-white rounded-lg">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Módulo principal da aplicação
+    const App = (function() {
+        // Estado da aplicação
+        let state = {
+            currentSimulation: null,
+            savedSimulations: JSON.parse(localStorage.getItem('savedAuctionSimulations')) || [],
+            chartInstances: {},
+            tourStep: 0
+        };
+
+        // Elementos do DOM
+        const dom = {
+            calcForm: document.getElementById('calcForm'),
+            resultsSection: document.getElementById('results-section'),
+            // Abas
+            tabButtons: document.querySelectorAll('.tab-btn'),
+            tabContents: document.querySelectorAll('.tab-content'),
+            // Modais
+            helpModal: document.getElementById('helpModal'),
+            tourModal: document.getElementById('tourModal'),
+            messageModal: document.getElementById('messageModal'),
+            confirmModal: document.getElementById('confirmModal'),
+            // Botões principais
+            calcularBtn: document.getElementById('calcularBtn'),
+            limparBtn: document.getElementById('limparBtn'),
+            tourBtn: document.getElementById('tourBtn'),
+            exampleBtn: document.getElementById('exampleBtn'),
+            // Botões de resultado
+            saveBtn: document.getElementById('saveBtn'),
+            printButton: document.getElementById('printButton'),
+            exportExcelBtn: document.getElementById('exportExcelBtn'),
+            // Histórico e Comparação
+            historyBody: document.getElementById('history-body'),
+            compareSelect1: document.getElementById('compare-sim1'),
+            compareSelect2: document.getElementById('compare-sim2'),
+            sim1Details: document.getElementById('sim1-details'),
+            sim2Details: document.getElementById('sim2-details'),
+            comparisonResults: document.getElementById('comparison-results'),
+        };
+
+        const CONFIG = {
+            MAX_ITERATIONS: 100,
+            TOLERANCE: 1e-6,
+            CURRENCY_FORMAT: { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 },
+            PERCENT_FORMAT: { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 }
+        };
+
+        // Inicialização
+        function init() {
+            setupEventListeners();
+            loadSavedSimulations();
+            loadExample(false); // Carrega o exemplo sem mostrar modal
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            dom.calcForm.addEventListener('submit', handleFormSubmit);
+            dom.limparBtn.addEventListener('click', limparFormulario);
+            dom.tourBtn.addEventListener('click', startTour);
+            dom.exampleBtn.addEventListener('click', () => loadExample(true));
+            dom.saveBtn.addEventListener('click', saveSimulation);
+            dom.printButton.addEventListener('click', generatePrintView);
+            dom.exportExcelBtn.addEventListener('click', exportToExcel);
+
+            dom.tabButtons.forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
+            
+            document.querySelectorAll('.close-button').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.modal').classList.add('hidden')));
+            window.addEventListener('click', (e) => { if(e.target.classList.contains('modal')) e.target.classList.add('hidden'); });
+            
+            document.getElementById('next-step').addEventListener('click', nextTourStep);
+            document.getElementById('prev-step').addEventListener('click', prevTourStep);
+            
+            document.getElementById('confirmCancel').addEventListener('click', () => dom.confirmModal.classList.add('hidden'));
+            
+            dom.compareSelect1.addEventListener('change', handleCompareChange);
+            dom.compareSelect2.addEventListener('change', handleCompareChange);
+
+            document.querySelectorAll('input[data-type="monetario"]').forEach(aplicarMascaraMonetaria);
+            document.querySelectorAll('input[data-type="percentual"]').forEach(aplicarMascaraPercentual);
+        }
+
+        // --- LÓGICA DE ABAS E MODAIS ---
+        function switchTab(tabId) {
+            dom.tabContents.forEach(content => content.classList.toggle('active', content.id === tabId));
+            dom.tabButtons.forEach(button => button.classList.toggle('active', button.dataset.tab === tabId));
+        }
+
+        function showMessage(title, content) {
+            document.getElementById('messageTitle').textContent = title;
+            document.getElementById('messageContent').innerHTML = content;
+            dom.messageModal.classList.remove('hidden');
+        }
+
+        function showConfirm(title, content, onConfirm) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmContent').textContent = content;
+            document.getElementById('confirmOk').onclick = () => {
+                onConfirm();
+                dom.confirmModal.classList.add('hidden');
+            };
+            dom.confirmModal.classList.remove('hidden');
+        }
+
+        // --- LÓGICA DO TOUR E EXEMPLO ---
+        function startTour() {
+            state.tourStep = 0;
+            updateTourContent();
+            dom.tourModal.classList.remove('hidden');
+        }
+
+        function updateTourContent() {
+            const steps = [
+                { title: "Boas-vindas!", content: "Este tour guiará você pelas funcionalidades do Simulador de Venda em Leilão." },
+                { title: "Aba Simulação", content: "Preencha os dados financeiros e do leilão. Use o botão 'Calcular' para ver a análise completa." },
+                { title: "Resultados", content: "Após calcular, você pode salvar a simulação, imprimir um relatório ou exportar os dados para o Excel." },
+                { title: "Aba Histórico", content: "Aqui ficam todas as suas simulações salvas. Você pode visualizá-las ou excluí-las." },
+                { title: "Aba Comparação", content: "Selecione duas simulações salvas para comparar os principais indicadores lado a lado." },
+                { title: "Fim do Tour", content: "Você está pronto para começar! Use o botão 'Ver Exemplo' para carregar dados e testar a ferramenta." }
+            ];
+            const current = steps[state.tourStep];
+            document.getElementById('tour-content').innerHTML = `<h3 class="text-lg font-bold mb-2">${current.title}</h3><p>${current.content}</p><div class="text-center mt-4 text-sm text-gray-500">Passo ${state.tourStep + 1} de ${steps.length}</div>`;
+            document.getElementById('prev-step').disabled = state.tourStep === 0;
+            document.getElementById('next-step').textContent = state.tourStep === steps.length - 1 ? 'Concluir' : 'Próximo';
+        }
+        
+        function nextTourStep() {
+            if (state.tourStep < 5) {
+                state.tourStep++;
+                updateTourContent();
+            } else {
+                dom.tourModal.classList.add('hidden');
+            }
+        }
+        
+        function prevTourStep() {
+             if (state.tourStep > 0) {
+                state.tourStep--;
+                updateTourContent();
+            }
+        }
+        
+        function loadExample(showMsg = true) {
+            const example = {
+                valorTotal: '20.000,00', custoProducao: '7.500,00', despesaComercial: '2.500,00',
+                descontoVista: '10,00', custoOportunidade: '14,75', totalParcelas: 30,
+                parcelasDuplas: 5, parcelasTriplas: 0, fazenda: 'Fazenda Exemplo', raca: 'Nelore', categoriaVenda: 'Touros',
+                sexo: 'Macho', idade: 3, tecnico: 'Ricardo C. Brumatti', localLeilao: 'Campo Grande, MS'
+            };
+            Object.keys(example).forEach(key => {
+                const el = document.getElementById(key);
+                if (el) {
+                    el.value = example[key];
+                    el.dispatchEvent(new Event('input', { bubbles: true })); // Dispara o evento para formatar
+                }
+            });
+             if (showMsg) {
+                showMessage("Exemplo Carregado", "Os campos foram preenchidos. Clique em 'Calcular' para ver os resultados.");
+             }
+        }
+
+
+        // --- LÓGICA DE FORMULÁRIO E LIMPEZA ---
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            dom.calcularBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Calculando...';
+            dom.calcularBtn.disabled = true;
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            try {
+                const inputs = getInputs();
+                const { fluxoCaixa, fluxoCaixaCorrigido, receitaCorrigida } = calcularFluxoCaixa(inputs);
+                const resultados = calcularResultados(inputs, fluxoCaixa, fluxoCaixaCorrigido, receitaCorrigida);
+                
+                state.currentSimulation = { 
+                    id: Date.now().toString(),
+                    timestamp: new Date().getTime(),
+                    inputs, 
+                    resultados: { ...resultados, receitaCorrigida, valorTotal: inputs.valorTotal, custoTotal: inputs.custoTotal },
+                    fluxoCaixaCorrigido
+                };
+                
+                renderizarResultados(state.currentSimulation.resultados);
+                renderizarGraficos(inputs, state.currentSimulation.resultados, fluxoCaixa, fluxoCaixaCorrigido);
+                dom.resultsSection.classList.remove('hidden');
+
+            } catch (error) {
+                showMessage("Erro no Cálculo", error.message);
+            } finally {
+                dom.calcularBtn.innerHTML = '<i class="fas fa-calculator mr-2"></i>Calcular';
+                dom.calcularBtn.disabled = false;
+            }
+        }
+
+        function limparFormulario() {
+            dom.calcForm.reset();
+            document.querySelectorAll('input[data-type]').forEach(input => {
+                input.value = '';
+                input.dataset.value = '';
+            });
+            dom.resultsSection.classList.add('hidden');
+            Object.values(state.chartInstances).forEach(chart => chart?.destroy());
+            state.chartInstances = {};
+            state.currentSimulation = null;
+        }
+
+
+        // --- LÓGICA DE SALVAMENTO, HISTÓRICO E COMPARAÇÃO ---
+        function saveSimulation() {
+            if (!state.currentSimulation) {
+                return showMessage("Atenção", "Calcule uma simulação antes de salvar.");
+            }
+            // Evita duplicatas
+            state.savedSimulations = state.savedSimulations.filter(sim => sim.id !== state.currentSimulation.id);
+            state.savedSimulations.unshift(state.currentSimulation);
+            localStorage.setItem('savedAuctionSimulations', JSON.stringify(state.savedSimulations));
+            loadSavedSimulations();
+            showMessage("Sucesso", `Simulação salva com sucesso! Você pode acessá-la na aba 'Histórico'.<br><br><strong class="text-yellow-800">Atenção:</strong> <em class="text-gray-600">As simulações são salvas localmente e serão apagadas se o histórico do seu navegador for limpo.</em>`);
+        }
+
+        function loadSavedSimulations() {
+            const sims = state.savedSimulations;
+            dom.historyBody.innerHTML = '';
+            dom.compareSelect1.innerHTML = '<option value="">Selecione...</option>';
+            dom.compareSelect2.innerHTML = '<option value="">Selecione...</option>';
+
+            if (sims.length === 0) {
+                dom.historyBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">Nenhuma simulação salva.</td></tr>`;
+                return;
+            }
+
+            sims.forEach((sim, index) => {
+                const date = new Date(sim.timestamp).toLocaleDateString('pt-BR');
+                const lucro = formatCurrency(sim.resultados.lucroCorrigido);
+                const lucroClass = sim.resultados.lucroCorrigido >= 0 ? 'text-green-600' : 'text-red-600';
+
+                // Tabela de Histórico
+                const row = `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3">${date}</td>
+                        <td class="p-3">${sim.inputs.fazenda || 'Sem nome'}</td>
+                        <td class="p-3 font-semibold ${lucroClass}">${lucro}</td>
+                        <td class="p-3">
+                            <button class="view-sim-btn text-blue-600 hover:text-blue-800 mr-2" data-index="${index}"><i class="fas fa-eye"></i></button>
+                            <button class="delete-sim-btn text-red-600 hover:text-red-800" data-index="${index}"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                dom.historyBody.innerHTML += row;
+
+                // Opções de Comparação
+                const option = `<option value="${index}">${date} - ${sim.inputs.fazenda || 'Simulação'}</option>`;
+                dom.compareSelect1.innerHTML += option;
+                dom.compareSelect2.innerHTML += option;
+            });
+            
+            // Adicionar eventos aos novos botões
+            document.querySelectorAll('.view-sim-btn').forEach(b => b.addEventListener('click', (e) => loadSimulation(e.currentTarget.dataset.index)));
+            document.querySelectorAll('.delete-sim-btn').forEach(b => b.addEventListener('click', (e) => deleteSimulation(e.currentTarget.dataset.index)));
+        }
+        
+        function loadSimulation(index) {
+            const sim = state.savedSimulations[index];
+            if (!sim) return;
+            
+            Object.keys(sim.inputs).forEach(key => {
+                 const el = document.getElementById(key);
+                 if (el) {
+                    el.value = sim.inputs[key];
+                    if(el.dataset.type) {
+                        // Recria valor formatado
+                         el.value = el.dataset.type === 'monetario' ? formatCurrency(sim.inputs[key]).replace('R$\xa0', '') : (sim.inputs[key] * 100).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    }
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                 }
+            });
+            showMessage("Simulação Carregada", `Dados da simulação "${sim.inputs.fazenda}" foram carregados. Clique em 'Calcular' para re-analisar.`);
+            switchTab('simulation');
+        }
+
+        function deleteSimulation(index) {
+             const sim = state.savedSimulations[index];
+             showConfirm("Confirmar Exclusão", `Deseja realmente excluir a simulação "${sim.inputs.fazenda}"?`, () => {
+                state.savedSimulations.splice(index, 1);
+                localStorage.setItem('savedAuctionSimulations', JSON.stringify(state.savedSimulations));
+                loadSavedSimulations();
+             });
+        }
+        
+        function handleCompareChange() {
+             updateComparisonDetails(dom.compareSelect1.value, dom.sim1Details);
+             updateComparisonDetails(dom.compareSelect2.value, dom.sim2Details);
+             
+             if (dom.compareSelect1.value && dom.compareSelect2.value) {
+                renderComparisonCharts();
+                dom.comparisonResults.classList.remove('hidden');
+             } else {
+                dom.comparisonResults.classList.add('hidden');
+             }
+        }
+        
+        function updateComparisonDetails(index, element) {
+            if (index === '') {
+                element.innerHTML = '';
+                element.classList.add('hidden');
+                return;
+            }
+            const sim = state.savedSimulations[index];
+            const lucroClass = sim.resultados.lucroCorrigido >= 0 ? 'text-green-600' : 'text-red-600';
+            element.innerHTML = `
+                <div class="bg-white p-3 rounded shadow text-sm space-y-1">
+                    <p><strong>Fazenda:</strong> ${sim.inputs.fazenda || 'N/A'}</p>
+                    <p><strong>Lucro Corrigido:</strong> <span class="font-bold ${lucroClass}">${formatCurrency(sim.resultados.lucroCorrigido)}</span></p>
+                    <p><strong>TIR Mensal:</strong> ${formatPercent(sim.resultados.tirMensalPercentual / 100)}</p>
+                </div>`;
+            element.classList.remove('hidden');
+        }
+        
+        // --- LÓGICA DE FORMATAÇÃO E CÁLCULO (ORIGINAL PRESERVADA) ---
+        const parseCurrency = (value) => parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
+        const parsePercent = (value) => parseFloat(value.replace(',', '.')) / 100 || 0;
+        const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', CONFIG.CURRENCY_FORMAT);
+        const formatPercent = (value) => isNaN(value) ? 'N/A' : (value || 0).toLocaleString('pt-BR', CONFIG.PERCENT_FORMAT);
+
+        function aplicarMascaraMonetaria(input) {
+            input.addEventListener('input', (e) => {
+                let valor = e.target.value.replace(/\D/g, '');
+                if (valor === '') { e.target.dataset.value = ''; return; }
+                valor = (parseFloat(valor) / 100);
+                e.target.dataset.value = valor.toFixed(2);
+                e.target.value = valor.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            });
+        }
+        function aplicarMascaraPercentual(input) {
+            input.addEventListener('input', (e) => {
+                let valor = e.target.value.replace(/[^\d]/g, '');
+                if (valor === '') { e.target.dataset.value = ''; return; }
+                const valorDisplay = (parseFloat(valor) / 100).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                const valorCalculo = parseFloat(valor) / 10000;
+                e.target.dataset.value = valorCalculo.toFixed(4);
+                e.target.value = valorDisplay;
+            });
+        }
+        
+        function getInputs() {
+            const getVal = (id) => parseFloat(document.getElementById(id).dataset.value) || 0;
+            return {
+                valorTotal: getVal('valorTotal'),
+                totalParcelas: parseInt(document.getElementById('totalParcelas').value) || 0,
+                parcelasDuplas: parseInt(document.getElementById('parcelasDuplas').value) || 0,
+                parcelasTriplas: parseInt(document.getElementById('parcelasTriplas').value) || 0,
+                custoProducao: getVal('custoProducao'),
+                despesaComercial: getVal('despesaComercial'),
+                custoTotal: getVal('custoProducao') + getVal('despesaComercial'),
+                descontoVista: getVal('descontoVista'),
+                custoOportunidade: Math.pow(1 + getVal('custoOportunidade'), 1 / 12) - 1,
+                custoOportunidadeAnual: getVal('custoOportunidade'),
+                fazenda: document.getElementById('fazenda').value,
+                raca: document.getElementById('raca').value,
+                categoriaVenda: document.getElementById('categoriaVenda').value,
+                sexo: document.getElementById('sexo').value,
+                idade: document.getElementById('idade').value,
+                tecnico: document.getElementById('tecnico').value,
+                localLeilao: document.getElementById('localLeilao').value,
+            };
+        }
+        
+        const calcularVPL = (fluxoCaixa, taxa) => fluxoCaixa.reduce((vpl, valor, t) => vpl + valor / Math.pow(1 + taxa, t), 0);
+        const calcularDerivadaVPL = (fluxoCaixa, taxa) => fluxoCaixa.reduce((derivada, valor, t) => derivada - t * valor / Math.pow(1 + taxa, t + 1), 0);
+        
+        function calcularTIR(fluxoCaixa) {
+            if (!fluxoCaixa || fluxoCaixa.length < 2 || fluxoCaixa.reduce((a, b) => a + b) === 0) return NaN;
+            let taxa = 0.1;
+            for (let i = 0; i < CONFIG.MAX_ITERATIONS; i++) {
+                const vpl = calcularVPL(fluxoCaixa, taxa);
+                if (Math.abs(vpl) < CONFIG.TOLERANCE) return taxa;
+                const derivada = calcularDerivadaVPL(fluxoCaixa, taxa);
+                if (Math.abs(derivada) < CONFIG.TOLERANCE) break;
+                taxa -= vpl / derivada;
+            }
+            return NaN;
+        }
+
+        function calcularFluxoCaixa(inputs) {
+            const { valorTotal, totalParcelas, parcelasDuplas, parcelasTriplas, custoTotal, custoOportunidade } = inputs;
+            if (totalParcelas === 0) throw new Error("O total de parcelas não pode ser zero.");
+            const fluxoCaixa = [], fluxoCaixaCorrigido = [];
+            const valorBaseParcela = valorTotal / totalParcelas;
+            const numParcelasUnicas = totalParcelas - (parcelasDuplas * 2) - (parcelasTriplas * 3);
+            if (numParcelasUnicas < 0) throw new Error('A combinação de parcelas duplas/triplas excede o total.');
+            
+            const prazoTotalMeses = parcelasTriplas + parcelasDuplas + numParcelasUnicas;
+            const pagamentos = Array.from({length: prazoTotalMeses}, (_, i) => 
+                i < parcelasTriplas ? valorBaseParcela * 3 : 
+                (i < parcelasTriplas + parcelasDuplas ? valorBaseParcela * 2 : valorBaseParcela)
+            );
+
+            let receitaCorrigidaTotal = 0, saldoAcumulado = 0, saldoAcumuladoCorrigido = 0;
+            const receitaT0 = pagamentos.shift() || 0;
+            saldoAcumulado = receitaT0 - custoTotal;
+            saldoAcumuladoCorrigido = receitaT0 - custoTotal;
+            receitaCorrigidaTotal += receitaT0;
+            
+            fluxoCaixa.push({ mes: -1, receita: receitaT0, custo: custoTotal, saldo: saldoAcumulado });
+            fluxoCaixaCorrigido.push({ mes: -1, receita: receitaT0, custo: custoTotal, saldo: saldoAcumuladoCorrigido });
+
+            pagamentos.forEach((receitaNominal, index) => {
+                const t = index + 1;
+                const receitaCorrigidaMes = receitaNominal / Math.pow(1 + custoOportunidade, t);
+                receitaCorrigidaTotal += receitaCorrigidaMes;
+                saldoAcumulado += receitaNominal;
+                saldoAcumuladoCorrigido += receitaCorrigidaMes;
+                fluxoCaixa.push({ mes: index, receita: receitaNominal, custo: 0, saldo: saldoAcumulado });
+                fluxoCaixaCorrigido.push({ mes: index, receita: receitaCorrigidaMes, custo: 0, saldo: saldoAcumuladoCorrigido });
+            });
+
+            return { fluxoCaixa, fluxoCaixaCorrigido, receitaCorrigida: receitaCorrigidaTotal };
+        }
+
+        function calcularResultados(inputs, fluxoCaixa, fluxoCaixaCorrigido, receitaCorrigida) {
+            const { valorTotal, custoTotal, descontoVista } = inputs;
+            const receitaVista = valorTotal * (1 - descontoVista);
+            const lucroNominal = valorTotal - custoTotal, lucroVista = receitaVista - custoTotal, lucroCorrigido = receitaCorrigida - custoTotal;
+            const margemNominal = valorTotal ? (lucroNominal / valorTotal) : 0;
+            const margemVista = receitaVista ? (lucroVista / receitaVista) : 0;
+            const margemCorrigida = receitaCorrigida ? (lucroCorrigido / receitaCorrigida) : 0;
+            
+            const fluxoCaixaTIR = fluxoCaixa.map(item => item.receita - item.custo);
+            const tirMensal = calcularTIR(fluxoCaixaTIR);
+            
+            let mesPayback = 'Não atingido';
+            for (let i = 0; i < fluxoCaixaCorrigido.length; i++) {
+                if (fluxoCaixaCorrigido[i].saldo >= 0) {
+                    const mesReal = fluxoCaixaCorrigido[i].mes === -1 ? 0 : fluxoCaixaCorrigido[i].mes + 1;
+                    mesPayback = `Mês ${mesReal}`;
+                    break;
+                }
+            }
+            return { 
+                receitaVista, lucroNominal, lucroVista, lucroCorrigido,
+                margemNominal, margemVista, margemCorrigida,
+                tirMensalPercentual: isNaN(tirMensal) ? 'N/A' : tirMensal * 100,
+                mesPayback 
+            };
+        }
+
+        // --- LÓGICA DE RENDERIZAÇÃO ---
+        function renderizarResultados(resultados) {
+            const renderCell = (elId, value, formatFn) => {
+                const el = document.getElementById(elId);
+                const isPositive = typeof value === 'number' && value >= 0;
+                el.innerHTML = `<span class="${isPositive ? 'text-green-600' : 'text-red-600'}">${formatFn(value)}</span>`;
+            };
+            
+            renderCell('receitaNominal', resultados.valorTotal, formatCurrency);
+            renderCell('receitaVista', resultados.receitaVista, formatCurrency);
+            renderCell('receitaCorrigida', resultados.receitaCorrigida, formatCurrency);
+            renderCell('custoNominal', resultados.custoTotal, val => formatCurrency(val));
+            renderCell('custoVista', resultados.custoTotal, val => formatCurrency(val));
+            renderCell('custoCorrigido', resultados.custoTotal, val => formatCurrency(val));
+            renderCell('lucroNominal', resultados.lucroNominal, formatCurrency);
+            renderCell('lucroVista', resultados.lucroVista, formatCurrency);
+            renderCell('lucroCorrigido', resultados.lucroCorrigido, formatCurrency);
+            renderCell('margemNominal', resultados.margemNominal, val => formatPercent(val));
+            renderCell('margemVista', resultados.margemVista, val => formatPercent(val));
+            renderCell('margemCorrigida', resultados.margemCorrigida, val => formatPercent(val));
+
+            document.getElementById('analysisCardsContainer').innerHTML = `
+                <div class="analysis-card interactive-card-hover yellow-card"><div class="label">TIR Mensal</div><div class="value">${formatPercent(resultados.tirMensalPercentual / 100)}</div></div>
+                <div class="analysis-card interactive-card-hover yellow-card"><div class="label">C. Oport. Mensal</div><div class="value">${formatPercent(state.currentSimulation.inputs.custoOportunidade)}</div></div>
+                <div class="analysis-card interactive-card-hover yellow-card"><div class="label">Payback</div><div class="value">${resultados.mesPayback}</div></div>`;
+            updateSource();
+        }
+
+        // --- LÓGICA DE GRÁFICOS ---
+        function createOrUpdateChart(id, config) {
+            if (state.chartInstances[id]) state.chartInstances[id].destroy();
+            const ctx = document.getElementById(id).getContext('2d');
+            state.chartInstances[id] = new Chart(ctx, config);
+        }
+
+        function getChartOptions(title) {
+             const isMobile = window.innerWidth < 640;
+             return {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: title, font: { size: isMobile ? 14 : 18 } },
+                    tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatCurrency(c.raw)}` } },
+                    datalabels: { display: !isMobile, anchor: 'end', align: 'top', formatter: (v) => formatCurrency(v), color: '#444', font: { weight: 'bold' } }
+                }
+             };
+        }
+
+        function renderizarGraficos(inputs, resultados, fluxoCaixa, fluxoCaixaCorrigido) {
+            createOrUpdateChart('desvalorizacaoChart', {
+                type: 'bar', plugins: [ChartDataLabels],
+                data: {
+                    labels: ['Nominal', 'À Vista', 'Corrigido'],
+                    datasets: [
+                        { label: 'Receita', data: [inputs.valorTotal, resultados.receitaVista, resultados.receitaCorrigida], backgroundColor: '#3b82f6' },
+                        { label: 'Custo Total', data: [inputs.custoTotal, inputs.custoTotal, inputs.custoTotal], backgroundColor: '#ef4444' },
+                        { label: 'Lucro Bruto', data: [resultados.lucroNominal, resultados.lucroVista, resultados.lucroCorrigido], backgroundColor: '#10b981' }
+                    ]
+                },
+                options: getChartOptions('Comparativo de Receita, Custo e Lucro')
+            });
+
+            const fluxoCaixaOptions = getChartOptions('Fluxo de Caixa (Valores Corrigidos)');
+            fluxoCaixaOptions.plugins.datalabels.display = false; // Não mostrar labels no gráfico de linha
+
+            createOrUpdateChart('fluxoCaixaChart', {
+                type: 'line',
+                data: {
+                    labels: fluxoCaixaCorrigido.map(item => item.mes === -1 ? 'Mês 0' : `Mês ${item.mes + 1}`),
+                    datasets: [{
+                        label: 'Receita Corrigida',
+                        data: fluxoCaixaCorrigido.map(item => item.receita),
+                        borderColor: '#3b82f6',
+                        stepped: true,
+                        fill: false,
+                        pointRadius: 2,
+                    },{
+                        label: 'Custo Corrigido',
+                        data: fluxoCaixaCorrigido.map(item => item.custo),
+                        borderColor: '#ef4444',
+                        fill: false,
+                        pointRadius: 2,
+                    },{
+                        label: 'Saldo Acumulado Corrigido', 
+                        data: fluxoCaixaCorrigido.map(item => item.saldo),
+                        borderColor: '#10b981', 
+                        fill: true, 
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)', 
+                        tension: 0.1,
+                        pointRadius: 2,
+                        segment: { borderColor: ctx => ctx.p1.parsed.y < 0 ? '#ef4444' : '#10b981' }
+                    }]
+                },
+                options: fluxoCaixaOptions
+            });
+        }
+        
+        function renderComparisonCharts() {
+            const sim1 = state.savedSimulations[dom.compareSelect1.value];
+            const sim2 = state.savedSimulations[dom.compareSelect2.value];
+            if (!sim1 || !sim2) return;
+
+            const makeConfig = (title, dataKey, formatFn, type = 'bar') => ({
+                type,
+                data: {
+                    labels: [sim1.inputs.fazenda || 'Sim 1', sim2.inputs.fazenda || 'Sim 2'],
+                    datasets: [{
+                        label: title,
+                        data: [sim1.resultados[dataKey], sim2.resultados[dataKey]],
+                        backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)']
+                    }]
+                },
+                options: {
+                    plugins: { 
+                        legend: { display: false }, 
+                        title: { display: true, text: title },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatFn(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: { y: { ticks: { callback: (v) => formatFn(v) } } }
+                }
+            });
+            
+            createOrUpdateChart('comparisonLucroChart', makeConfig('Lucro Bruto Corrigido', 'lucroCorrigido', formatCurrency));
+            createOrUpdateChart('comparisonMargemChart', makeConfig('Margem Corrigida', 'margemCorrigida', v => formatPercent(v)));
+
+            // Novo Gráfico de Saldo Acumulado
+            const fluxoSaldos1 = sim1.fluxoCaixaCorrigido.map(d => d.saldo);
+            const fluxoSaldos2 = sim2.fluxoCaixaCorrigido.map(d => d.saldo);
+            const maxLen = Math.max(fluxoSaldos1.length, fluxoSaldos2.length);
+            
+            const labels = Array.from({length: maxLen}, (_, i) => `Mês ${i}`);
+            labels[0] = 'Mês 0';
+
+            const padData = (data, len) => {
+                const lastValue = data[data.length - 1];
+                while (data.length < len) {
+                    data.push(lastValue);
+                }
+                return data;
+            };
+
+            createOrUpdateChart('comparisonSaldoChart', {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: sim1.inputs.fazenda || 'Sim 1',
+                            data: padData([...fluxoSaldos1], maxLen),
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: sim2.inputs.fazenda || 'Sim 2',
+                            data: padData([...fluxoSaldos2], maxLen),
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: false,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    plugins: {
+                        title: { display: true, text: 'Comparativo do Saldo Acumulado Corrigido' },
+                        tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatCurrency(c.raw)}` } }
+                    },
+                    scales: { y: { ticks: { callback: (v) => formatCurrency(v) } } }
+                }
+            });
+        }
+
+        // --- LÓGICA DE EXPORTAÇÃO E IMPRESSÃO ---
+        function exportToExcel() {
+            if (!state.currentSimulation) return showMessage("Atenção", "Calcule uma simulação para exportar.");
+            const { inputs, resultados } = state.currentSimulation;
+            const data = [
+                ["Parâmetro", "Valor"],
+                ["Fazenda", inputs.fazenda],
+                ["Raça", inputs.raca],
+                ["Categoria", inputs.categoriaVenda],
+                ["Sexo", inputs.sexo],
+                ["Idade (anos)", inputs.idade],
+                ["Técnico Responsável", inputs.tecnico],
+                ["Local do Leilão", inputs.localLeilao],
+                ["Valor Total da Venda", formatCurrency(inputs.valorTotal)],
+                ["Custo Total", formatCurrency(inputs.custoTotal)],
+                ["Total de Parcelas", inputs.totalParcelas],
+                [],
+                ["Métrica", "Nominal", "À Vista", "Corrigido"],
+                ["Receita", formatCurrency(resultados.valorTotal), formatCurrency(resultados.receitaVista), formatCurrency(resultados.receitaCorrigida)],
+                ["Lucro Bruto", formatCurrency(resultados.lucroNominal), formatCurrency(resultados.lucroVista), formatCurrency(resultados.lucroCorrigido)],
+                ["Margem Bruta", formatPercent(resultados.margemNominal), formatPercent(resultados.margemVista), formatPercent(resultados.margemCorrigida)],
+                [],
+                ["Análise Financeira"],
+                ["TIR Mensal", formatPercent(resultados.tirMensalPercentual / 100)],
+                ["Payback", resultados.mesPayback]
+            ];
+            
+            const csv = "data:text/csv;charset=utf-8," + data.map(e => e.join(";")).join("\n");
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csv));
+            link.setAttribute("download", `simulacao_leilao_${Date.now()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function generatePrintView() {
+            if (!state.currentSimulation) return showMessage("Atenção", "Calcule uma simulação para imprimir.");
+
+            const chartImg1 = state.chartInstances.desvalorizacaoChart?.toBase64Image();
+            const chartImg2 = state.chartInstances.fluxoCaixaChart?.toBase64Image();
+            
+            const { inputs, resultados } = state.currentSimulation;
+            const fonte = `Fonte: Ricardo C. Brumatti (${new Date().getFullYear()})`;
+
+            const printHTML = `
+                <html><head><title>Relatório de Simulação</title><script src="https://cdn.tailwindcss.com"><\/script>
+                <style> @page { size: A4 portrait; margin: 1.5cm; } body { -webkit-print-color-adjust: exact !important; } .no-break { page-break-inside: avoid; } </style>
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+                <body class="p-4 font-sans text-sm">
+                    <header class="text-center mb-6">
+                        <h1 class="text-xl font-bold">Relatório de Simulação - Venda em Leilão</h1>
+                        <p>Prof. Ricardo C. Brumatti - FAMEZ/UFMS | Gerado em: ${new Date().toLocaleDateString('pt-BR')}</p>
+                    </header>
+                    <main>
+                        <div class="no-break border rounded-lg p-4 mb-4">
+                            <h2 class="text-lg font-bold border-b pb-1 mb-3">Identificação e Parâmetros</h2>
+                            <p><strong>Fazenda:</strong> ${inputs.fazenda || 'N/A'}</p>
+                            <p><strong>Raça/Categoria:</strong> ${inputs.raca || 'N/A'} / ${inputs.categoriaVenda || 'N/A'}</p>
+                            <p><strong>Sexo/Idade:</strong> ${inputs.sexo || 'N/A'} / ${inputs.idade ? inputs.idade + ' anos' : 'N/A'}</p>
+                            <p><strong>Técnico:</strong> ${inputs.tecnico || 'N/A'}</p>
+                            <p><strong>Local:</strong> ${inputs.localLeilao || 'N/A'}</p>
+                            <p><strong>Valor da Venda:</strong> ${formatCurrency(inputs.valorTotal)} em ${inputs.totalParcelas} parcelas</p>
+                            <p><strong>Custo Total:</strong> ${formatCurrency(inputs.custoTotal)}</p>
+                        </div>
+                        <div class="no-break border rounded-lg p-4 mb-4">
+                            <h2 class="text-lg font-bold border-b pb-1 mb-3">Resultados da Simulação</h2>
+                            ${document.getElementById('resultsTable').outerHTML}
+                            <p class="text-right text-xs mt-1">${fonte}</p>
+                        </div>
+                        <div class="no-break border rounded-lg p-4 mb-4">
+                            <h2 class="text-lg font-bold border-b pb-1 mb-3">Análise Financeira</h2>
+                             <div class="grid grid-cols-3 gap-4 text-center">
+                                <div><p class="font-semibold">TIR Mensal</p><p class="text-xl font-bold">${formatPercent(resultados.tirMensalPercentual/100)}</p></div>
+                                <div><p class="font-semibold">C. Oport. Mensal</p><p class="text-xl font-bold">${formatPercent(inputs.custoOportunidade)}</p></div>
+                                <div><p class="font-semibold">Payback</p><p class="text-xl font-bold">${resultados.mesPayback}</p></div>
+                            </div>
+                        </div>
+                        <div class="no-break pt-4">
+                             ${chartImg1 ? `<img src="${chartImg1}" class="w-full mb-4 border rounded">` : ''}
+                             ${chartImg2 ? `<img src="${chartImg2}" class="w-full border rounded">` : ''}
+                        </div>
+                    </main>
+                
+    <!-- Rodapé Acadêmico/Profissional -->
+    <footer class="no-print mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
+        <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color: #0d9488; text-decoration: none;">ricardobrumatti.pro.br</a> | &copy; 2026</p>
+    </footer>
+</body></html>`;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printHTML);
+            printWindow.document.close();
+            setTimeout(() => printWindow.print(), 500);
+        }
+        
+        function updateSource() {
+            const fonteText = `Fonte: Ricardo C. Brumatti (${new Date().getFullYear()})`;
+            document.getElementById('fonte-tabela').textContent = fonteText;
+            document.querySelectorAll('.fonte-grafico').forEach(el => el.textContent = fonteText);
+        }
+
+        // Retornar métodos públicos
+        return { init };
+    })();
+
+    document.addEventListener('DOMContentLoaded', App.init);
+    </script>
+</body>
+</html>

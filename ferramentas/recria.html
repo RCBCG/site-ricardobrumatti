@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador gratuito: Simulação Econômica da Recria em Gado de Corte. Desenvolvido pelo Prof. Ricardo C. Brumatti (FAMEZ/UFMS) para análise econômica e pecuária de corte.">
+    <title>Simulação Econômica da Recria em Gado de Corte</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration (Image 2 Colors) -->
+    <script id="tailwind-theme-config">
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            emerald: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c', // Overridden to darker deep teal
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            blue: {
+                                50: '#f8fafc',
+                                100: '#f1f5f9',
+                                200: '#e2e8f0',
+                                300: '#cbd5e1',
+                                400: '#94a3b8',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            teal: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            green: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .fade-in {
+            animation: fadeInAnimation 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeInAnimation {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        /* Classes de estilo para as tabelas de resultados */
+        td.technical { @apply text-slate-600 font-medium; }
+        td.cost { @apply text-red-600; }
+        td.revenue { @apply text-green-600; }
+        td.profit { @apply text-green-700 font-semibold; }
+        td.loss { @apply text-red-700 font-semibold; }
+        
+        /* Estilo para impressão */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: #fff;
+            }
+            .print-card { 
+                page-break-inside: avoid; 
+                border: 1px solid #e5e7eb; 
+                padding: 1rem; 
+                margin-bottom: 1rem; 
+                border-radius: 0.5rem; 
+            }
+        }
+    </style>
+
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <script>
+        if (window.self !== window.top) {
+            document.write('<style>.back-btn-container { display: none !important; }</style>');
+        }
+    </script>
+    <div class="back-btn-container no-print" style="padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; width: 100%;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#0d9488'" onmouseout="this.style.color='#64748b'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar ao site
+        </a>
+        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">ricardobrumatti.pro.br</span>
+    </div>
+
+
+    <!-- Cabeçalho -->
+    <header class="bg-slate-800 shadow-lg no-print">
+        <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+            <h1 class="text-2xl sm:text-3xl font-bold text-white text-center tracking-wide">Simulação Econômica da Recria</h1>
+        </div>
+    </header>
+
+    <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Seção de Introdução -->
+        <div class="text-center my-8 fade-in no-print">
+            <h2 class="text-2xl sm:text-3xl font-bold text-slate-700">O poder da análise econômica na palma da sua mão!</h2>
+            <p class="text-md text-slate-500 mt-2">Desenvolva seus cenários de análise.</p>
+        </div>
+
+        <!-- Formulário com Layout Atualizado -->
+        <div class="bg-white shadow-xl rounded-2xl p-6 sm:p-8 mb-8 fade-in border border-slate-200 no-print">
+            <h2 class="text-2xl font-bold text-slate-800 mb-2 text-center">Parâmetros de Simulação</h2>
+            <!-- NOVO: Subtítulo adicionado -->
+            <p class="text-center text-sm text-slate-500 mb-8 italic">*Aplicação desenvolvida por Prof. Ricardo C. Brumatti - FAMEZ/UFMS - Campo Grande, MS, uso gratuito, sem fins comerciais.*</p>
+            
+            <form id="simulationForm">
+                <div class="space-y-8">
+                    
+                    <!-- NOVO: Agrupamento de Dados de Identificação -->
+                    <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
+                        <legend class="text-lg font-semibold text-slate-700 px-2">Dados de Identificação</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 mt-4">
+                            <div>
+                                <label for="farmName" class="block text-sm font-medium text-slate-600">Fazenda</label>
+                                <input type="text" id="farmName" placeholder="Nome da Fazenda" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="techName" class="block text-sm font-medium text-slate-600">Técnico Responsável</label>
+                                <input type="text" id="techName" placeholder="Nome do Técnico" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="location" class="block text-sm font-medium text-slate-600">Localidade</label>
+                                <input type="text" id="location" placeholder="Cidade / Estado" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="animalBreed" class="block text-sm font-medium text-slate-600">Raça</label>
+                                <input type="text" id="animalBreed" placeholder="Ex: Nelore" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="animalSex" class="block text-sm font-medium text-slate-600">Sexo</label>
+                                <input type="text" id="animalSex" placeholder="Ex: Machos Inteiros" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="animalCategory" class="block text-sm font-medium text-slate-600">Categoria Animal</label>
+                                <input type="text" id="animalCategory" placeholder="Ex: Bezerro, Garrote, Novilha" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Agrupamento: Dados Gerais -->
+                    <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
+                        <legend class="text-lg font-semibold text-slate-700 px-2">Dados Gerais</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5 mt-4">
+                            <div>
+                                <label for="pricePerKg" class="block text-sm font-medium text-slate-600">Valor Aquisição (R$/kg)</label>
+                                <input type="number" id="pricePerKg" value="12.50" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="sanitaryCost" class="block text-sm font-medium text-slate-600">Custo Sanitário (R$)</label>
+                                <input type="number" id="sanitaryCost" value="45.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="initialWeight" class="block text-sm font-medium text-slate-600">Peso Compra (kg)</label>
+                                <input type="number" id="initialWeight" value="210" step="1" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                             <div>
+                                <label for="entryDate" class="block text-sm font-medium text-slate-600">Data Entrada</label>
+                                <input type="date" id="entryDate" value="2025-08-15" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="exitDate" class="block text-sm font-medium text-slate-600">Data Saída</label>
+                                <input type="date" id="exitDate" value="2026-06-15" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Agrupamento: Etapa 1 -->
+                    <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
+                        <legend class="text-lg font-semibold text-slate-700 px-2">Etapa 1 - Sequestro</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5 mt-4">
+                             <div>
+                                <label for="entryDateStage1" class="block text-sm font-medium text-slate-600">Data Entrada Sequestro</label>
+                                <input type="date" id="entryDateStage1" value="2025-08-15" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="exitDateStage1" class="block text-sm font-medium text-slate-600">Data Saída Sequestro</label>
+                                <input type="date" id="exitDateStage1" value="2025-11-15" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <div class="flex items-center">
+                                    <label for="dailyCostStage1" class="block text-sm font-medium text-slate-600">Custo da Diária (R$)</label>
+                                    <div class="relative flex items-center ml-2 group">
+                                        <svg class="w-4 h-4 text-slate-500 cursor-help" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                                        </svg>
+                                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 text-xs text-white bg-slate-700 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
+                                            Estimativa de custos totais por dia, considerando custos fixos e vaiáveis.
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-700"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="number" id="dailyCostStage1" value="5.50" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="gmdStage1" class="block text-sm font-medium text-slate-600">GMD Esperado (kg/dia)</label>
+                                <input type="number" id="gmdStage1" value="0.550" step="0.001" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Agrupamento: Etapa 2 -->
+                    <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
+                        <legend class="text-lg font-semibold text-slate-700 px-2">Etapa 2 - Pasto</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5 mt-4">
+                             <div>
+                                <label for="entryDateStage2" class="block text-sm font-medium text-slate-600">Data Entrada Pasto</label>
+                                <input type="date" id="entryDateStage2" value="2025-11-15" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            
+                            <div>
+                                <div class="flex items-center">
+                                    <label for="monthlyRent" class="block text-sm font-medium text-slate-600">Valor Mensal Fixo (R$)</label>
+                                    <div class="relative flex items-center ml-2 group">
+                                        <svg class="w-4 h-4 text-slate-500 cursor-help" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                                        </svg>
+                                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 text-xs text-white bg-slate-700 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
+                                            Estimativa dos gastos mensais com: Mão-de-obra, Manutenções, Gastos Sanitários, Administrativos, entre outros.
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-700"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="number" id="monthlyRent" value="70.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+
+                            <div>
+                                <div class="flex items-center">
+                                    <label for="supplementCost" class="block text-sm font-medium text-slate-600">Valor Mensal Custos Nutricionais (R$)</label>
+                                    <div class="relative flex items-center ml-2 group">
+                                        <svg class="w-4 h-4 text-slate-500 cursor-help" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                                        </svg>
+                                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 text-xs text-white bg-slate-700 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
+                                            Estimativa mensal com gastos nutricionais, entre eles, suplementações minerais, protéicas, energéticas, e demais possibilidades de manejos.
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-700"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="number" id="supplementCost" value="10.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                        </div>
+                    </fieldset>
+
+                     <!-- Agrupamento: Resultado Final -->
+                    <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
+                        <legend class="text-lg font-semibold text-slate-700 px-2">Premissas de Resultado</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5 mt-4">
+                            <div>
+                                <label for="gmdFinal" class="block text-sm font-medium text-slate-600">GMD Esperado Final (kg/dia)</label>
+                                <input type="number" id="gmdFinal" value="0.600" step="0.001" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="mortalityRate" class="block text-sm font-medium text-slate-600">Taxa de Mortalidade (%)</label>
+                                <input type="number" id="mortalityRate" value="0.50" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="salePriceHead" class="block text-sm font-medium text-slate-600">Valor do Boi Magro (R$/cab.)</label>
+                                <input type="number" id="salePriceHead" value="4300.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="arrobaPriceGordo" class="block text-sm font-medium text-slate-600">Arroba do Boi Gordo (R$/@)</label>
+                                <input type="number" id="arrobaPriceGordo" value="300.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+                
+                <!-- Botões de Ação -->
+                <div class="mt-10 flex flex-wrap gap-4">
+                    <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-transparent bg-blue-600 px-6 py-3 text-sm font-medium text-white shadow-md hover:shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-150 ease-in-out">Calcular Simulação</button>
+                    <button type="button" id="clearFormButton" class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-700 shadow-md hover:shadow-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-150 ease-in-out">Limpar Formulário</button>
+                    <button type="button" id="printButton" class="inline-flex items-center justify-center rounded-lg border border-transparent bg-green-600 px-6 py-3 text-sm font-medium text-white shadow-md hover:shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-150 ease-in-out">Gerar Relatório</button>
+                </div>
+                <div id="errorMessage" class="text-sm text-red-600 mt-4 font-medium"></div>
+            </form>
+        </div>
+
+        <!-- Seção de Resultados -->
+        <div id="results-section" class="bg-white shadow-2xl rounded-xl p-6 sm:p-8 mb-8 fade-in border border-slate-300">
+            <h2 class="text-xl font-semibold text-slate-700 mb-6">Resultados da Simulação</h2>
+            <h3 class="text-md font-semibold text-slate-600 mt-6 mb-2 first:mt-0">Dados Gerais</h3>
+            <div class="overflow-x-auto rounded-lg shadow ring-1 ring-black ring-opacity-5">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Descrição</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="generalTable" class="bg-white divide-y divide-slate-200"></tbody>
+                </table>
+            </div>
+            <div id="fonteGeneral" class="text-xs text-slate-500 mt-2 text-right"></div>
+            <h3 class="text-md font-semibold text-slate-600 mt-6 mb-2">Etapa 1 - Sequestro</h3>
+            <div class="overflow-x-auto rounded-lg shadow ring-1 ring-black ring-opacity-5">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Descrição</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stage1Table" class="bg-white divide-y divide-slate-200"></tbody>
+                </table>
+            </div>
+            <div id="fonteStage1" class="text-xs text-slate-500 mt-2 text-right"></div>
+            <h3 class="text-md font-semibold text-slate-600 mt-6 mb-2">Etapa 2 - Pasto</h3>
+            <div class="overflow-x-auto rounded-lg shadow ring-1 ring-black ring-opacity-5">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Descrição</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stage2Table" class="bg-white divide-y divide-slate-200"></tbody>
+                </table>
+            </div>
+            <div id="fonteStage2" class="text-xs text-slate-500 mt-2 text-right"></div>
+            <h3 class="text-md font-semibold text-slate-600 mt-6 mb-2">Resultado Final (Principais Indicadores)</h3>
+            <div class="overflow-x-auto rounded-lg shadow ring-1 ring-black ring-opacity-5">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Descrição</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="finalTable" class="bg-white divide-y divide-slate-200"></tbody>
+                </table>
+            </div>
+            <div id="keyMetricsCards" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6 mt-8">
+                <div class="bg-amber-400 p-5 rounded-xl shadow-lg text-center flex flex-col justify-between transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.01] hover:cursor-pointer">
+                    <p class="text-base text-amber-900 font-semibold">Lucro Bruto</p>
+                    <p id="metricLucroBruto" class="text-2xl font-bold text-green-700 mt-1">-</p>
+                </div>
+                <div class="bg-amber-400 p-5 rounded-xl shadow-lg text-center flex flex-col justify-between transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.01] hover:cursor-pointer">
+                    <p class="text-base text-amber-900 font-semibold">Margem Bruta</p>
+                    <p id="metricMargemBruta" class="text-2xl font-bold text-green-700 mt-1">-</p>
+                </div>
+                <div class="bg-amber-400 p-5 rounded-xl shadow-lg text-center flex flex-col justify-between transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.01] hover:cursor-pointer">
+                    <p class="text-base text-amber-900 font-semibold">Margem Bruta Mensal</p>
+                    <p id="metricMargemBrutaMensal" class="text-2xl font-bold text-green-700 mt-1">-</p>
+                </div>
+                <div class="bg-amber-400 p-5 rounded-xl shadow-lg text-center flex flex-col justify-between transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.01] hover:cursor-pointer">
+                    <p class="text-base text-amber-900 font-semibold">TIR</p>
+                    <p id="metricTIR" class="text-2xl font-bold text-green-700 mt-1">-</p>
+                </div>
+                <div class="bg-amber-400 p-5 rounded-xl shadow-lg text-center flex flex-col justify-between transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.01] hover:cursor-pointer">
+                    <p class="text-base text-amber-900 font-semibold">Ágio do Bezerro</p>
+                    <p id="metricAgioBezerro" class="text-2xl font-bold text-green-700 mt-1">-</p>
+                </div>
+                <div class="bg-amber-400 p-5 rounded-xl shadow-lg text-center flex flex-col justify-between transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.01] hover:cursor-pointer">
+                    <p class="text-base text-amber-900 font-semibold">Ágio Boi Magro</p>
+                    <p id="metricAgioBoiMagro" class="text-2xl font-bold text-green-700 mt-1">-</p>
+                </div>
+                <div class="bg-amber-400 p-5 rounded-xl shadow-lg text-center flex flex-col justify-between transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.01] hover:cursor-pointer">
+                    <p class="text-base text-amber-900 font-semibold">Relação de Troca Boi Magro</p>
+                    <p id="metricRelacaoTroca" class="text-2xl font-bold text-green-700 mt-1">-</p>
+                </div>
+                <div class="bg-amber-400 p-5 rounded-xl shadow-lg text-center flex flex-col justify-between transition-all duration-200 ease-in-out hover:shadow-xl hover:-translate-y-1 hover:scale-[1.01] hover:cursor-pointer">
+                    <p class="text-base text-amber-900 font-semibold">Relação de Troca Bezerro</p>
+                    <p id="metricRelacaoTrocaBezerro" class="text-2xl font-bold text-green-700 mt-1">-</p>
+                </div>
+            </div>
+            <div id="fonteKeyMetrics" class="text-xs text-slate-500 mt-3 text-right"></div>
+        </div>
+
+        <!-- Seção de Gráficos -->
+        <div id="charts-section" class="bg-white shadow-2xl rounded-xl p-6 sm:p-8 fade-in border border-slate-300">
+            <h2 class="text-xl font-semibold text-slate-700 mb-6 no-print">Gráficos</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-4 rounded-lg shadow-md relative h-80 sm:h-96 transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1 hover:scale-[1.01] hover:cursor-pointer border border-slate-300">
+                    <canvas id="metricsChart"></canvas>
+                    <div id="fonteMetricsChart" class="text-xs text-slate-500 mt-2 text-right"></div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md relative h-80 sm:h-96 transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1 hover:scale-[1.01] hover:cursor-pointer border border-slate-300">
+                    <canvas id="cashFlowChart"></canvas>
+                    <div id="fonteCashFlowChart" class="text-xs text-slate-500 mt-2 text-right"></div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md relative h-80 sm:h-96 transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1 hover:scale-[1.01] hover:cursor-pointer border border-slate-300">
+                <canvas id="sensitivityChart"></canvas>
+                <div id="fonteSensitivityChart" class="text-xs text-slate-500 mt-2 text-right"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Funções e variáveis globais...
+        function getAnoAtual() { return new Date().getFullYear(); }
+        function getFonteHTML() { return `Fonte: Ricardo C. Brumatti (${getAnoAtual()})`; }
+
+        Chart.defaults.font.family = 'Inter';
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = '#334155';
+        Chart.defaults.borderColor = '#e2e8f0';
+
+        let metricsChart = null;
+        let cashFlowChart = null;
+        let sensitivityChart = null;
+
+        const formatNumber = (num) => num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const formatNumberThreeDecimals = (num) => num.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+        const formatCurrency = (num) => `R$ ${formatNumber(num)}`;
+        const formatPercent = (num) => `${formatNumber(num)}%`;
+        const roundToTwo = (num) => Math.round(num * 100) / 100;
+
+        // ATUALIZADO: IDs dos novos inputs adicionados
+        const inputIds = [
+            'farmName', 'techName', 'location', 'animalBreed', 'animalSex', 'animalCategory',
+            'pricePerKg', 'sanitaryCost', 'initialWeight', 'entryDate', 'exitDate',
+            'entryDateStage1', 'exitDateStage1', 'dailyCostStage1', 'gmdStage1',
+            'entryDateStage2', 'monthlyRent', 'supplementCost', 'gmdFinal',
+            'mortalityRate', 'salePriceHead', 'arrobaPriceGordo'
+        ];
+
+        function clearFormInputs() {
+            inputIds.forEach(id => {
+                const inputElement = document.getElementById(id);
+                if (inputElement) {
+                    if (inputElement.type === 'number') {
+                        inputElement.value = '0'; 
+                    } else if (inputElement.type === 'date') {
+                        inputElement.value = '';
+                    } else {
+                        inputElement.value = '';
+                    }
+                }
+            });
+            document.getElementById('errorMessage').textContent = ''; 
+        }
+
+        function generatePrintView() {
+            const chartConfigModifier = (chartInstance, display) => {
+                if (chartInstance && chartInstance.options.plugins && chartInstance.options.plugins.title) {
+                    chartInstance.options.plugins.title.display = display;
+                    chartInstance.update('none'); 
+                }
+            };
+
+            chartConfigModifier(metricsChart, false);
+            chartConfigModifier(cashFlowChart, false);
+            chartConfigModifier(sensitivityChart, false);
+
+            const metricsChartImg = metricsChart ? metricsChart.toBase64Image() : '';
+            const cashFlowChartImg = cashFlowChart ? cashFlowChart.toBase64Image() : '';
+            const sensitivityChartImg = sensitivityChart ? sensitivityChart.toBase64Image() : '';
+            
+            chartConfigModifier(metricsChart, true);
+            chartConfigModifier(cashFlowChart, true);
+            chartConfigModifier(sensitivityChart, true);
+
+            const fonte = getFonteHTML();
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            
+            // ATUALIZADO: Geração do HTML dos parâmetros agora inclui os novos campos automaticamente
+            let paramsHTML = '<div class="grid grid-cols-2 gap-x-8 gap-y-1">';
+            inputIds.forEach(id => {
+                const labelElement = document.querySelector(`label[for='${id}']`);
+                const inputElement = document.getElementById(id);
+                if (labelElement && inputElement && inputElement.value) { // Só adiciona se tiver valor
+                    paramsHTML += `<div><strong>${labelElement.textContent}:</strong> ${inputElement.value}</div>`;
+                }
+            });
+            paramsHTML += '</div>';
+
+            const generalTableHTML = `<tbody>${document.getElementById('generalTable').innerHTML}</tbody>`;
+            const stage1TableHTML = `<tbody>${document.getElementById('stage1Table').innerHTML}</tbody>`;
+            const stage2TableHTML = `<tbody>${document.getElementById('stage2Table').innerHTML}</tbody>`;
+            const finalTableHTML = `<tbody>${document.getElementById('finalTable').innerHTML}</tbody>`;
+
+            const metricLucro = document.getElementById('metricLucroBruto').outerHTML;
+            const metricMargem = document.getElementById('metricMargemBruta').outerHTML;
+            const metricMargemMensal = document.getElementById('metricMargemBrutaMensal').outerHTML;
+            const metricTIR = document.getElementById('metricTIR').outerHTML;
+            const metricAgioBezerro = document.getElementById('metricAgioBezerro').outerHTML;
+            const metricAgioBoiMagro = document.getElementById('metricAgioBoiMagro').outerHTML;
+            const metricRelacaoTroca = document.getElementById('metricRelacaoTroca').outerHTML;
+            const metricRelacaoTrocaBezerro = document.getElementById('metricRelacaoTrocaBezerro').outerHTML;
+            
+            const printWindowHTML = `
+                <html>
+                <head>
+                    <title>Relatório de Simulação - Recria</title>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        body { font-family: 'Inter', sans-serif; font-size: 9pt; }
+                        @media print {
+                            @page { size: A4 portrait; margin: 1cm; }
+                            body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                            .print-card { page-break-inside: avoid; border: 1px solid #e5e7eb; padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; }
+                            h1, h2, h3 { page-break-after: avoid; }
+                            table { width: 100%; border-collapse: collapse; }
+                            th, td { border: 1px solid #e5e7eb; padding: 4px; text-align: left; }
+                            thead { display: table-header-group; }
+                            th { background-color: #f9fafb !important; }
+                            footer { position: fixed; bottom: 0; left: 1cm; right: 1cm; text-align: center; }
+                        }
+                    </style>
+                
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+                <body class="p-4">
+                    <header class="text-center mb-6">
+                        <h1 class="text-xl font-bold">Relatório de Simulação - Recria</h1>
+                        <p class="text-sm">Prof. Ricardo C. Brumatti - FAMEZ/UFMS, Campo Grande, MS</p>
+                        <p class="text-xs italic mt-1">*Aplicação desenvolvida para uso gratuito, sem fins comerciais.*</p>
+                        <!-- NOVO: Data de geração do relatório -->
+                        <p class="text-sm text-slate-600 mt-2">Gerado em: ${formattedDate}</p>
+                    </header>
+                    
+                    <main>
+                        <div class="print-card">
+                            <h2 class="text-lg font-bold border-b pb-1 mb-3">Parâmetros Utilizados</h2>
+                            ${paramsHTML}
+                        </div>
+
+                        <div class="print-card">
+                            <h3 class="font-bold text-base mb-2">Métricas Chave</h3>
+                            <div class="grid grid-cols-4 gap-2">
+                                <div class="bg-amber-100 border border-amber-300 rounded-lg p-3 text-center"><p class="font-semibold text-amber-900 text-sm">Lucro Bruto</p>${metricLucro}</div>
+                                <div class="bg-amber-100 border border-amber-300 rounded-lg p-3 text-center"><p class="font-semibold text-amber-900 text-sm">Margem Bruta</p>${metricMargem}</div>
+                                <div class="bg-amber-100 border border-amber-300 rounded-lg p-3 text-center"><p class="font-semibold text-amber-900 text-sm">Margem Bruta Mensal</p>${metricMargemMensal}</div>
+                                <div class="bg-amber-100 border border-amber-300 rounded-lg p-3 text-center"><p class="font-semibold text-amber-900 text-sm">TIR</p>${metricTIR}</div>
+                                <div class="bg-amber-100 border border-amber-300 rounded-lg p-3 text-center"><p class="font-semibold text-amber-900 text-sm">Ágio do Bezerro</p>${metricAgioBezerro}</div>
+                                <div class="bg-amber-100 border border-amber-300 rounded-lg p-3 text-center"><p class="font-semibold text-amber-900 text-sm">Ágio Boi Magro</p>${metricAgioBoiMagro}</div>
+                                <div class="bg-amber-100 border border-amber-300 rounded-lg p-3 text-center"><p class="font-semibold text-amber-900 text-sm">Relação de Troca Boi Magro</p>${metricRelacaoTroca}</div>
+                                <div class="bg-amber-100 border border-amber-300 rounded-lg p-3 text-center"><p class="font-semibold text-amber-900 text-sm">Relação de Troca Bezerro</p>${metricRelacaoTrocaBezerro}</div>
+                            </div>
+                            <p class="text-right text-xs mt-1">${fonte}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-x-6">
+                            <div class="space-y-4">
+                                <div class="print-card">
+                                    <h3 class="font-bold text-base mb-2">Dados Gerais</h3>
+                                    <table class="w-full text-xs"><thead><tr><th class="p-1 text-left bg-slate-50">Descrição</th><th class="p-1 text-left bg-slate-50">Valor</th></tr></thead>${generalTableHTML}</table>
+                                    <p class="text-right text-xs mt-1">${fonte}</p>
+                                </div>
+                                <div class="print-card">
+                                    <h3 class="font-bold text-base mb-2">Etapa 1 - Sequestro</h3>
+                                    <table class="w-full text-xs"><thead><tr><th class="p-1 text-left bg-slate-50">Descrição</th><th class="p-1 text-left bg-slate-50">Valor</th></tr></thead>${stage1TableHTML}</table>
+                                    <p class="text-right text-xs mt-1">${fonte}</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="print-card">
+                                    <h3 class="font-bold text-base mb-2">Etapa 2 - Pasto</h3>
+                                    <table class="w-full text-xs"><thead><tr><th class="p-1 text-left bg-slate-50">Descrição</th><th class="p-1 text-left bg-slate-50">Valor</th></tr></thead>${stage2TableHTML}</tbody></table>
+                                    <p class="text-right text-xs mt-1">${fonte}</p>
+                                </div>
+                                <div class="print-card">
+                                    <h3 class="font-bold text-base mb-2">Resultado Final (Indicadores)</h3>
+                                    <table class="w-full text-xs"><thead><tr><th class="p-1 text-left bg-slate-50">Descrição</th><th class="p-1 text-left bg-slate-50">Valor</th></tr></thead>${finalTableHTML}</tbody></table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="print-charts print-card mt-6" style="page-break-before: always;">
+                            <h2 class="text-lg font-bold border-b pb-1 mb-3">Gráficos</h2>
+                            <div class="space-y-6">
+                                <div class="text-center"><h3 class="font-bold mb-1">Resultados Econômicos</h3><img src="${metricsChartImg}" style="max-width: 90%; margin: auto; border: 1px solid #eee;"></div>
+                                <div class="text-center"><h3 class="font-bold mb-1">Fluxo de Caixa Projetado</h3><img src="${cashFlowChartImg}" style="max-width: 90%; margin: auto; border: 1px solid #eee;"></div>
+                                <div class="text-center"><h3 class="font-bold mb-1">Análise de Cenários</h3><img src="${sensitivityChartImg}" style="max-width: 90%; margin: auto; border: 1px solid #eee;"></div>
+                            </div>
+                        </div>
+                    </main>
+
+                    <footer class="text-center text-xs text-gray-500 mt-8 pt-2 border-t">
+                        <p class="italic">* Este aplicativo oferece análise econômica com base nos dados informados pelo usuário. Os resultados são apenas uma referência, sendo o uso das informações de inteira responsabilidade do usuário.</p>
+                    </footer>
+                
+    <!-- Rodapé Acadêmico/Profissional -->
+    <footer class="no-print mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
+        <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color: #0d9488; text-decoration: none;">ricardobrumatti.pro.br</a> | &copy; 2026</p>
+    </footer>
+</body>
+                </html>
+            `;
+            
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(printWindowHTML);
+                printWindow.document.close();
+            } else {
+                console.error('Abertura de nova janela bloqueada. Por favor, permita pop-ups para este site.');
+            }
+        }
+
+
+        document.getElementById('simulationForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            // Leitura de todos os inputs, incluindo os novos (não são usados nos cálculos)
+            const inputs = {
+                pricePerKg: parseFloat(document.getElementById('pricePerKg').value) || 0, 
+                sanitaryCost: parseFloat(document.getElementById('sanitaryCost').value) || 0,
+                initialWeight: parseFloat(document.getElementById('initialWeight').value) || 0,
+                entryDate: new Date(document.getElementById('entryDate').value),
+                exitDate: new Date(document.getElementById('exitDate').value),
+                entryDateStage1: new Date(document.getElementById('entryDateStage1').value),
+                exitDateStage1: new Date(document.getElementById('exitDateStage1').value),
+                dailyCostStage1: parseFloat(document.getElementById('dailyCostStage1').value) || 0,
+                gmdStage1: parseFloat(document.getElementById('gmdStage1').value) || 0,
+                entryDateStage2: new Date(document.getElementById('entryDateStage2').value),
+                monthlyRent: parseFloat(document.getElementById('monthlyRent').value) || 0,
+                supplementCost: parseFloat(document.getElementById('supplementCost').value) || 0,
+                gmdFinal: parseFloat(document.getElementById('gmdFinal').value) || 0,
+                mortalityRate: parseFloat(document.getElementById('mortalityRate').value) / 100 || 0,
+                salePriceHead: parseFloat(document.getElementById('salePriceHead').value) || 0,
+                arrobaPriceGordo: parseFloat(document.getElementById('arrobaPriceGordo').value) || 0
+            };
+            calculateSimulation(inputs);
+            performSensitivityAnalysis(inputs);
+        });
+
+        document.getElementById('clearFormButton').addEventListener('click', function() {
+            clearFormInputs();
+        });
+
+        document.getElementById('printButton').addEventListener('click', generatePrintView);
+
+
+        function calculateSimulation(inputs, updateUI = true) {
+            const errorMessage = document.getElementById('errorMessage');
+            if (updateUI) errorMessage.textContent = '';
+
+            const {
+                pricePerKg, sanitaryCost, initialWeight, entryDate, exitDate,
+                entryDateStage1, exitDateStage1, dailyCostStage1, gmdStage1,
+                entryDateStage2, monthlyRent, supplementCost, gmdFinal,
+                mortalityRate, salePriceHead, arrobaPriceGordo
+            } = inputs;
+
+            if (isNaN(entryDate.getTime()) || isNaN(exitDate.getTime()) || isNaN(entryDateStage1.getTime()) || isNaN(exitDateStage1.getTime()) || isNaN(entryDateStage2.getTime())) {
+                if (updateUI) errorMessage.textContent = 'Por favor, preencha todas as datas corretamente.';
+                return null;
+            }
+            if (exitDate <= entryDate) {
+                if (updateUI) errorMessage.textContent = 'Data de saída deve ser posterior à data de entrada.';
+                return null;
+            }
+            if (exitDateStage1 <= entryDateStage1) {
+                if (updateUI) errorMessage.textContent = 'Data de saída da Etapa 1 deve ser posterior à data de entrada.';
+                return null;
+            }
+            if (entryDateStage2 < exitDateStage1) {
+                if (updateUI) errorMessage.textContent = 'Data de entrada da Etapa 2 deve ser igual ou posterior à data de saída da Etapa 1.';
+                return null;
+            }
+            if (exitDate < entryDateStage2) {
+                if (updateUI) errorMessage.textContent = 'Data de saída geral deve ser posterior à data de entrada da Etapa 2.';
+                return null;
+            }
+
+            const purchaseValue = roundToTwo((pricePerKg * initialWeight) + sanitaryCost);
+            const farmArrobaValue = roundToTwo(pricePerKg * 30);
+            const daysRecria = Math.max(0, Math.round((exitDate - entryDate) / (1000 * 60 * 60 * 24)));
+            const monthsRecria = daysRecria > 0 ? roundToTwo(daysRecria / 30.42) : 0;
+
+            const daysStage1 = Math.max(0, Math.round((exitDateStage1 - entryDateStage1) / (1000 * 60 * 60 * 24)));
+            const costStage1 = roundToTwo(daysStage1 * dailyCostStage1);
+            const weightGainStage1 = roundToTwo(gmdStage1 * daysStage1);
+            const finalWeightStage1 = roundToTwo(initialWeight + weightGainStage1);
+            const costPerArrobaStage1 = weightGainStage1 > 0 ? roundToTwo(costStage1 / (weightGainStage1 / 30)) : 0;
+            const partialArrobaCostStage1 = finalWeightStage1 > 0 ? roundToTwo((purchaseValue + costStage1) / (finalWeightStage1 / 30)) : 0;
+
+            const daysStage2 = Math.max(0, Math.round((exitDate - entryDateStage2) / (1000 * 60 * 60 * 24)));
+            const monthsStage2 = daysStage2 > 0 ? roundToTwo(daysStage2 / 30.42) : 0;
+            const costStage2 = roundToTwo((monthlyRent + supplementCost) * monthsStage2);
+            
+            const weightGainFinal = roundToTwo(gmdFinal * daysRecria); 
+            const arrobaGainFinal = roundToTwo(weightGainFinal / 30); 
+            const finalWeight = roundToTwo(initialWeight + weightGainStage1 + (gmdFinal * daysStage2));
+            const costPerArrobaStage2 = arrobaGainFinal > 0 ? roundToTwo(costStage2 / arrobaGainFinal) : 0;
+
+            const finalAnimalCost = roundToTwo(purchaseValue + costStage1 + costStage2);
+            const partialArrobaCostFinal = finalWeight > 0 ? roundToTwo(finalAnimalCost / (finalWeight / 30)) : 0;
+            const mortalityCost = roundToTwo(finalAnimalCost * mortalityRate);
+            const totalCost = roundToTwo(finalAnimalCost + mortalityCost);
+
+            const saleValue = roundToTwo(salePriceHead);
+            const grossProfit = roundToTwo(saleValue - totalCost);
+            const grossMargin = saleValue !== 0 ? roundToTwo((grossProfit / saleValue) * 100) : 0;
+            const monthlyGrossMargin = monthsRecria > 0 ? roundToTwo(grossMargin / monthsRecria) : 0;
+
+            const agioBezerro = arrobaPriceGordo > 0 ? roundToTwo(((farmArrobaValue - arrobaPriceGordo) / arrobaPriceGordo) * 100) : 0;
+            
+            const saleArrobaValue = finalWeight > 0 ? salePriceHead / (finalWeight / 30) : 0;
+            const agioBoiMagro = arrobaPriceGordo > 0 ? roundToTwo(((saleArrobaValue - arrobaPriceGordo) / arrobaPriceGordo) * 100) : 0;
+
+            const relacaoTroca = salePriceHead > 0 ? roundToTwo((arrobaPriceGordo * 20) / salePriceHead) : 0;
+            
+            const purchaseCostAnimalOnly = pricePerKg * initialWeight;
+            const relacaoTrocaBezerro = purchaseCostAnimalOnly > 0 ? roundToTwo((arrobaPriceGordo * 20) / purchaseCostAnimalOnly) : 0;
+
+
+            let totalMonthsCalc = Math.ceil(monthsRecria);
+            if (isNaN(totalMonthsCalc) || totalMonthsCalc <= 0) {
+                totalMonthsCalc = 1; 
+            }
+            const totalMonths = totalMonthsCalc;
+
+            const cashFlow = Array(totalMonths).fill(0);
+            const cumulativeCashFlow = Array(totalMonths).fill(0); 
+
+            if (totalMonths > 0) { 
+                cashFlow[0] = -purchaseValue;
+
+                const _monthsStage1 = Math.max(1, Math.round(daysStage1 / 30.42));
+                let _totalDistributedS1 = 0;
+                if (costStage1 > 0 && daysStage1 > 0) {
+                    const _perMonthS1 = _monthsStage1 > 0 ? roundToTwo(costStage1 / _monthsStage1) : 0;
+                    for (let i = 1; i <= _monthsStage1; i++) { 
+                        if (i < totalMonths) { 
+                            if (i < _monthsStage1) {
+                                cashFlow[i] -= _perMonthS1; 
+                                _totalDistributedS1 += _perMonthS1;
+                            } else { 
+                                cashFlow[i] -= roundToTwo(costStage1 - _totalDistributedS1);
+                            }
+                        } else if (i === totalMonths) { 
+                            cashFlow[totalMonths - 1] -= roundToTwo(costStage1 - _totalDistributedS1);
+                            break; 
+                        }
+                    }
+                }
+                
+                const _startCFMonthStage2 = _monthsStage1 + 1; 
+                let _monthsForStage2Dist = 0;
+                if (totalMonths -1 >= _startCFMonthStage2) { 
+                    _monthsForStage2Dist = (totalMonths -1) - _startCFMonthStage2 + 1;
+                }
+
+                let _totalDistributedS2 = 0;
+                if (costStage2 > 0 && daysStage2 > 0) {
+                    if (_monthsForStage2Dist > 0) {
+                        const _perMonthS2 = roundToTwo(costStage2 / _monthsForStage2Dist);
+                        for (let i = 0; i < _monthsForStage2Dist; i++) {
+                            const cfIndex = _startCFMonthStage2 + i; 
+                            if (cfIndex < totalMonths) { 
+                                if (i < _monthsForStage2Dist - 1) {
+                                    cashFlow[cfIndex] -= _perMonthS2;
+                                    _totalDistributedS2 += _perMonthS2;
+                                } else {
+                                    cashFlow[cfIndex] -= roundToTwo(costStage2 - _totalDistributedS2);
+                                }
+                            }
+                        }
+                    } else if (_startCFMonthStage2 === totalMonths) { 
+                        cashFlow[totalMonths - 1] -= costStage2;
+                    }
+                }
+
+                cashFlow[totalMonths - 1] += (saleValue - mortalityCost);
+                
+                cumulativeCashFlow[0] = cashFlow[0];
+                for (let i = 1; i < totalMonths; i++) {
+                    cumulativeCashFlow[i] = roundToTwo(cumulativeCashFlow[i - 1] + (cashFlow[i] || 0));
+                }
+            }
+
+
+            const calculatedGrossProfit = totalMonths > 0 && cumulativeCashFlow.length > 0 ? cumulativeCashFlow[totalMonths - 1] : -purchaseValue;
+            if (updateUI && Math.abs(calculatedGrossProfit - grossProfit) > 0.05) { 
+                console.warn(`Soma do fluxo de caixa (${formatCurrency(calculatedGrossProfit)}) vs Lucro Bruto (${formatCurrency(grossProfit)}). Diferença: ${formatCurrency(calculatedGrossProfit - grossProfit)}`);
+            }
+
+            const tir = calculateTIR(cashFlow) * 100;
+
+            if (updateUI) {
+                document.getElementById('generalTable').innerHTML = `
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Valor Aquisição por kg</td><td class="px-4 py-3 text-sm cost">${formatCurrency(pricePerKg)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Custo Sanitário</td><td class="px-4 py-3 text-sm cost">${formatCurrency(sanitaryCost)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Peso Compra (kg)</td><td class="px-4 py-3 text-sm technical">${formatNumber(initialWeight)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Valor da Compra</td><td class="px-4 py-3 text-sm cost">${formatCurrency(purchaseValue)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Valor Arroba Fazenda</td><td class="px-4 py-3 text-sm cost">${formatCurrency(farmArrobaValue)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Dias Recria</td><td class="px-4 py-3 text-sm technical">${formatNumber(daysRecria)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Meses</td><td class="px-4 py-3 text-sm technical">${formatNumber(monthsRecria)}</td></tr>
+                `;
+                document.getElementById('fonteGeneral').innerHTML = getFonteHTML();
+
+                document.getElementById('stage1Table').innerHTML = `
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Dias Sequestro</td><td class="px-4 py-3 text-sm technical">${formatNumber(daysStage1)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Custo Sequestro</td><td class="px-4 py-3 text-sm cost">${formatCurrency(costStage1)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Peso Final Sequestro (kg)</td><td class="px-4 py-3 text-sm technical">${formatNumber(finalWeightStage1)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Custo @ Produzida</td><td class="px-4 py-3 text-sm cost">${formatCurrency(costPerArrobaStage1)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Custo Parcial da Arroba</td><td class="px-4 py-3 text-sm cost">${formatCurrency(partialArrobaCostStage1)}</td></tr>
+                `;
+                document.getElementById('fonteStage1').innerHTML = getFonteHTML();
+
+                document.getElementById('stage2Table').innerHTML = `
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Dias Pasto</td><td class="px-4 py-3 text-sm technical">${formatNumber(daysStage2)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Meses Pasto</td><td class="px-4 py-3 text-sm technical">${formatNumber(monthsStage2)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Custo Pasto</td><td class="px-4 py-3 text-sm cost">${formatCurrency(costStage2)}</td></tr>
+                `;
+                document.getElementById('fonteStage2').innerHTML = getFonteHTML();
+
+                document.getElementById('finalTable').innerHTML = `
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Ganho no Período (kg)</td><td class="px-4 py-3 text-sm technical">${formatNumber(weightGainFinal)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Ganho no Período (@)</td><td class="px-4 py-3 text-sm technical">${formatNumber(arrobaGainFinal)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Custo @ Produzida Pasto</td><td class="px-4 py-3 text-sm cost">${formatCurrency(costPerArrobaStage2)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Peso Final (kg)</td><td class="px-4 py-3 text-sm technical">${formatNumber(finalWeight)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Custo Parcial @</td><td class="px-4 py-3 text-sm cost">${formatCurrency(partialArrobaCostFinal)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Custo Por Animal Produzido</td><td class="px-4 py-3 text-sm cost">${formatCurrency(finalAnimalCost)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Custo Mortalidade</td><td class="px-4 py-3 text-sm cost">${formatCurrency(mortalityCost)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Custo Total Final</td><td class="px-4 py-3 text-sm cost">${formatCurrency(totalCost)}</td></tr>
+                    <tr class="transition-all duration-200 ease-in-out hover:bg-slate-50 hover:shadow-md hover:-translate-y-px hover:cursor-default"><td class="px-4 py-3 text-sm technical">Valor de Venda</td><td class="px-4 py-3 text-sm revenue">${formatCurrency(saleValue)}</td></tr>
+                `;
+                
+                const lucroBrutoCardValue = document.getElementById('metricLucroBruto');
+                lucroBrutoCardValue.textContent = formatCurrency(grossProfit);
+                lucroBrutoCardValue.className = `text-2xl font-bold mt-1 ${grossProfit >= 0 ? 'text-green-700' : 'text-red-700'}`;
+
+                const margemBrutaCardValue = document.getElementById('metricMargemBruta');
+                margemBrutaCardValue.textContent = formatPercent(grossMargin);
+                margemBrutaCardValue.className = `text-2xl font-bold mt-1 ${grossMargin >= 0 ? 'text-green-700' : 'text-red-700'}`;
+                
+                const margemBrutaMensalCardValue = document.getElementById('metricMargemBrutaMensal');
+                margemBrutaMensalCardValue.textContent = formatPercent(monthlyGrossMargin);
+                margemBrutaMensalCardValue.className = `text-2xl font-bold mt-1 ${monthlyGrossMargin >= 0 ? 'text-green-700' : 'text-red-700'}`;
+
+                const tirCardValue = document.getElementById('metricTIR');
+                tirCardValue.textContent = formatPercent(tir);
+                tirCardValue.className = `text-2xl font-bold mt-1 ${tir >= 0 ? 'text-green-700' : 'text-red-700'}`; 
+
+                const agioBezerroCardValue = document.getElementById('metricAgioBezerro');
+                agioBezerroCardValue.textContent = formatPercent(agioBezerro);
+                agioBezerroCardValue.className = `text-2xl font-bold mt-1 ${agioBezerro >= 0 ? 'text-green-700' : 'text-red-700'}`;
+                
+                const agioBoiMagroCardValue = document.getElementById('metricAgioBoiMagro');
+                agioBoiMagroCardValue.textContent = formatPercent(agioBoiMagro);
+                agioBoiMagroCardValue.className = `text-2xl font-bold mt-1 ${agioBoiMagro >= 0 ? 'text-green-700' : 'text-red-700'}`;
+
+                const relacaoTrocaCardValue = document.getElementById('metricRelacaoTroca');
+                relacaoTrocaCardValue.textContent = formatNumber(relacaoTroca);
+                relacaoTrocaCardValue.className = `text-2xl font-bold mt-1 text-green-700`;
+
+                const relacaoTrocaBezerroCardValue = document.getElementById('metricRelacaoTrocaBezerro');
+                relacaoTrocaBezerroCardValue.textContent = formatNumber(relacaoTrocaBezerro);
+                relacaoTrocaBezerroCardValue.className = `text-2xl font-bold mt-1 text-green-700`;
+
+
+                document.getElementById('fonteKeyMetrics').innerHTML = getFonteHTML();
+
+
+                const metricsCtx = document.getElementById('metricsChart').getContext('2d');
+                if (metricsChart) metricsChart.destroy();
+                metricsChart = new Chart(metricsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Receita', 'Custo Total', 'Lucro Bruto'],
+                        datasets: [{
+                            label: 'Métricas Financeiras',
+                            data: [saleValue, totalCost, grossProfit],
+                            backgroundColor: ['#2563eb', '#dc2626', grossProfit >= 0 ? '#16a34a' : '#ef4444'],
+                            borderRadius: 6, barPercentage: 0.7, categoryPercentage: 0.7
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'Resultados Econômicos', font: { size: 16, weight: '600' }, padding: { bottom: 15 } },
+                            legend: { position: 'bottom', labels: { usePointStyle: true, font: {size: 12} } },
+                            tooltip: {
+                                callbacks: { label: context => `${context.dataset.label}: ${formatCurrency(context.raw)}` },
+                                backgroundColor: '#1f2937', titleFont: {size: 14}, bodyFont: {size: 12}, padding: 10, cornerRadius: 6
+                            }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'R$' }, ticks: { callback: value => formatCurrency(value) } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+                document.getElementById('fonteMetricsChart').innerHTML = getFonteHTML();
+
+                const cashFlowCtx = document.getElementById('cashFlowChart').getContext('2d');
+                if (cashFlowChart) cashFlowChart.destroy();
+                cashFlowChart = new Chart(cashFlowCtx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({ length: totalMonths }, (_, i) => `Mês ${i + 1}`),
+                        datasets: [
+                            {
+                                label: 'Fluxo de Caixa (R$)', data: cashFlow,
+                                borderColor: '#2563eb', backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                fill: true, tension: 0.3, pointBackgroundColor: '#2563eb', pointRadius: 4, pointHoverRadius: 6
+                            },
+                            {
+                                label: 'Saldo Acumulado (R$)', data: cumulativeCashFlow,
+                                borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                                fill: true, tension: 0.3, pointBackgroundColor: '#16a34a', pointRadius: 4, pointHoverRadius: 6
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'Fluxo de Caixa Projetado', font: { size: 16, weight: '600' }, padding: { bottom: 15 } },
+                            legend: { position: 'bottom', labels: { usePointStyle: true, font: {size: 12} } },
+                            tooltip: {
+                                callbacks: { label: context => `${context.dataset.label}: ${formatCurrency(context.raw)}` },
+                                backgroundColor: '#1f2937', titleFont: {size: 14}, bodyFont: {size: 12}, padding: 10, cornerRadius: 6
+                            }
+                        },
+                        scales: {
+                            y: { beginAtZero: false, title: { display: true, text: 'R$' }, ticks: { callback: value => formatCurrency(value) } },
+                            x: { title: { display: true, text: 'Mês' }, grid: { display: false } }
+                        }
+                    }
+                });
+                document.getElementById('fonteCashFlowChart').innerHTML = getFonteHTML();
+            }
+            return { grossProfit, saleValue, grossMargin, cashFlow, totalMonths };
+        }
+
+        function performSensitivityAnalysis(baseInputs) {
+            const variations = [-0.15, -0.075, 0, 0.075, 0.15];
+            const results = [];
+
+            variations.forEach(variation => {
+                const adjustedInputs = { ...baseInputs };
+                adjustedInputs.pricePerKg = roundToTwo(baseInputs.pricePerKg * (1 + variation)); 
+                adjustedInputs.gmdFinal = roundToTwo(baseInputs.gmdFinal * (1 + variation)); 
+                adjustedInputs.salePriceHead = roundToTwo(baseInputs.salePriceHead * (1 + variation));
+
+                const result = calculateSimulation(adjustedInputs, false);
+                results.push({
+                    variation,
+                    grossProfit: result ? result.grossProfit : 0,
+                    grossMargin: result ? result.grossMargin : 0,
+                    inputs: {
+                        pricePerKg: adjustedInputs.pricePerKg,
+                        gmdFinal: adjustedInputs.gmdFinal,
+                        salePriceHead: adjustedInputs.salePriceHead
+                    }
+                });
+            });
+
+            const scenarioData = results.map(r => {
+                let scenarioName = 'Base';
+                const variationPercent = r.variation * 100;
+                if (r.variation > 0) scenarioName = `Cenário +${variationPercent.toFixed(1)}%`;
+                else if (r.variation < 0) scenarioName = `Cenário ${variationPercent.toFixed(1)}%`;
+                return {...r, scenarioName};
+            }).sort((a,b) => a.variation - b.variation);
+
+            const labels = scenarioData.map(r => r.scenarioName);
+            const grossProfits = scenarioData.map(result => result.grossProfit);
+            const inputValues = scenarioData.map(result => ({ ...result.inputs, grossMargin: result.grossMargin }));
+
+            const sensitivityCtx = document.getElementById('sensitivityChart').getContext('2d');
+            if (sensitivityChart) sensitivityChart.destroy();
+            sensitivityChart = new Chart(sensitivityCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Lucro Bruto (R$)',
+                        data: grossProfits,
+                        backgroundColor: grossProfits.map(profit => profit >= 0 ? '#16a34a' : '#ef4444'),
+                        borderRadius: 6, barPercentage: 0.7, categoryPercentage: 0.7
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Análise de Cenários', font: { size: 16, weight: '600' }, padding: { bottom: 15 } },
+                        legend: { position: 'bottom', labels: { usePointStyle: true, font: {size: 12} } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const inputs = inputValues[index];
+                                    return [
+                                        `Lucro Bruto: ${formatCurrency(context.raw)}`,
+                                        `Margem Bruta: ${formatPercent(inputs.grossMargin)}`,
+                                        `Valor Aquisição/kg: ${formatCurrency(inputs.pricePerKg)}`,
+                                        `GMD Esperado: ${formatNumberThreeDecimals(inputs.gmdFinal)} kg/dia`,
+                                        `Valor do Boi Magro: ${formatCurrency(inputs.salePriceHead)}`
+                                    ];
+                                }
+                            },
+                            backgroundColor: '#1f2937', titleFont: {size: 14}, bodyFont: {size: 12}, padding: 10, cornerRadius: 6
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Lucro Bruto (R$)' }, ticks: { callback: value => formatCurrency(value) } },
+                        x: { title: { display: true, text: 'Cenário' }, grid: { display: false } }
+                    }
+                }
+            });
+            document.getElementById('fonteSensitivityChart').innerHTML = getFonteHTML();
+        }
+
+        function calculateTIR(cashFlows) {
+            let rate = 0.1;
+            const maxIterations = 1000;
+            const tolerance = 0.00001;
+            let prevRate = 0;
+            for (let i = 0; i < maxIterations; i++) {
+                let npv = 0;
+                let deriv = 0;
+                for (let t = 0; t < cashFlows.length; t++) {
+                    npv += (cashFlows[t] || 0) / Math.pow(1 + rate, t);
+                    deriv -= t * (cashFlows[t] || 0) / Math.pow(1 + rate, t + 1);
+                }
+                if (Math.abs(npv) < tolerance) return rate;
+                if (deriv === 0) return rate; 
+                prevRate = rate;
+                rate -= npv / deriv;
+                if (Math.abs(rate - prevRate) < tolerance) return rate;
+                if (rate < -0.99) rate = -0.99; 
+                if (rate > 5) rate = 5; 
+            }
+            return isNaN(rate) || !isFinite(rate) ? 0 : rate;
+        }
+
+        function parseDateForInitial(dateString) {
+            if (!dateString) return new Date(NaN); 
+            const parts = dateString.split('-');
+            if (parts.length !== 3) return new Date(NaN); 
+
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; 
+            const day = parseInt(parts[2], 10);
+
+            if (isNaN(year) || isNaN(month) || isNaN(day)) return new Date(NaN);
+            return new Date(year, month, day, 0, 0, 0); 
+        }
+
+        // ATUALIZADO: Valores iniciais para os novos campos
+        const initialFormValues = {
+            farmName: "",
+            techName: "",
+            location: "",
+            animalBreed: "",
+            animalSex: "",
+            animalCategory: "",
+            pricePerKg: "12.50",
+            sanitaryCost: "45.00",
+            initialWeight: "210",
+            entryDate: "2025-08-15",
+            exitDate: "2026-06-15",
+            entryDateStage1: "2025-08-15",
+            exitDateStage1: "2025-11-15",
+            dailyCostStage1: "5.50",
+            gmdStage1: "0.550",
+            entryDateStage2: "2025-11-15",
+            monthlyRent: "70.00",
+            supplementCost: "10.00",
+            gmdFinal: "0.600",
+            mortalityRate: "0.50",
+            salePriceHead: "4300.00",
+            arrobaPriceGordo: "300.00"
+        };
+        
+        function setInitialFormValues() {
+            for (const id in initialFormValues) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.value = initialFormValues[id];
+                }
+            }
+        }
+
+        setInitialFormValues(); 
+        const initialLoadInputs = { 
+            pricePerKg: parseFloat(initialFormValues.pricePerKg),
+            sanitaryCost: parseFloat(initialFormValues.sanitaryCost),
+            initialWeight: parseFloat(initialFormValues.initialWeight),
+            entryDate: parseDateForInitial(initialFormValues.entryDate),
+            exitDate: parseDateForInitial(initialFormValues.exitDate),
+            entryDateStage1: parseDateForInitial(initialFormValues.entryDateStage1),
+            exitDateStage1: parseDateForInitial(initialFormValues.exitDateStage1),
+            dailyCostStage1: parseFloat(initialFormValues.dailyCostStage1),
+            gmdStage1: parseFloat(initialFormValues.gmdStage1),
+            entryDateStage2: parseDateForInitial(initialFormValues.entryDateStage2),
+            monthlyRent: parseFloat(initialFormValues.monthlyRent),
+            supplementCost: parseFloat(initialFormValues.supplementCost),
+            gmdFinal: parseFloat(initialFormValues.gmdFinal),
+            mortalityRate: (parseFloat(initialFormValues.mortalityRate) / 100),
+            salePriceHead: parseFloat(initialFormValues.salePriceHead),
+            arrobaPriceGordo: parseFloat(initialFormValues.arrobaPriceGordo)
+        };
+
+        calculateSimulation(initialLoadInputs);
+        performSensitivityAnalysis(initialLoadInputs);
+
+    </script>
+</body>
+</html>

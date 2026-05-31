@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador gratuito: Análise de Viabilidade - Ágio do Bezerro com Gráficos. Desenvolvido pelo Prof. Ricardo C. Brumatti (FAMEZ/UFMS) para análise econômica e pecuária de corte.">
+    <title>Análise de Viabilidade - Ágio do Bezerro com Gráficos</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <!-- Incluindo Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration (Image 2 Colors) -->
+    <script id="tailwind-theme-config">
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            emerald: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c', // Overridden to darker deep teal
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            blue: {
+                                50: '#f8fafc',
+                                100: '#f1f5f9',
+                                200: '#e2e8f0',
+                                300: '#cbd5e1',
+                                400: '#94a3b8',
+                                500: '#0d6b83', // Overridden to medium teal
+                                600: '#064e65', // Overridden to deep teal
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            teal: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                                800: '#032c39',
+                                900: '#022029',
+                            },
+                            green: {
+                                50: '#f0fdfa',
+                                100: '#ccfbf1',
+                                200: '#99f6e4',
+                                300: '#5eead4',
+                                400: '#2dd4bf',
+                                500: '#0d6b83', // Overridden
+                                600: '#064e65', // Overridden
+                                700: '#043b4c',
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+    <!-- Incluindo a fonte Inter do Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Incluindo Chart.js para os gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Estilos personalizados */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Animação do Spinner de carregamento */
+        .loader {
+            border-top-color: #14b8a6; /* teal-500 */
+            animation: spinner 1.5s linear infinite;
+        }
+        
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Estilos para impressão na página principal */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: #fff;
+            }
+            .container {
+                padding: 0;
+                max-width: 100%;
+            }
+            .printable-section {
+                page-break-inside: avoid;
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0;
+            }
+            h1, h2 {
+                color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <script>
+        if (window.self !== window.top) {
+            document.write('<style>.back-btn-container { display: none !important; }</style>');
+        }
+    </script>
+    <div class="back-btn-container no-print" style="padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#0d9488'" onmouseout="this.style.color='#64748b'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar ao site
+        </a>
+        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">ricardobrumatti.pro.br</span>
+    </div>
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-5xl">
+        
+        <header class="text-center mb-10 py-8 bg-gradient-to-r from-teal-700 to-teal-800 rounded-xl shadow-lg printable-section">
+            <h1 class="text-4xl lg:text-5xl font-extrabold text-white text-shadow">Simulação e Análise do Ágio</h1>
+            <p class="text-xl text-teal-200 mt-2">Uma ferramenta para análise de mercado do bezerro</p>
+            <!-- CORREÇÃO: Removido "Por:" -->
+            <p class="text-md text-teal-300 mt-4 font-semibold">Prof. Ricardo C. Brumatti - FAMEZ/UFMS</p>
+        </header>
+
+        <!-- Seção de Formulário -->
+        <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg mb-8 transition-all duration-300 printable-section">
+            <h2 class="text-2xl font-semibold mb-6 border-b-2 border-slate-200 pb-3 text-teal-700">Informações para Análise</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label for="input-data" class="block text-sm font-medium text-slate-700 mb-1">Data da Cotação</label>
+                    <input type="date" id="input-data" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50 transition sm:text-sm">
+                </div>
+                <div>
+                    <label for="input-valor-bezerro" class="block text-sm font-medium text-slate-700 mb-1">Valor do Bezerro (R$/cab.)</label>
+                    <input type="number" id="input-valor-bezerro" step="0.01" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50 transition sm:text-sm" placeholder="Ex: 2500.00">
+                </div>
+                <div>
+                    <label for="input-preco-boi" class="block text-sm font-medium text-slate-700 mb-1">Preço Boi Gordo (R$/@)</label>
+                    <input type="number" id="input-preco-boi" step="0.01" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50 transition sm:text-sm" placeholder="Ex: 230.00">
+                </div>
+            </div>
+            
+            <div class="mt-6 border-t border-slate-200 pt-4 text-xs italic text-slate-500 space-y-1">
+                <p>*Fonte de dados Cepea - ESALQ/USP.</p>
+                <p>**Peso padronizado para o bezerro = 210 kg.</p>
+                <p>***Arrobas padronizadas para o cálculo do Boi Gordo = 20,00 @.</p>
+            </div>
+
+            <div class="flex items-center justify-end gap-4 mt-6">
+                <button id="btn-limpar" class="px-5 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-all duration-300 hover:shadow-md no-print">Limpar</button>
+                <button id="btn-calcular" class="px-8 py-2 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all duration-300 hover:shadow-lg hover:scale-105 no-print">Calcular</button>
+            </div>
+        </div>
+
+        <!-- Seção de Loading e Erro -->
+        <div id="loading-section" class="text-center p-8 hidden">
+            <div class="loader ease-linear rounded-full border-8 border-t-8 border-slate-200 h-24 w-24 mx-auto"></div>
+            <p class="mt-4 text-slate-600 text-lg">Buscando dados históricos e calculando... Por favor, aguarde.</p>
+        </div>
+        <div id="error-section" class="hidden bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-lg relative mb-6" role="alert">
+            <strong class="font-bold">Ocorreu um erro!</strong>
+            <span class="block sm:inline" id="error-message">Não foi possível carregar os dados.</span>
+        </div>
+
+        <!-- Container para os Resultados -->
+        <div id="results-container" class="hidden space-y-8">
+            <!-- Tabela de Resultados do Usuário -->
+            <div id="user-results-card" class="bg-white p-6 md:p-8 rounded-xl shadow-lg printable-section">
+                <h2 class="text-2xl font-semibold mb-4 border-b-2 border-slate-200 pb-3 text-teal-700">Resultados da Sua Cotação</h2>
+                <div id="user-results-table"></div>
+            </div>
+
+            <!-- Tabela Comparativa com a Série Histórica -->
+            <div id="historical-results-card" class="bg-white p-6 md:p-8 rounded-xl shadow-lg printable-section">
+                <h2 class="text-2xl font-semibold mb-2 text-teal-700">Análise Comparativa com a Série Histórica</h2>
+                <p class="text-sm text-slate-500 mb-6">Os períodos são calculados com base na data que você informou, utilizando os dados públicos do Cepea Esalq/USP.</p>
+                <div id="historical-results-table" class="overflow-x-auto"></div>
+            </div>
+
+            <!-- Container para os Gráficos -->
+            <div id="charts-container" class="space-y-8"></div>
+            
+            <div class="text-center mt-8 no-print">
+                <button id="btn-gerar-relatorio" class="px-8 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-300 hover:shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v6a2 2 0 002 2h1v-4a1 1 0 011-1h10a1 1 0 011 1v4h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" /></svg>
+                    Gerar Relatório para Impressão
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Rodapé Acadêmico/Profissional -->
+    <footer class="no-print mt-8 py-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+        <p>Ricardo Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color: #0d9488; text-decoration: none;">ricardobrumatti.pro.br</a> | &copy; 2026</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- VARIÁVEIS GLOBAIS ---
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBfuLMfxCV8lP0zfGv_4Cg_P5TBcIc0DyNo-E_xYsb_OgQzu-wMrAeXH2qT9_hIMCj/exec';
+            const FATOR_ARROBA_BEZERRO = 210 / 30;
+            const FATOR_VALOR_BOI = 20;
+            let agioChartInstance = null;
+            let trocaChartInstance = null;
+            let precosChartInstance = null;
+
+            // --- SELEÇÃO DE ELEMENTOS DO DOM ---
+            const elements = {
+                inputData: document.getElementById('input-data'),
+                inputValorBezerro: document.getElementById('input-valor-bezerro'),
+                inputPrecoBoi: document.getElementById('input-preco-boi'),
+                btnCalcular: document.getElementById('btn-calcular'),
+                btnLimpar: document.getElementById('btn-limpar'),
+                btnGerarRelatorio: document.getElementById('btn-gerar-relatorio'),
+                loadingSection: document.getElementById('loading-section'),
+                errorSection: document.getElementById('error-section'),
+                errorMessage: document.getElementById('error-message'),
+                resultsContainer: document.getElementById('results-container'),
+                userResultsCard: document.getElementById('user-results-card'),
+                historicalResultsCard: document.getElementById('historical-results-card'),
+                chartsContainer: document.getElementById('charts-container')
+            };
+            
+            // --- FUNÇÕES DE FORMATAÇÃO ---
+            const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+            const formatPercent = (value) => `${value.toFixed(2).replace('.', ',')}%`;
+            const formatRatio = (value) => `${value.toFixed(2).replace('.', ',')}`;
+            const formatNumber = (value) => parseFloat(value.toFixed(2));
+
+            // --- FUNÇÕES AUXILIARES ---
+            const setInitialValues = () => {
+                elements.inputData.value = new Date().toISOString().split('T')[0];
+                elements.resultsContainer.classList.add('hidden');
+            };
+
+            const clearInputs = () => {
+                setInitialValues();
+                elements.inputValorBezerro.value = '';
+                elements.inputPrecoBoi.value = '';
+                elements.errorSection.classList.add('hidden');
+                if (agioChartInstance) agioChartInstance.destroy();
+                if (trocaChartInstance) trocaChartInstance.destroy();
+                if (precosChartInstance) precosChartInstance.destroy();
+                elements.chartsContainer.innerHTML = '';
+            };
+
+            // --- LÓGICA DE DADOS ---
+            const fetchData = async () => {
+                try {
+                    const response = await fetch(SCRIPT_URL);
+                    if (!response.ok) throw new Error(`A resposta da rede não foi bem-sucedida: ${response.statusText}`);
+                    const jsonData = await response.json();
+                    if (jsonData.error) throw new Error(jsonData.error);
+                    return jsonData.map(row => ({
+                        data: new Date(row.data),
+                        bezerro: parseFloat(row.bezerro),
+                        boiGordo: parseFloat(row.boiGordo)
+                    })).filter(row => row.data && !isNaN(row.data.getTime()) && !isNaN(row.bezerro) && !isNaN(row.boiGordo));
+                } catch (error) {
+                    console.error('Falha ao buscar ou processar dados do App Script:', error);
+                    throw error;
+                }
+            };
+            
+            const filterDataByPeriod = (data, userDate, period) => {
+                const year = userDate.getUTCFullYear();
+                const month = userDate.getUTCMonth();
+
+                return data.filter(row => {
+                    const rowYear = row.data.getUTCFullYear();
+                    const rowMonth = row.data.getUTCMonth();
+
+                    switch (period) {
+                        case 'mesAnterior':
+                            let prevMonth = month - 1;
+                            let prevMonthYear = year;
+                            if (prevMonth < 0) {
+                                prevMonth = 11; // Dezembro
+                                prevMonthYear--;
+                            }
+                            return rowYear === prevMonthYear && rowMonth === prevMonth;
+                        case 'trimestre':
+                            if (rowYear !== year) return false;
+                            const quarter = Math.floor(month / 3);
+                            const rowQuarter = Math.floor(rowMonth / 3);
+                            return rowQuarter === quarter;
+                        case 'anoVigente':
+                            return rowYear === year;
+                        case 'anoAnterior':
+                            const prevYear = year - 1;
+                            return rowYear === prevYear;
+                        case 'geral':
+                            return true;
+                        default:
+                            return false;
+                    }
+                });
+            };
+
+            const calculateAverages = (data) => {
+                if (data.length === 0) return { mediaArrobaBezerro: 0, mediaArrobaBoiGordo: 0, mediaValorBezerro: 0, mediaValorBoiGordo: 0, mediaAgioBezerro: 0, mediaRelacaoTroca: 0, count: 0 };
+                const sum = data.reduce((acc, row) => {
+                    const arrobaBezerro = row.bezerro / FATOR_ARROBA_BEZERRO;
+                    const valorBoiGordo = row.boiGordo * FATOR_VALOR_BOI;
+                    acc.arrobaBezerro += arrobaBezerro;
+                    acc.arrobaBoiGordo += row.boiGordo;
+                    acc.valorBezerro += row.bezerro;
+                    acc.valorBoiGordo += valorBoiGordo;
+                    acc.relacaoTroca += row.bezerro > 0 ? valorBoiGordo / row.bezerro : 0;
+                    return acc;
+                }, { arrobaBezerro: 0, arrobaBoiGordo: 0, valorBezerro: 0, valorBoiGordo: 0, relacaoTroca: 0 });
+                const count = data.length;
+                const mediaArrobaBezerro = sum.arrobaBezerro / count;
+                const mediaArrobaBoiGordo = sum.arrobaBoiGordo / count;
+                return {
+                    mediaArrobaBezerro, mediaArrobaBoiGordo,
+                    mediaValorBezerro: sum.valorBezerro / count,
+                    mediaValorBoiGordo: sum.valorBoiGordo / count,
+                    mediaAgioBezerro: mediaArrobaBoiGordo > 0 ? ((mediaArrobaBezerro - mediaArrobaBoiGordo) / mediaArrobaBoiGordo) * 100 : 0,
+                    mediaRelacaoTroca: sum.relacaoTroca / count,
+                    count
+                };
+            };
+            
+            // --- FUNÇÕES DE RENDERIZAÇÃO ---
+            const renderTables = (userResults, historicalResults) => {
+                const currentYear = new Date().getFullYear();
+                const sourceHTML = `<p class="text-[11px] italic text-slate-500 text-right mt-4">Fonte: Ricardo C. Brumatti - FAMEZ/UFMS (${currentYear})</p>`;
+                
+                document.getElementById('user-results-table').innerHTML = `
+                    <div class="overflow-hidden rounded-lg">
+                        <table class="w-full text-sm text-left text-slate-600">
+                            <tbody class="divide-y divide-slate-200">
+                                <tr class="hover:bg-slate-50 transition"><td class="px-4 py-4 font-semibold text-slate-800">Valor @ do Bezerro</td><td class="px-4 py-4 text-right font-bold text-lg text-teal-700">${formatCurrency(userResults.arrobaBezerro)}</td></tr>
+                                <tr class="hover:bg-slate-50 transition"><td class="px-4 py-4 font-semibold text-slate-800">Ágio da @ Bezerro</td><td class="px-4 py-4 text-right font-bold text-lg text-teal-700">${formatPercent(userResults.agioBezerro)}</td></tr>
+                                <tr class="hover:bg-slate-50 transition"><td class="px-4 py-4 font-semibold text-slate-800">Relação de Troca (Bezerro/Boi Gordo)</td><td class="px-4 py-4 text-right font-bold text-lg text-teal-700">${(userResults.relacaoTroca).toFixed(2).replace('.',',')}</td></tr>
+                                <tr class="hover:bg-slate-50 transition"><td class="px-4 py-4 font-semibold text-slate-800">Diferencial de Base @ Boi Gordo</td><td class="px-4 py-4 text-right font-bold text-lg text-teal-700">${formatPercent(userResults.difBaseBoi)}</td></tr>
+                                <tr class="hover:bg-slate-50 transition"><td class="px-4 py-4 font-semibold text-slate-800">Diferencial de Base @ Bezerro</td><td class="px-4 py-4 text-right font-bold text-lg text-teal-700">${formatPercent(userResults.difBaseBezerro)}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- CORREÇÃO: Fonte unificada -->
+                    ${sourceHTML}`;
+
+                const periods = ['Mês Anterior', 'Trimestre Vigente', 'Ano Vigente', 'Ano Anterior', 'Média Geral'];
+                const periodKeys = ['mesAnterior', 'trimestre', 'anoVigente', 'anoAnterior', 'geral'];
+                let headHTML = `<th class="px-4 py-3 text-left">Indicador</th><th class="px-4 py-3 text-center">Seu Resultado</th>`;
+                periods.forEach(p => headHTML += `<th class="px-4 py-3 text-center">${p}</th>`);
+                const createRow = (label, userValue, dataKey, formatFn) => {
+                    let row = `<td class="px-4 py-4 font-semibold text-slate-800">${label}</td><td class="px-4 py-4 text-center font-bold bg-teal-50 text-teal-800">${userValue}</td>`;
+                    periodKeys.forEach(key => {
+                        const value = historicalResults[key][dataKey];
+                        const count = historicalResults[key].count;
+                        row += `<td class="px-4 py-4 text-center">${count > 0 ? formatFn(value) : 'N/D'}</td>`;
+                    });
+                    return row;
+                };
+                document.getElementById('historical-results-table').innerHTML = `
+                    <table class="w-full text-sm text-left text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100 rounded-t-lg"><tr>${headHTML}</tr></thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr class="bg-white hover:bg-slate-50 transition">${createRow('Ágio do Bezerro (%)', formatPercent(userResults.agioBezerro), 'mediaAgioBezerro', formatPercent)}</tr>
+                            <tr class="bg-white hover:bg-slate-50 transition">${createRow('Relação de Troca', formatRatio(userResults.relacaoTroca), 'mediaRelacaoTroca', formatRatio)}</tr>
+                            <tr class="bg-white hover:bg-slate-50 transition">${createRow('@ do Bezerro (R$)', formatCurrency(userResults.arrobaBezerro), 'mediaArrobaBezerro', formatCurrency)}</tr>
+                            <tr class="bg-white hover:bg-slate-50 transition">${createRow('@ Boi Gordo (R$)', formatCurrency(userResults.precoBoiGordo), 'mediaArrobaBoiGordo', formatCurrency)}</tr>
+                            <tr class="bg-white hover:bg-slate-50 transition">${createRow('Valor Bezerro (R$)', formatCurrency(userResults.valorBezerro), 'mediaValorBezerro', formatCurrency)}</tr>
+                            <tr class="bg-white hover:bg-slate-50 transition">${createRow('Valor Boi Gordo (R$)', formatCurrency(userResults.valorBoiGordo), 'mediaValorBoiGordo', formatCurrency)}</tr>
+                        </tbody>
+                    </table>
+                    ${sourceHTML}`;
+            };
+            
+            const renderCharts = (userResults, historicalResults) => {
+                if (agioChartInstance) agioChartInstance.destroy();
+                if (trocaChartInstance) trocaChartInstance.destroy();
+                if (precosChartInstance) precosChartInstance.destroy();
+
+                const currentYear = new Date().getFullYear();
+                const sourceHTML = `<p class="text-[11px] italic text-slate-500 text-right mt-4">Fonte: Ricardo C. Brumatti - FAMEZ/UFMS (${currentYear})</p>`;
+
+                elements.chartsContainer.innerHTML = `
+                    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg printable-section">
+                        <h3 class="text-lg font-semibold text-center mb-4 text-slate-700">Ágio da @ Bezerro (%)</h3>
+                        <div class="relative h-80 md:h-96"><canvas id="agioChart"></canvas></div>
+                        ${sourceHTML}
+                    </div>
+                    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg printable-section">
+                        <h3 class="text-lg font-semibold text-center mb-4 text-slate-700">Relação de Troca (Bezerro/Boi Gordo)</h3>
+                        <div class="relative h-80 md:h-96"><canvas id="trocaChart"></canvas></div>
+                        ${sourceHTML}
+                    </div>
+                    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg printable-section">
+                        <h3 class="text-lg font-semibold text-center mb-4 text-slate-700">Preços da Arroba (R$)</h3>
+                        <div class="relative h-80 md:h-96"><canvas id="precosChart"></canvas></div>
+                        ${sourceHTML}
+                    </div>
+                `;
+
+                const periodKeys = ['mesAnterior', 'trimestre', 'anoVigente', 'anoAnterior', 'geral'];
+                const chartLabels = ['Mês Ant.', 'Trimestre', 'Ano Vigente', 'Ano Ant.', 'Geral'];
+                
+                const historicalAgio = periodKeys.map(key => formatNumber(historicalResults[key].mediaAgioBezerro));
+                const historicalTroca = periodKeys.map(key => formatNumber(historicalResults[key].mediaRelacaoTroca));
+                const historicalArrobaBezerro = periodKeys.map(key => formatNumber(historicalResults[key].mediaArrobaBezerro));
+                const historicalArrobaBoi = periodKeys.map(key => formatNumber(historicalResults[key].mediaArrobaBoiGordo));
+
+                const chartOptions = {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => value } } }
+                };
+                
+                agioChartInstance = new Chart(document.getElementById('agioChart').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: chartLabels, datasets: [ { label: 'Seu Resultado', data: Array(5).fill(formatNumber(userResults.agioBezerro)), backgroundColor: '#14b8a6', barPercentage: 0.5 }, { label: 'Média Histórica', data: historicalAgio, backgroundColor: '#94a3b8', barPercentage: 0.5 } ] },
+                    options: { ...chartOptions, scales: { y: { ...chartOptions.scales.y, ticks: { callback: (value) => `${value}%` } } } }
+                });
+
+                trocaChartInstance = new Chart(document.getElementById('trocaChart').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: chartLabels, datasets: [ { label: 'Seu Resultado', data: Array(5).fill(formatNumber(userResults.relacaoTroca)), backgroundColor: '#14b8a6', barPercentage: 0.5 }, { label: 'Média Histórica', data: historicalTroca, backgroundColor: '#94a3b8', barPercentage: 0.5 } ] },
+                    options: chartOptions
+                });
+
+                precosChartInstance = new Chart(document.getElementById('precosChart').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: ['Seu Resultado', ...chartLabels], datasets: [ { label: '@ Bezerro (R$)', data: [formatNumber(userResults.arrobaBezerro), ...historicalArrobaBezerro], backgroundColor: '#14b8a6' }, { label: '@ Boi Gordo (R$)', data: [formatNumber(userResults.precoBoiGordo), ...historicalArrobaBoi], backgroundColor: '#94a3b8' } ] },
+                     options: { ...chartOptions, scales: { y: { ...chartOptions.scales.y, ticks: { callback: (value) => `R$ ${value}` } } } }
+                });
+            };
+
+            // --- LÓGICA PRINCIPAL ---
+            const handleCalculate = async () => {
+                const dataSelecionada = elements.inputData.value;
+                const valorBezerro = parseFloat(elements.inputValorBezerro.value);
+                const precoBoiGordo = parseFloat(elements.inputPrecoBoi.value);
+                if (!dataSelecionada || isNaN(valorBezerro) || isNaN(precoBoiGordo) || valorBezerro <= 0 || precoBoiGordo <= 0) {
+                    alert('Por favor, preencha todos os campos com valores válidos.'); return;
+                }
+
+                elements.loadingSection.classList.remove('hidden');
+                elements.resultsContainer.classList.add('hidden');
+                elements.errorSection.classList.add('hidden');
+
+                try {
+                    const historicalData = await fetchData();
+                    if(historicalData.length === 0) throw new Error("Nenhum dado histórico foi carregado.");
+                    
+                    const userDate = new Date(dataSelecionada + 'T00:00:00');
+                    const arrobaBezerro = valorBezerro / FATOR_ARROBA_BEZERRO;
+                    const agioBezerro = precoBoiGordo > 0 ? ((arrobaBezerro - precoBoiGordo) / precoBoiGordo) * 100 : 0;
+                    const valorBoiGordo = precoBoiGordo * FATOR_VALOR_BOI;
+                    const relacaoTroca = valorBezerro > 0 ? valorBoiGordo / valorBezerro : 0;
+                    
+                    const prevMonthData = filterDataByPeriod(historicalData, userDate, 'mesAnterior');
+                    const prevMonthAverages = calculateAverages(prevMonthData);
+
+                    const difBaseBoi = prevMonthAverages.mediaArrobaBoiGordo > 0 ? ((precoBoiGordo - prevMonthAverages.mediaArrobaBoiGordo) / prevMonthAverages.mediaArrobaBoiGordo) * 100 : 0;
+                    const difBaseBezerro = prevMonthAverages.mediaArrobaBezerro > 0 ? ((arrobaBezerro - prevMonthAverages.mediaArrobaBezerro) / prevMonthAverages.mediaArrobaBezerro) * 100 : 0;
+
+                    const userResults = { valorBezerro, precoBoiGordo, valorBoiGordo, arrobaBezerro, agioBezerro, relacaoTroca, difBaseBoi, difBaseBezerro };
+                    const historicalResults = {
+                        mesAnterior: prevMonthAverages,
+                        trimestre: calculateAverages(filterDataByPeriod(historicalData, userDate, 'trimestre')),
+                        anoVigente: calculateAverages(filterDataByPeriod(historicalData, userDate, 'anoVigente')),
+                        anoAnterior: calculateAverages(filterDataByPeriod(historicalData, userDate, 'anoAnterior')),
+                        geral: calculateAverages(historicalData)
+                    };
+                    
+                    renderTables(userResults, historicalResults);
+                    renderCharts(userResults, historicalResults);
+                    elements.resultsContainer.classList.remove('hidden');
+                } catch (err) {
+                    elements.errorSection.classList.remove('hidden');
+                    elements.errorMessage.textContent = `Erro: ${err.message}. Verifique sua conexão e a configuração da API.`;
+                } finally {
+                    elements.loadingSection.classList.add('hidden');
+                }
+            };
+            
+            const handleGenerateReport = () => {
+                if (elements.resultsContainer.classList.contains('hidden')) {
+                    alert('Por favor, calcule os resultados antes de gerar um relatório.');
+                    return;
+                }
+
+                const headerHTML = document.querySelector('header').outerHTML;
+                const userResultsHTML = elements.userResultsCard.outerHTML;
+                const historicalResultsHTML = elements.historicalResultsCard.outerHTML;
+                const agioImage = agioChartInstance.toBase64Image();
+                const trocaImage = trocaChartInstance.toBase64Image();
+                const precosImage = precosChartInstance.toBase64Image();
+                
+                const chartsHTML = `
+                    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg printable-section" style="break-inside: avoid;">
+                        <h3 class="text-lg font-semibold text-center mb-4 text-slate-700">Ágio da @ Bezerro (%)</h3>
+                        <img src="${agioImage}" alt="Gráfico de Ágio" style="width: 100%; height: auto;"/>
+                        ${document.querySelector('#charts-container div:nth-child(1) p').outerHTML}
+                    </div>
+                    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg printable-section" style="margin-top: 2rem; break-inside: avoid;">
+                        <h3 class="text-lg font-semibold text-center mb-4 text-slate-700">Relação de Troca (Bezerro/Boi Gordo)</h3>
+                        <img src="${trocaImage}" alt="Gráfico de Relação de Troca" style="width: 100%; height: auto;"/>
+                         ${document.querySelector('#charts-container div:nth-child(2) p').outerHTML}
+                    </div>
+                    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg printable-section" style="margin-top: 2rem; break-inside: avoid;">
+                        <h3 class="text-lg font-semibold text-center mb-4 text-slate-700">Preços da Arroba (R$)</h3>
+                        <img src="${precosImage}" alt="Gráfico de Preços da Arroba" style="width: 100%; height: auto;"/>
+                         ${document.querySelector('#charts-container div:nth-child(3) p').outerHTML}
+                    </div>
+                `;
+                
+                const reportHTML = `
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Relatório de Análise - ${new Date(elements.inputData.value + 'T00:00:00').toLocaleDateString('pt-BR')}</title>
+                        <script src="https://cdn.tailwindcss.com"><\/script>
+                        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+                        <style>
+                            body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+                            .printable-section { break-inside: avoid; }
+                            @media print {
+                                body { background-color: #fff; }
+                                .printable-section { box-shadow: none !important; border: 1px solid #e2e8f0; margin-top: 20px; }
+                                table { table-layout: fixed; width: 100%; }
+                                th, td {
+                                    font-size: 8pt !important;
+                                    padding: 4px !important;
+                                    text-align: center !important;
+                                    word-wrap: break-word;
+                                }
+                                th:first-child, td:first-child { text-align: left !important; }
+                            }
+                        </style>
+                    
+    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
+    <style id="theme-override-styles">
+        :root {
+            --primary: #064e65 !important;
+            --secondary: #0d6b83 !important;
+            --success: #10b981 !important;
+            --danger: #cf1818 !important;
+            --bg-page: #f8fafc !important;
+            --bg-card: #ffffff !important;
+            --text-main: #0f172a !important;
+            --text-muted: #64748b !important;
+            --green: #064e65 !important;
+            --green-mid: #0d6b83 !important;
+            --green-lt: #e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, 
+        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
+        .metric-value, .metric-number, .chart-title, 
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        /* Custom background color overrides (e.g. headers and buttons) */
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
+            background-color: #064e65 !important;
+        }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
+            background-color: #064e65 !important;
+        }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
+            background-color: #0d6b83 !important;
+        }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
+            color: #064e65 !important;
+        }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
+            border-color: #064e65 !important;
+        }
+        .btn-primary {
+            background-color: #064e65 !important;
+            color: #ffffff !important;
+        }
+        .btn-primary:hover {
+            background-color: #0d6b83 !important;
+        }
+        .btn-outline:hover {
+            border-color: #0d6b83 !important;
+            color: #0d6b83 !important;
+        }
+        /* Standardizing clean red reset buttons to match the Image 2 style */
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
+            background-color: #cf1818 !important;
+            color: #ffffff !important;
+        }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
+            background-color: #b91c1c !important;
+        }
+    </style>
+    
+</head>
+                    <body class="bg-slate-50">
+                        <div class="container mx-auto p-8">
+                            ${headerHTML}
+                            <div class="space-y-8 mt-10">
+                                ${userResultsHTML}
+                                ${historicalResultsHTML}
+                                ${chartsHTML}
+                            </div>
+                            <footer class="mt-8 pt-4 border-t text-xs text-slate-500 text-center">
+                                <p class="italic">* Este aplicativo oferece análise econômica com base nos dados informados pelo usuário. Os resultados são apenas uma referência, sendo o uso das informações de inteira responsabilidade do usuário.</p>
+                            </footer>
+                        </div>
+                    </body>
+                    </html>
+                `;
+
+                const reportTab = window.open('', '_blank');
+                reportTab.document.open();
+                reportTab.document.write(reportHTML);
+                reportTab.document.close();
+                reportTab.onload = () => {
+                    reportTab.focus();
+                    reportTab.print();
+                };
+            };
+
+
+            // --- EVENT LISTENERS ---
+            elements.btnCalcular.addEventListener('click', handleCalculate);
+            elements.btnLimpar.addEventListener('click', clearInputs);
+            elements.btnGerarRelatorio.addEventListener('click', handleGenerateReport);
+
+            // --- INICIALIZAÇÃO ---
+            setInitialValues();
+        });
+    </script>
+</body>
+</html>
