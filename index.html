@@ -782,6 +782,126 @@ footer {
   .articles-grid { grid-template-columns: 1fr; }
   .tool-panel.active { grid-template-columns: 1fr; }
 }
+/* ===== CARROSSEL HERO ===== */
+.hero-carousel-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  background: #f0f4f8;
+  aspect-ratio: 16 / 10;
+}
+
+.hero-carousel-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-slide {
+  min-width: 100%;
+  height: 100%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  display: block;
+}
+
+.carousel-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.62));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 20px 16px 10px;
+  letter-spacing: 0.02em;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.88);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+  color: #1a3a3a;
+}
+
+.hero-carousel-wrapper:hover .carousel-btn {
+  opacity: 1;
+}
+
+.carousel-prev { left: 10px; }
+.carousel-next { right: 10px; }
+
+.carousel-btn:hover {
+  background: rgba(255,255,255,1);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+
+.carousel-dots .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.carousel-dots .dot.active {
+  background: #fff;
+  transform: scale(1.3);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .hero-carousel-wrapper {
+    max-width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 12px;
+  }
+
+  .carousel-btn {
+    opacity: 1;
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+}
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -850,31 +970,48 @@ footer {
   </div>
 
   <div class="hero-right">
-    <div class="institution-card reveal">
-      <div class="inst-label">Instituição - Professor Titular</div>
-      <div class="inst-title">FAMEZ — Faculdade de Medicina Veterinária e Zootecnia</div>
-      <div class="inst-sub">Universidade Federal de Mato Grosso do Sul · Docente em Economia e Projetos Agropecuários</div>
+  <!-- CARROSSEL DE FERRAMENTAS -->
+  <div class="hero-carousel-wrapper">
+    <div class="hero-carousel-track" id="carrosselTrack">
+      <div class="carousel-slide">
+        <img src="img/carrossel-confinamento.png" alt="Simulação Econômica de Confinamento" loading="lazy">
+        <span class="carousel-label">Simulação de Confinamento</span>
+      </div>
+      <div class="carousel-slide">
+        <img src="img/carrossel-ponto-otimo.png" alt="Ponto Ótimo de Venda" loading="lazy">
+        <span class="carousel-label">Ponto Ótimo de Venda</span>
+      </div>
+      <div class="carousel-slide">
+        <img src="img/carrossel-bioecon.png" alt="BioEcon Corte — Simulador de Rentabilidade" loading="lazy">
+        <span class="carousel-label">BioEcon Corte</span>
+      </div>
+      <div class="carousel-slide">
+        <img src="img/carrossel-leilao.png" alt="Eficiência na Venda em Leilão" loading="lazy">
+        <span class="carousel-label">Venda em Leilão</span>
+      </div>
+      <div class="carousel-slide">
+        <img src="img/carrossel-mercado.png" alt="Preços e Mercado Futuro B3 e CEPEA" loading="lazy">
+        <span class="carousel-label">Painel de Mercado</span>
+      </div>
+      <div class="carousel-slide">
+        <img src="img/carrossel-historico.png" alt="Painel de Séries Históricas" loading="lazy">
+        <span class="carousel-label">Séries Históricas</span>
+      </div>
     </div>
-    <div class="institution-card reveal reveal-d1">
-      <div class="inst-label">Formação</div>
-      <div class="inst-title">Zootecnista · Mestre · Doutor</div>
-      <div class="inst-sub">Zootecnia pela USP (1998 · 2002 · 2006). Orientador de Mestrado e Doutorado (2014–2025).</div>
-    </div>
-    <div class="tool-count-card reveal reveal-d2">
-      <div class="tool-count-item">
-        <span class="tool-count-num">6</span>
-        <span class="tool-count-label">Simuladores Econômicos</span>
-      </div>
-      <div class="tool-count-item">
-        <span class="tool-count-num">2</span>
-        <span class="tool-count-label">Painéis de Mercado</span>
-      </div>
-      <div class="tool-count-item">
-        <span class="tool-count-num">4</span>
-        <span class="tool-count-label">Calculadoras</span>
-      </div>
+
+    <button class="carousel-btn carousel-prev" id="carrosselPrev" aria-label="Anterior">&#8592;</button>
+    <button class="carousel-btn carousel-next" id="carrosselNext" aria-label="Próximo">&#8594;</button>
+
+    <div class="carousel-dots" id="carrosselDots">
+      <button class="dot active" aria-label="Slide 1"></button>
+      <button class="dot" aria-label="Slide 2"></button>
+      <button class="dot" aria-label="Slide 3"></button>
+      <button class="dot" aria-label="Slide 4"></button>
+      <button class="dot" aria-label="Slide 5"></button>
+      <button class="dot" aria-label="Slide 6"></button>
     </div>
   </div>
+</div>
 </section>
 
 <!-- ─── FERRAMENTAS ───────────────────────────────────── -->
@@ -1518,6 +1655,49 @@ function submitForm(e) {
       setTimeout(() => { status.className = 'form-status'; status.style.display = 'none'; }, 6000);
     });
 }
+</script>
+<script>
+(function() {
+  var track = document.getElementById('carrosselTrack');
+  var dots = document.querySelectorAll('#carrosselDots .dot');
+  var total = 6;
+  var current = 0;
+  var timer;
+
+  function goTo(index) {
+    current = (index + total) % total;
+    track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    dots.forEach(function(d, i) {
+      d.classList.toggle('active', i === current);
+    });
+  }
+
+  function next() { goTo(current + 1); }
+  function prev() { goTo(current - 1); }
+
+  function startAuto() {
+    timer = setInterval(next, 3800);
+  }
+
+  function stopAuto() {
+    clearInterval(timer);
+  }
+
+  document.getElementById('carrosselNext').addEventListener('click', function() { stopAuto(); next(); startAuto(); });
+  document.getElementById('carrosselPrev').addEventListener('click', function() { stopAuto(); prev(); startAuto(); });
+
+  dots.forEach(function(dot, i) {
+    dot.addEventListener('click', function() { stopAuto(); goTo(i); startAuto(); });
+  });
+
+  var wrapper = document.querySelector('.hero-carousel-wrapper');
+  if (wrapper) {
+    wrapper.addEventListener('mouseenter', stopAuto);
+    wrapper.addEventListener('mouseleave', startAuto);
+  }
+
+  startAuto();
+})();
 </script>
 </body>
 </html>
