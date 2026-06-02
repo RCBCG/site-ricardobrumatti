@@ -786,13 +786,69 @@ footer {
 .hero-carousel-wrapper {
   position: relative;
   width: 100%;
-  max-width: 520px;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 0 0 1px rgba(13,60,60,0.08);
-  background: #0d2b2b;
-  aspect-ratio: 16 / 9;
+  max-width: 560px;
   align-self: center;
+}
+
+.carousel-notebook-frame {
+  position: relative;
+  width: 100%;
+  background: #1a1a1a;
+  border-radius: 16px 16px 4px 4px;
+  padding: 10px 10px 0 10px;
+  box-shadow:
+    0 2px 0 #888 inset,
+    0 32px 64px rgba(0,0,0,0.28),
+    0 8px 24px rgba(0,0,0,0.18),
+    0 0 0 1px rgba(0,0,0,0.12);
+}
+
+.carousel-notebook-topbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 8px 4px;
+}
+
+.carousel-notebook-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.carousel-notebook-dot:nth-child(1) { background: #ff5f57; }
+.carousel-notebook-dot:nth-child(2) { background: #ffbd2e; }
+.carousel-notebook-dot:nth-child(3) { background: #28c840; }
+
+.carousel-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 6px 6px 0 0;
+  overflow: hidden;
+  background: #0d2b2b;
+}
+
+.carousel-notebook-base {
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  height: 18px;
+  background: linear-gradient(to bottom, #c8c8c8, #b0b0b0);
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.carousel-notebook-base::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: #999;
+  border-radius: 0 0 4px 4px;
 }
 
 .hero-carousel-track {
@@ -822,12 +878,12 @@ footer {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(transparent, rgba(5,30,30,0.75));
+  background: linear-gradient(transparent, rgba(5,30,30,0.80));
   color: #fff;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 24px 14px 10px;
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 28px 14px 10px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -835,12 +891,12 @@ footer {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.88);
   border: none;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  font-size: 14px;
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -851,7 +907,7 @@ footer {
   color: #0d3030;
 }
 
-.hero-carousel-wrapper:hover .carousel-btn {
+.carousel-screen:hover .carousel-btn {
   opacity: 1;
 }
 
@@ -878,7 +934,7 @@ footer {
   height: 6px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.40);
   cursor: pointer;
   padding: 0;
   transition: background 0.2s, transform 0.2s;
@@ -892,16 +948,14 @@ footer {
 @media (max-width: 768px) {
   .hero-carousel-wrapper {
     max-width: 100%;
-    aspect-ratio: 4 / 3;
-    border-radius: 10px;
-    margin-top: 24px;
+    margin-top: 28px;
   }
 
   .carousel-btn {
     opacity: 1;
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
   }
 }
 </style>
@@ -973,46 +1027,53 @@ footer {
 
   <div class="hero-right">
   <!-- CARROSSEL DE FERRAMENTAS -->
-  <div class="hero-carousel-wrapper">
-    <div class="hero-carousel-track" id="carrosselTrack">
-      <div class="carousel-slide">
-        <img src="img/carrossel-confinamento.png" alt="Simulação Econômica de Confinamento" loading="lazy">
-        <span class="carousel-label">Simulação de Confinamento</span>
-      </div>
-      <div class="carousel-slide">
-        <img src="img/carrossel-ponto-otimo.png" alt="Ponto Ótimo de Venda" loading="lazy">
-        <span class="carousel-label">Ponto Ótimo de Venda</span>
-      </div>
-      <div class="carousel-slide">
-        <img src="img/carrossel-bioecon.png" alt="BioEcon Corte — Simulador de Rentabilidade" loading="lazy">
-        <span class="carousel-label">BioEcon Corte</span>
-      </div>
-      <div class="carousel-slide">
-        <img src="img/carrossel-leilao.png" alt="Eficiência na Venda em Leilão" loading="lazy">
-        <span class="carousel-label">Venda em Leilão</span>
-      </div>
-      <div class="carousel-slide">
-        <img src="img/carrossel-mercado.png" alt="Preços e Mercado Futuro B3 e CEPEA" loading="lazy">
-        <span class="carousel-label">Painel de Mercado</span>
-      </div>
-      <div class="carousel-slide">
-        <img src="img/carrossel-historico.png" alt="Painel de Séries Históricas" loading="lazy">
-        <span class="carousel-label">Séries Históricas</span>
-      </div>
+<div class="hero-carousel-wrapper">
+  <div class="carousel-notebook-frame">
+    <div class="carousel-notebook-topbar">
+      <div class="carousel-notebook-dot"></div>
+      <div class="carousel-notebook-dot"></div>
+      <div class="carousel-notebook-dot"></div>
     </div>
-
-    <button class="carousel-btn carousel-prev" id="carrosselPrev" aria-label="Anterior">&#8592;</button>
-    <button class="carousel-btn carousel-next" id="carrosselNext" aria-label="Próximo">&#8594;</button>
-
-    <div class="carousel-dots" id="carrosselDots">
-      <button class="dot active" aria-label="Slide 1"></button>
-      <button class="dot" aria-label="Slide 2"></button>
-      <button class="dot" aria-label="Slide 3"></button>
-      <button class="dot" aria-label="Slide 4"></button>
-      <button class="dot" aria-label="Slide 5"></button>
-      <button class="dot" aria-label="Slide 6"></button>
+    <div class="carousel-screen">
+      <div class="hero-carousel-track" id="carrosselTrack">
+        <div class="carousel-slide">
+          <img src="img/carrossel-confinamento.png" alt="Simulação Econômica de Confinamento" loading="lazy">
+          <span class="carousel-label">Simulação de Confinamento</span>
+        </div>
+        <div class="carousel-slide">
+          <img src="img/carrossel-ponto-otimo.png" alt="Ponto Ótimo de Venda" loading="lazy">
+          <span class="carousel-label">Ponto Ótimo de Venda</span>
+        </div>
+        <div class="carousel-slide">
+          <img src="img/carrossel-bioecon.png" alt="BioEcon Corte — Simulador de Rentabilidade" loading="lazy">
+          <span class="carousel-label">BioEcon Corte</span>
+        </div>
+        <div class="carousel-slide">
+          <img src="img/carrossel-leilao.png" alt="Eficiência na Venda em Leilão" loading="lazy">
+          <span class="carousel-label">Venda em Leilão</span>
+        </div>
+        <div class="carousel-slide">
+          <img src="img/carrossel-mercado.png" alt="Preços e Mercado Futuro B3 e CEPEA" loading="lazy">
+          <span class="carousel-label">Painel de Mercado</span>
+        </div>
+        <div class="carousel-slide">
+          <img src="img/carrossel-historico.png" alt="Painel de Séries Históricas" loading="lazy">
+          <span class="carousel-label">Séries Históricas</span>
+        </div>
+      </div>
+      <button class="carousel-btn carousel-prev" id="carrosselPrev" aria-label="Anterior">&#8592;</button>
+      <button class="carousel-btn carousel-next" id="carrosselNext" aria-label="Próximo">&#8594;</button>
+      <div class="carousel-dots" id="carrosselDots">
+        <button class="dot active" aria-label="Slide 1"></button>
+        <button class="dot" aria-label="Slide 2"></button>
+        <button class="dot" aria-label="Slide 3"></button>
+        <button class="dot" aria-label="Slide 4"></button>
+        <button class="dot" aria-label="Slide 5"></button>
+        <button class="dot" aria-label="Slide 6"></button>
+      </div>
     </div>
   </div>
+  <div class="carousel-notebook-base"></div>
 </div>
 </section>
 
