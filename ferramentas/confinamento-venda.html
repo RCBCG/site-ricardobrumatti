@@ -121,8 +121,8 @@
         .heatmap-table th, .heatmap-table td { padding: 8px; text-align: center; border: 1px solid #e2e8f0; } .dark .heatmap-table th, .dark .heatmap-table td { border-color: #334155; }
         .heatmap-cell { font-weight: bold; color: #fff; border-radius: 4px; font-size: 0.85rem; }
         
-        .table-container { max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 0.5rem; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .table-container { max-height: 400px; overflow-y: auto; overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 0.5rem; }
+        .data-table { width: 100%; min-width: 620px; border-collapse: collapse; font-size: 0.85rem; }
         .data-table th { position: sticky; top: 0; background: var(--bg-page); z-index: 10; padding: 10px; text-align: right; }
         .data-table td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; text-align: right; } .dark .data-table td { border-color: #334155; }
         .data-table tr:hover { background-color: rgba(59, 130, 246, 0.05); }
@@ -501,6 +501,9 @@
                     app.state.simulationData = { dailyData: daily, results: res, inputs: inp };
                     app.updateUI(); app.generateHeatmap(inp); app.renderCharts(); app.renderTornado(inp); app.renderTable(daily);
                     document.getElementById('resultsArea').classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        [app.state.chart, app.state.tornadoChart].forEach(c => c && c.resize());
+                    });
                     document.getElementById('btnExcel').disabled = false;
                     document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth' });
                 } catch(e) { console.error(e); alert("Erro ao calcular."); }
