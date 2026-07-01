@@ -2292,6 +2292,7 @@
 
             // Atualizar gráfico de fluxo de caixa
             function updateCashFlowChart(resultados, chartFontSize, chartTitleFontSize, chartAspectRatio) {
+                const isMobile = window.innerWidth < 640;
                 const {
                     fluxoCaixa,
                     lucroBruto
