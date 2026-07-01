@@ -977,6 +977,9 @@
             // Show UI
             document.getElementById('results-area').style.display = 'block';
             document.getElementById('btn-save').style.display = 'flex';
+            requestAnimationFrame(() => {
+                Object.values(appState.charts).forEach(c => c && c.resize());
+            });
             setTimeout(() => document.getElementById('results-area').scrollIntoView({behavior:'smooth'}), 100);
         }
 
