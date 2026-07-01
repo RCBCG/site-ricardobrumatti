@@ -439,7 +439,7 @@
                     return row;
                 };
                 document.getElementById('historical-results-table').innerHTML = `
-                    <table class="w-full text-sm text-left text-slate-600">
+                    <table class="w-full min-w-[640px] text-sm text-left text-slate-600">
                         <thead class="text-xs text-slate-700 uppercase bg-slate-100 rounded-t-lg"><tr>${headHTML}</tr></thead>
                         <tbody class="divide-y divide-slate-200">
                             <tr class="bg-white hover:bg-slate-50 transition">${createRow('Ágio do Bezerro (%)', formatPercent(userResults.agioBezerro), 'mediaAgioBezerro', formatPercent)}</tr>
@@ -554,6 +554,9 @@
                     renderTables(userResults, historicalResults);
                     renderCharts(userResults, historicalResults);
                     elements.resultsContainer.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        [agioChartInstance, trocaChartInstance, precosChartInstance].forEach(c => c && c.resize());
+                    });
                 } catch (err) {
                     elements.errorSection.classList.remove('hidden');
                     elements.errorMessage.textContent = `Erro: ${err.message}. Verifique sua conexão e a configuração da API.`;
