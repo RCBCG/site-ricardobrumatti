@@ -420,6 +420,26 @@
         </div>
     </nav>
 
+    <!-- Aviso de rotação (só aparece em celular, na vertical, e pode ser fechado) -->
+    <div id="rotateHint" class="rotate-hint">
+        <i class="fas fa-mobile-alt"></i>
+        <span>Gire a tela para melhor visualização dos gráficos</span>
+        <button id="rotateHintClose" aria-label="Fechar aviso">&times;</button>
+    </div>
+    <script>
+        (function () {
+            var hint = document.getElementById('rotateHint');
+            if (!hint) return;
+            if (sessionStorage.getItem('rotateHintDismissed') === '1') {
+                hint.classList.add('dismissed');
+            }
+            document.getElementById('rotateHintClose').addEventListener('click', function () {
+                hint.classList.add('dismissed');
+                sessionStorage.setItem('rotateHintDismissed', '1');
+            });
+        })();
+    </script>
+
     <!-- Container principal -->
     <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 fade-in">
         <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8">
@@ -1737,7 +1757,7 @@
                 const isMobile = window.innerWidth < 640;
                 const chartFontSize = isMobile ? 10 : 12;
                 const chartTitleFontSize = isMobile ? 13 : 15;
-                const chartAspectRatio = isMobile ? 1.2 : 2;
+                const chartAspectRatio = isMobile ? 0.95 : 2;
 
                 // Gráfico econômico
                 updateEconomicChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio);
@@ -2326,7 +2346,7 @@
                         scales: {
                             y: {
                                 title: {
-                                    display: true,
+                                    display: !isMobile,
                                     text: 'Fluxo de Caixa (R$)',
                                     font: {
                                         size: chartTitleFontSize,

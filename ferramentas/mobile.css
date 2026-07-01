@@ -30,6 +30,8 @@
   .mt-8  { margin-top: 1.5rem    !important; }
   .py-8  { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
   .p-8   { padding: 1.25rem !important; }
+  .p-6   { padding: 0.9rem !important; }
+  .sm\:p-8 { padding: 1.25rem !important; }
 
   /* ---- Cabeçalhos "título + botão(ões)" (gráficos, resultados) ----
      Em desktop, título e botão cabem lado a lado. Em celular, títulos
@@ -82,4 +84,33 @@
   /* Telas muito estreitas (iPhone SE e similares) — um degrau a mais
      de contenção só nos elementos mais sensíveis. */
   .indicator-card .value { font-size: clamp(1.4rem, 9vw, 1.9rem) !important; }
+}
+
+/* ---- Aviso "gire a tela" ----
+   Some em desktop/tablet e em celular na horizontal. Só aparece em
+   celular na vertical, onde os gráficos ficam mais espremidos. */
+.rotate-hint {
+  display: none;
+}
+@media (max-width: 768px) and (orientation: portrait) {
+  .rotate-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #fef3c7;
+    color: #92400e;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+  .rotate-hint span { flex: 1; }
+  .rotate-hint button {
+    background: none;
+    border: none;
+    color: #92400e;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0.25rem;
+  }
+  .rotate-hint.dismissed { display: none; }
 }
