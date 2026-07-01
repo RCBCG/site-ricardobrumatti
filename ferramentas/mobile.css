@@ -1,0 +1,85 @@
+/* ==========================================================================
+   mobile.css — Ajustes responsivos compartilhados das ferramentas
+   Prof. Ricardo C. Brumatti — FAMEZ/UFMS
+
+   Objetivo: escala tipográfica e de espaçamento fluida para telas pequenas
+   (celular e tablet em pé), sem alterar layout/comportamento em desktop.
+   Não contém nenhuma lógica de cálculo — só CSS.
+
+   Como usar: <link rel="stylesheet" href="mobile.css"> logo depois do
+   <script src="https://cdn.tailwindcss.com"></script> no <head>.
+   ========================================================================== */
+
+@media (max-width: 768px) {
+
+  /* ---- Escala tipográfica fluida (Tailwind utilities) ----
+     clamp(mínimo, preferido-em-vw, máximo) — o tamanho acompanha a largura
+     real da tela em vez de ficar fixo e forçar quebra de linha. */
+  .text-4xl { font-size: clamp(1.5rem, 6vw, 2.25rem)   !important; line-height: 1.15 !important; }
+  .text-3xl { font-size: clamp(1.35rem, 5.5vw, 1.875rem) !important; line-height: 1.2 !important; }
+  .text-2xl { font-size: clamp(1.2rem, 5vw, 1.5rem)    !important; line-height: 1.25 !important; }
+  .text-xl  { font-size: clamp(1.05rem, 4.2vw, 1.25rem) !important; line-height: 1.3 !important; }
+  .text-lg  { font-size: clamp(1rem, 3.6vw, 1.125rem)  !important; }
+
+  /* ---- Espaçamento entre seções (Tailwind utilities de grande porte) ----
+     Em desktop esses valores dão "respiro"; em celular só desperdiçam
+     tela e aumentam a rolagem antes do conteúdo útil. */
+  .mb-12 { margin-bottom: 2rem   !important; }
+  .mt-12 { margin-top: 2rem      !important; }
+  .mb-8  { margin-bottom: 1.5rem !important; }
+  .mt-8  { margin-top: 1.5rem    !important; }
+  .py-8  { padding-top: 1.25rem !important; padding-bottom: 1.25rem !important; }
+  .p-8   { padding: 1.25rem !important; }
+
+  /* ---- Cabeçalhos "título + botão(ões)" (gráficos, resultados) ----
+     Em desktop, título e botão cabem lado a lado. Em celular, títulos
+     longos ("Simulação Econômica - Oscilação Simultânea...") colidem
+     com o botão porque a linha não quebra. Empilha em coluna. */
+  .flex.justify-between.items-center.mb-4 {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.6rem !important;
+  }
+  .flex.justify-between.items-center.mb-4 > * {
+    width: 100%;
+  }
+
+  /* ---- Cabeçalho ---- */
+  .top-nav { padding: 0.6rem 1rem !important; }
+  .top-nav .logo { font-size: clamp(0.95rem, 4vw, 1.1rem) !important; }
+
+  /* ---- Cards de indicador (KPIs em destaque) ----
+     Em desktop, número grande (2.25rem/36px) e min-height fixo fazem
+     sentido lado a lado num grid de 4 colunas. Em celular, empilhados
+     em coluna única, o mesmo tamanho fica desproporcional. */
+  .indicator-card {
+    padding: clamp(0.9rem, 4vw, 1.5rem) !important;
+    min-height: 0 !important;
+  }
+  .indicator-card .label {
+    font-size: 0.8rem !important;
+  }
+  .indicator-card .value {
+    font-size: clamp(1.6rem, 8vw, 2.25rem) !important;
+  }
+
+  /* ---- Cards secundários (indicadores de apoio) ---- */
+  .secondary-indicator-card {
+    padding: 0.75rem !important;
+  }
+
+  /* ---- Botões de ação (Calcular, Limpar, Salvar, Imprimir, Excel) ----
+     Em telas estreitas, texto + ícone + padding generoso de desktop
+     empurra o botão pra fora da área visível. */
+  .btn-hover {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+@media (max-width: 400px) {
+  /* Telas muito estreitas (iPhone SE e similares) — um degrau a mais
+     de contenção só nos elementos mais sensíveis. */
+  .indicator-card .value { font-size: clamp(1.4rem, 9vw, 1.9rem) !important; }
+}

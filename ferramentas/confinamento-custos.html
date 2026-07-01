@@ -11,6 +11,7 @@
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <!-- CDNs -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="mobile.css">
 
     <!-- Custom Tailwind Configuration (Image 2 Colors) -->
     <script id="tailwind-theme-config">
@@ -1649,6 +1650,9 @@
 
                     // Mostrar seção de resultados
                     dom.resultsSection.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        Object.values(state.chartInstances).forEach(chart => chart && chart.resize());
+                    });
 
                 } catch (error) {
                     console.error('Erro:', error);
@@ -1841,6 +1845,9 @@
                 state.currentSimulation = sim;
                 updateResultsUI(sim.inputs, sim.resultados);
                 dom.resultsSection.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    Object.values(state.chartInstances).forEach(chart => chart && chart.resize());
+                });
                 // Mudar para aba de simulação
                 switchTab('simulation');
             }
