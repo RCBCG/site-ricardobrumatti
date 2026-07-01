@@ -114,3 +114,14 @@
   }
   .rotate-hint.dismissed { display: none; }
 }
+
+/* ---- Cards de widgets com altura fixa (painéis de mercado) ----
+   Em desktop, altura fixa em pixel é intencional (widgets TradingView
+   precisam de um contêiner com altura definida). Em celular, a mesma
+   altura em várias linhas empilhadas gera rolagem excessiva — reduz
+   moderadamente sem cortar o conteúdo interno do widget. */
+@media (max-width: 768px) {
+  .h-\[500px\] { height: 400px !important; }
+  .h-\[450px\] { height: 360px !important; }
+  .h-\[250px\] { height: 230px !important; }
+}
