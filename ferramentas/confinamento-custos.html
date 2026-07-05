@@ -11,6 +11,7 @@
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <!-- CDNs -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="mobile.css">
 
     <!-- Custom Tailwind Configuration (Image 2 Colors) -->
     <script id="tailwind-theme-config">
@@ -418,6 +419,26 @@
             </button>
         </div>
     </nav>
+
+    <!-- Aviso de rotação (só aparece em celular, na vertical, e pode ser fechado) -->
+    <div id="rotateHint" class="rotate-hint">
+        <i class="fas fa-mobile-alt"></i>
+        <span>Gire a tela para melhor visualização dos gráficos</span>
+        <button id="rotateHintClose" aria-label="Fechar aviso">&times;</button>
+    </div>
+    <script>
+        (function () {
+            var hint = document.getElementById('rotateHint');
+            if (!hint) return;
+            if (sessionStorage.getItem('rotateHintDismissed') === '1') {
+                hint.classList.add('dismissed');
+            }
+            document.getElementById('rotateHintClose').addEventListener('click', function () {
+                hint.classList.add('dismissed');
+                sessionStorage.setItem('rotateHintDismissed', '1');
+            });
+        })();
+    </script>
 
     <!-- Container principal -->
     <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 fade-in">
@@ -1649,6 +1670,9 @@
 
                     // Mostrar seção de resultados
                     dom.resultsSection.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        Object.values(state.chartInstances).forEach(chart => chart && chart.resize());
+                    });
 
                 } catch (error) {
                     console.error('Erro:', error);
@@ -1733,7 +1757,7 @@
                 const isMobile = window.innerWidth < 640;
                 const chartFontSize = isMobile ? 10 : 12;
                 const chartTitleFontSize = isMobile ? 13 : 15;
-                const chartAspectRatio = isMobile ? 1.2 : 2;
+                const chartAspectRatio = isMobile ? 0.95 : 2;
 
                 // Gráfico econômico
                 updateEconomicChart(inputs, resultados, chartFontSize, chartTitleFontSize, chartAspectRatio);
@@ -1841,6 +1865,9 @@
                 state.currentSimulation = sim;
                 updateResultsUI(sim.inputs, sim.resultados);
                 dom.resultsSection.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    Object.values(state.chartInstances).forEach(chart => chart && chart.resize());
+                });
                 // Mudar para aba de simulação
                 switchTab('simulation');
             }
@@ -2265,6 +2292,7 @@
 
             // Atualizar gráfico de fluxo de caixa
             function updateCashFlowChart(resultados, chartFontSize, chartTitleFontSize, chartAspectRatio) {
+                const isMobile = window.innerWidth < 640;
                 const {
                     fluxoCaixa,
                     lucroBruto
@@ -2319,7 +2347,7 @@
                         scales: {
                             y: {
                                 title: {
-                                    display: true,
+                                    display: !isMobile,
                                     text: 'Fluxo de Caixa (R$)',
                                     font: {
                                         size: chartTitleFontSize,
@@ -3125,6 +3153,7 @@
             App.init();
         });
     </script>
+    <script src="mobile-charts.js"></script>
 </body>
 
 </html>
