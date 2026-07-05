@@ -64,9 +64,17 @@
     }
   }
 
-  /* ---- 2. Wrap dos <canvas> com altura definida ---- */
+  /* ---- 2. Wrap dos <canvas> com altura definida ----
+     Só faz sentido para gráficos com maintainAspectRatio:false (sem isso,
+     Chart.js não sabe que altura usar). Algumas páginas (ex.: confinamento-
+     custos.html) já controlam a proporção de cada gráfico via
+     maintainAspectRatio:true + aspectRatio próprio — forçar uma altura fixa
+     nelas colide com esse cálculo e distorce o desenho (linhas "esticadas").
+     Essas páginas marcam <body data-charts-self-sized="true"> para pular
+     este passo. */
   function wrapCanvasesForMobile() {
     if (!isMobile()) return;
+    if (document.body && document.body.hasAttribute('data-charts-self-sized')) return;
     document.querySelectorAll('canvas').forEach(function (cv) {
       if (cv.closest('.chart-mobile-wrap') || cv.closest('.a4-page') || cv.closest('#printContainer')) return;
       var wrap = document.createElement('div');

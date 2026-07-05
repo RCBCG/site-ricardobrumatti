@@ -37,16 +37,23 @@
   .sm\:p-8 { padding: 1.25rem !important; }
 
   /* ---- Cabeçalhos "título + botão(ões)" (gráficos, resultados) ----
-     Em desktop, título e botão cabem lado a lado. Em celular, títulos
-     longos ("Simulação Econômica - Oscilação Simultânea...") colidem
-     com o botão porque a linha não quebra. Empilha em coluna. */
+     Em desktop, título e botão cabem lado a lado. Em celular, mantemos
+     lado a lado (o botão fica fixo à direita, sem encolher) e deixamos só
+     o título quebrar em várias linhas — evita a pilha vertical alta e o
+     espaço vazio que a versão anterior (empilhar em coluna, largura 100%)
+     criava em torno de um botão que é só um ícone. */
   .flex.justify-between.items-center.mb-4 {
-    flex-direction: column !important;
     align-items: flex-start !important;
     gap: 0.6rem !important;
   }
-  .flex.justify-between.items-center.mb-4 > * {
-    width: 100%;
+  .flex.justify-between.items-center.mb-4 > h3,
+  .flex.justify-between.items-center.mb-4 > h2 {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .flex.justify-between.items-center.mb-4 > .chart-actions,
+  .flex.justify-between.items-center.mb-4 > .flex {
+    flex: 0 0 auto;
   }
 
   /* ---- Cabeçalho ---- */
@@ -223,11 +230,14 @@
 
 /* ---- Cards de widgets com altura fixa (painéis de mercado) ----
    Em desktop, altura fixa em pixel é intencional (widgets TradingView
-   precisam de um contêiner com altura definida). Em celular, a mesma
-   altura em várias linhas empilhadas gera rolagem excessiva — reduz
-   moderadamente sem cortar o conteúdo interno do widget. */
+   precisam de um contêiner com altura definida). Os widgets desenham a
+   própria interface (abas, legendas, categorias) dentro dessa altura —
+   se ela for reduzida demais em celular, o próprio TradingView corta
+   texto e categorias (ex.: heatmap, screener). Por isso aqui só reduzimos
+   levemente o gráfico principal (que tem barra de ferramentas alta) e
+   mantemos os demais praticamente do tamanho original. */
 @media (max-width: 768px) {
-  .h-\[500px\] { height: 400px !important; }
-  .h-\[450px\] { height: 360px !important; }
-  .h-\[250px\] { height: 230px !important; }
+  .h-\[500px\] { height: 460px !important; }
+  .h-\[450px\] { height: 440px !important; }
+  .h-\[250px\] { height: 260px !important; }
 }
