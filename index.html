@@ -1624,18 +1624,23 @@ const toolMap = {
 };
 
 function openTool(id, title) {
+  const src = toolMap[id];
+  if (!src) return;
+
+  // Mobile: navega direto para a ferramenta em tela cheia,
+  // evitando scroll aninhado (modal + iframe) que quebra no Safari iOS
+  if (window.innerWidth < 768) {
+    window.location.href = src;
+    return;
+  }
+
   const overlay = document.getElementById('toolModal');
   const body    = document.getElementById('modalBody');
   document.getElementById('modalTitle').textContent = title;
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
 
-  const src = toolMap[id];
-  if (src) {
-    body.innerHTML = `<iframe src="${src}" allowfullscreen></iframe>`;
-  } else {
-    body.innerHTML = `<div style="padding:3rem;text-align:center;color:#78716c">Ferramenta não encontrada: ${id}</div>`;
-  }
+  body.innerHTML = `<iframe src="${src}" allowfullscreen></iframe>`;
 }
 
 function closeModal() {
