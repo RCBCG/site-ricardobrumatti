@@ -64,22 +64,68 @@
     }
   }
 
+  /* ---- 1b. Plugin global: sizing robusto no celular ----
+     A raiz dos gráficos "esticados"/borrados: com maintainAspectRatio:true
+     e aspectRatio < 1, o Chart.js deriva a LARGURA da ALTURA do contêiner;
+     se a altura estiver momentaneamente limitada durante o layout, o canvas
+     nasce minúsculo (ex.: 107px) e depois é esticado pelo CSS — linhas
+     "gordas" e texto gigante. No celular, forçamos maintainAspectRatio:false
+     em TODO gráfico (o wrapper .chart-mobile-wrap dá a altura certa) e
+     limitamos pontos/linhas a espessuras legíveis em tela estreita. */
+  function registerMobilePlugin() {
+    if (typeof Chart === 'undefined' || !isMobile() || !Chart.register) return;
+    try {
+      Chart.register({
+        id: 'mobileFit',
+        beforeInit: function (chart) {
+          var o = chart.options || {};
+          o.maintainAspectRatio = false;
+          delete o.aspectRatio;
+          // Títulos de eixo Y comem ~25px de largura cada (e há gráficos com
+          // dois eixos). A legenda já identifica as séries.
+          if (o.scales) {
+            Object.keys(o.scales).forEach(function (k) {
+              var s = o.scales[k];
+              if (s && s.title && k.charAt(0) === 'y') s.title.display = false;
+            });
+          }
+          // Pontos e linhas na espessura de desktop viram "cordas" num plot
+          // de ~300px — limita a valores legíveis.
+          var ds = (chart.config && chart.config.data && chart.config.data.datasets) || [];
+          ds.forEach(function (d) {
+            var isLine = d.type === 'line' || (!d.type && chart.config.type === 'line');
+            if (!isLine) return;
+            if (typeof d.pointRadius === 'number' && d.pointRadius > 3) d.pointRadius = 3;
+            if (typeof d.pointHoverRadius === 'number' && d.pointHoverRadius > 4) d.pointHoverRadius = 4;
+            if (typeof d.pointBorderWidth === 'number' && d.pointBorderWidth > 1.5) d.pointBorderWidth = 1.5;
+            if (typeof d.borderWidth === 'number' && d.borderWidth > 2.5) d.borderWidth = 2.5;
+          });
+        }
+      });
+    } catch (e) {
+      /* silencioso */
+    }
+  }
+
   /* ---- 2. Wrap dos <canvas> com altura definida ----
-     Só faz sentido para gráficos com maintainAspectRatio:false (sem isso,
-     Chart.js não sabe que altura usar). Algumas páginas (ex.: confinamento-
-     custos.html) já controlam a proporção de cada gráfico via
-     maintainAspectRatio:true + aspectRatio próprio — forçar uma altura fixa
-     nelas colide com esse cálculo e distorce o desenho (linhas "esticadas").
-     Essas páginas marcam <body data-charts-self-sized="true"> para pular
-     este passo. */
+     Com maintainAspectRatio:false forçado acima, TODO gráfico precisa de um
+     contêiner com altura explícita — o wrapper dá essa altura de forma
+     previsível em qualquer ferramenta. */
   function wrapCanvasesForMobile() {
     if (!isMobile()) return;
-    if (document.body && document.body.hasAttribute('data-charts-self-sized')) return;
     document.querySelectorAll('canvas').forEach(function (cv) {
       if (cv.closest('.chart-mobile-wrap') || cv.closest('.a4-page') || cv.closest('#printContainer')) return;
+      // Se o contêiner do canvas já tem altura explícita (ex.: Tailwind h-64,
+      // h-[300px] ou style="height:..."), a página já resolveu o sizing —
+      // embrulhar de novo só criaria conflito/estouro.
+      var par = cv.parentElement;
+      if (par) {
+        var cls = String(par.className || '');
+        if (/(^|\s)h-(\d+|\[[^\]]+\])(\s|$)/.test(cls) || (par.style && par.style.height)) return;
+      }
       var wrap = document.createElement('div');
       wrap.className = 'chart-mobile-wrap';
-      var tornado = /tornado/i.test(cv.id) || /sensibilidade/i.test(cv.id);
+      var tornado = /tornado|sensibilidade|custoreceita/i.test(cv.id);
       if (tornado) wrap.className += ' tall';
       cv.parentNode.insertBefore(wrap, cv);
       wrap.appendChild(cv);
@@ -120,6 +166,7 @@
 
   function initMobileEnhancements() {
     applyMobileChartDefaults();
+    registerMobilePlugin();
     wrapCanvasesForMobile();
     wrapTablesForMobile();
   }
