@@ -1,0 +1,38 @@
+name: Atualizar análise de mercado
+
+# Quando rodar:
+#  1) Automaticamente todo dia às 09:00 (horário de Brasília = 12:00 UTC)
+#  2) Manualmente, a qualquer momento, clicando "Run workflow" na aba Actions do GitHub
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # necessário para o Actions conseguir fazer commit do resultado
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências
+        run: pip install -r scripts/requirements.txt
+
+      - name: Rodar o motor de análise
+        run: python scripts/analise_mercado.py
+
+      - name: Publicar resultado (commit automático)
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add ferramentas/dados/resultados.json
+          git diff --staged --quiet && echo "Nada mudou, sem commit." || git commit -m "Atualização automática da análise de mercado"
+          git push

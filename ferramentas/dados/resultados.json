@@ -1,0 +1,388 @@
+{
+  "gerado_em": "2026-07-06T21:48:03.339176+00:00",
+  "tecnico": {
+    "boi": {
+      "descritiva": {
+        "preco": {
+          "n": 7202,
+          "media": 129.94,
+          "mediana": 98.09,
+          "desvio_padrao": 93.74,
+          "erro_padrao": 1.1046,
+          "minimo": 25.71,
+          "maximo": 367.3,
+          "assimetria": 0.972,
+          "curtose": -0.275
+        },
+        "retorno_log": {
+          "media": 0.000348,
+          "desvio_padrao": 0.00905,
+          "assimetria": -0.563,
+          "curtose": 18.677
+        }
+      },
+      "sazonalidade": {
+        "por_mes": {
+          "1": {
+            "media": 132.98,
+            "volatilidade": 96.27
+          },
+          "2": {
+            "media": 133.95,
+            "volatilidade": 98.36
+          },
+          "3": {
+            "media": 133.98,
+            "volatilidade": 99.48
+          },
+          "4": {
+            "media": 134.88,
+            "volatilidade": 99.84
+          },
+          "5": {
+            "media": 131.23,
+            "volatilidade": 96.14
+          },
+          "6": {
+            "media": 131.55,
+            "volatilidade": 95.74
+          },
+          "7": {
+            "media": 125.83,
+            "volatilidade": 89.44
+          },
+          "8": {
+            "media": 121.65,
+            "volatilidade": 86.17
+          },
+          "9": {
+            "media": 123.9,
+            "volatilidade": 86.84
+          },
+          "10": {
+            "media": 126.76,
+            "volatilidade": 87.92
+          },
+          "11": {
+            "media": 131.4,
+            "volatilidade": 93.29
+          },
+          "12": {
+            "media": 132.47,
+            "volatilidade": 94.94
+          }
+        },
+        "mes_maior_preco": 4,
+        "mes_menor_preco": 8
+      },
+      "n_observacoes": 7202,
+      "ultima_data": "06/07/2026",
+      "ultimo_preco": 326.45,
+      "preco_real_ipca_ultimo": 326.45
+    },
+    "bezerro": {
+      "descritiva": {
+        "preco": {
+          "n": 6569,
+          "media": 1166.93,
+          "mediana": 781.57,
+          "desvio_padrao": 871.66,
+          "erro_padrao": 10.7547,
+          "minimo": 242.4,
+          "maximo": 3433.52,
+          "assimetria": 0.959,
+          "curtose": -0.313
+        },
+        "retorno_log": {
+          "media": 0.000395,
+          "desvio_padrao": 0.008818,
+          "assimetria": -0.049,
+          "curtose": 6.206
+        }
+      },
+      "sazonalidade": {
+        "por_mes": {
+          "1": {
+            "media": 1176.7,
+            "volatilidade": 874.12
+          },
+          "2": {
+            "media": 1185.53,
+            "volatilidade": 891.13
+          },
+          "3": {
+            "media": 1185.81,
+            "volatilidade": 911.23
+          },
+          "4": {
+            "media": 1210.02,
+            "volatilidade": 931.06
+          },
+          "5": {
+            "media": 1208.25,
+            "volatilidade": 930.83
+          },
+          "6": {
+            "media": 1208.16,
+            "volatilidade": 913.77
+          },
+          "7": {
+            "media": 1143.28,
+            "volatilidade": 841.23
+          },
+          "8": {
+            "media": 1104.1,
+            "volatilidade": 807.64
+          },
+          "9": {
+            "media": 1122.06,
+            "volatilidade": 811.74
+          },
+          "10": {
+            "media": 1122.84,
+            "volatilidade": 807.87
+          },
+          "11": {
+            "media": 1154.17,
+            "volatilidade": 843.26
+          },
+          "12": {
+            "media": 1186.04,
+            "volatilidade": 883.34
+          }
+        },
+        "mes_maior_preco": 4,
+        "mes_menor_preco": 8
+      },
+      "n_observacoes": 6569,
+      "ultima_data": "06/07/2026",
+      "ultimo_preco": 3387.0,
+      "preco_real_ipca_ultimo": 3387.0
+    },
+    "soja": {
+      "descritiva": {
+        "preco": {
+          "n": 5064,
+          "media": 89.27,
+          "mediana": 75.73,
+          "desvio_padrao": 45.81,
+          "erro_padrao": 0.6438,
+          "minimo": 26.57,
+          "maximo": 207.14,
+          "assimetria": 0.75,
+          "curtose": -0.591
+        },
+        "retorno_log": {
+          "media": 0.000319,
+          "desvio_padrao": 0.011253,
+          "assimetria": -1.181,
+          "curtose": 16.558
+        }
+      },
+      "sazonalidade": {
+        "por_mes": {
+          "1": {
+            "media": 89.37,
+            "volatilidade": 45.24
+          },
+          "2": {
+            "media": 88.58,
+            "volatilidade": 45.88
+          },
+          "3": {
+            "media": 87.73,
+            "volatilidade": 47.82
+          },
+          "4": {
+            "media": 85.94,
+            "volatilidade": 45.12
+          },
+          "5": {
+            "media": 87.87,
+            "volatilidade": 46.2
+          },
+          "6": {
+            "media": 89.35,
+            "volatilidade": 44.55
+          },
+          "7": {
+            "media": 88.69,
+            "volatilidade": 44.59
+          },
+          "8": {
+            "media": 89.58,
+            "volatilidade": 45.42
+          },
+          "9": {
+            "media": 91.51,
+            "volatilidade": 46.02
+          },
+          "10": {
+            "media": 90.56,
+            "volatilidade": 46.06
+          },
+          "11": {
+            "media": 91.14,
+            "volatilidade": 46.71
+          },
+          "12": {
+            "media": 91.19,
+            "volatilidade": 46.43
+          }
+        },
+        "mes_maior_preco": 9,
+        "mes_menor_preco": 4
+      },
+      "n_observacoes": 5064,
+      "ultima_data": "06/07/2026",
+      "ultimo_preco": 139.01,
+      "preco_real_ipca_ultimo": 139.01
+    },
+    "milho": {
+      "descritiva": {
+        "preco": {
+          "n": 5460,
+          "media": 41.33,
+          "mediana": 31.9,
+          "desvio_padrao": 23.06,
+          "erro_padrao": 0.312,
+          "minimo": 13.32,
+          "maximo": 103.9,
+          "assimetria": 0.996,
+          "curtose": -0.193
+        },
+        "retorno_log": {
+          "media": 0.00023,
+          "desvio_padrao": 0.008569,
+          "assimetria": 0.447,
+          "curtose": 4.523
+        }
+      },
+      "sazonalidade": {
+        "por_mes": {
+          "1": {
+            "media": 43.43,
+            "volatilidade": 23.54
+          },
+          "2": {
+            "media": 43.77,
+            "volatilidade": 24.26
+          },
+          "3": {
+            "media": 45.13,
+            "volatilidade": 26.24
+          },
+          "4": {
+            "media": 42.58,
+            "volatilidade": 24.57
+          },
+          "5": {
+            "media": 41.15,
+            "volatilidade": 23.55
+          },
+          "6": {
+            "media": 40.09,
+            "volatilidade": 21.73
+          },
+          "7": {
+            "media": 38.79,
+            "volatilidade": 21.57
+          },
+          "8": {
+            "media": 38.3,
+            "volatilidade": 21.86
+          },
+          "9": {
+            "media": 39.2,
+            "volatilidade": 21.29
+          },
+          "10": {
+            "media": 40.22,
+            "volatilidade": 21.81
+          },
+          "11": {
+            "media": 41.31,
+            "volatilidade": 22.19
+          },
+          "12": {
+            "media": 42.33,
+            "volatilidade": 22.82
+          }
+        },
+        "mes_maior_preco": 3,
+        "mes_menor_preco": 8
+      },
+      "n_observacoes": 5460,
+      "ultima_data": "06/07/2026",
+      "ultimo_preco": 64.0,
+      "preco_real_ipca_ultimo": 64.0
+    },
+    "razao_boi_bezerro": {
+      "media": 2.58,
+      "atual": 1.93
+    },
+    "monte_carlo_boi": {
+      "preco_inicial": 326.45,
+      "horizonte_dias_uteis": 180,
+      "n_simulacoes": 1000,
+      "percentis_preco_final": {
+        "p5": 283.84,
+        "p25": 318.54,
+        "p50": 346.27,
+        "p75": 378.83,
+        "p95": 424.06
+      },
+      "trajetoria_mediana": [
+        326.58,
+        327.02,
+        327.34,
+        327.92,
+        329.09,
+        329.13,
+        330.57,
+        331.26,
+        331.39,
+        332.65,
+        332.32,
+        333.32,
+        334.44,
+        334.45,
+        334.9,
+        335.61,
+        334.76,
+        335.71,
+        336.44,
+        337.74,
+        337.41,
+        337.96,
+        338.4,
+        339.75,
+        339.59,
+        340.85,
+        341.57,
+        342.11,
+        341.93,
+        342.74,
+        343.2,
+        343.21,
+        343.15,
+        343.63,
+        344.64,
+        345.87
+      ]
+    }
+  },
+  "publico": {
+    "atualizado_em": "06/07/2026",
+    "preco_boi_atual": 326.45,
+    "leitura_preco": "Preço atual acima da média histórica do período analisado.",
+    "razao_boi_bezerro_atual": 1.93,
+    "projecao_180_dias": {
+      "p5": 283.84,
+      "p25": 318.54,
+      "p50": 346.27,
+      "p75": 378.83,
+      "p95": 424.06
+    }
+  }
+}
