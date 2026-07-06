@@ -4,8 +4,11 @@ name: Atualizar análise de mercado
 #  1) Automaticamente todo dia às 09:00 (horário de Brasília = 12:00 UTC)
 #  2) Manualmente, a qualquer momento, clicando "Run workflow" na aba Actions do GitHub
 on:
-  schedule:
-    - cron: "0 12 * * *"
+  # PAUSADO em 06/07/2026: aguardando autorização formal do Cepea para
+  # retransmissão de séries de preços (ver e-mail enviado a cepea@usp.br).
+  # Não reativar o agendamento abaixo até a resposta chegar.
+  # schedule:
+  #   - cron: "0 12 * * *"
   workflow_dispatch: {}
 
 permissions:
