@@ -24,6 +24,7 @@ IMPORTANTE PARA RICARDO (não-desenvolvedor):
 import io
 import json
 import os
+import re
 import time
 import sys
 from datetime import datetime, timezone
@@ -58,6 +59,13 @@ BCB_SGS = {
 }
 
 SAIDA_JSON = "ferramentas/dados/resultados.json"
+
+# Etapa 9 — abate por sexo (IBGE/SIDRA, Tabela 1092). O IBGE bloqueia acesso
+# automatizado, então esse arquivo é baixado manualmente por Ricardo no
+# navegador (uma vez a cada atualização trimestral do IBGE) e colocado nesse
+# caminho. Se o arquivo não existir, o script segue sem essa seção — não é
+# obrigatório pra rodar o resto.
+CAMINHO_IBGE_ABATE = "scripts/tabela1092.xlsx"
 
 # Quantas tentativas por arquivo do Cepea, e quanto esperar entre elas.
 # O bezerro se mostrou mais sensível a bot-detection nos testes — por isso
@@ -334,6 +342,63 @@ def deflacionar(df_preco: pd.DataFrame, indice_mensal: pd.Series) -> pd.Series:
     return df_preco["Preco_RS"] * fator
 
 
+def serie_mensal_com_medias_moveis(
+    df_preco: pd.DataFrame,
+    indice_ipca: pd.Series = None,
+    indice_igpdi: pd.Series = None,
+    janela_mm: int = 12,
+) -> list:
+    """Agrega a série diária em médias mensais (nominal e real pelos dois
+    deflatores) e calcula a média móvel de `janela_mm` meses sobre a série
+    nominal — a 'tendência de longo prazo' que a análise original pedia
+    (Etapa 3: comparar os dois deflatores; leitura de nível atual vs.
+    histórico real, não nominal).
+
+    LACUNA ENCONTRADA (retomada de 13/07/2026): a versão anterior baixava o
+    IGP-DI do Banco Central mas nunca chegava a usá-lo — só o IPCA entrava
+    na deflação. Corrigido aqui: as duas séries reais (IPCA e IGP-DI) saem
+    lado a lado, exatamente como a Etapa 3 do prompt original pedia
+    ("calcular com os dois deflatores e comparar").
+
+    Agregação mensal, não diária: expor as ~7.200 linhas diárias cruas no
+    JSON deixaria o arquivo pesado à toa para um gráfico de tendência de
+    longo prazo — resample mensal (~350 pontos em 29 anos) é suficiente e
+    muito mais leve pro navegador renderizar.
+    """
+    serie = df_preco.set_index("Data")["Preco_RS"]
+    nominal_mensal = serie.resample("ME").mean()
+
+    real_ipca_mensal = None
+    if indice_ipca is not None:
+        real_ipca_mensal = deflacionar(df_preco, indice_ipca).set_axis(df_preco["Data"]).resample("ME").mean()
+
+    real_igpdi_mensal = None
+    if indice_igpdi is not None:
+        real_igpdi_mensal = deflacionar(df_preco, indice_igpdi).set_axis(df_preco["Data"]).resample("ME").mean()
+
+    media_movel = nominal_mensal.rolling(janela_mm, min_periods=max(3, janela_mm // 4)).mean()
+
+    linhas = []
+    for data_mes, valor_nominal in nominal_mensal.items():
+        linha = {
+            "ano_mes": data_mes.strftime("%Y-%m"),
+            "nominal": round(float(valor_nominal), 2) if pd.notna(valor_nominal) else None,
+            "media_movel_nominal": (
+                round(float(media_movel.loc[data_mes]), 2)
+                if pd.notna(media_movel.loc[data_mes]) else None
+            ),
+        }
+        if real_ipca_mensal is not None:
+            v = real_ipca_mensal.loc[data_mes] if data_mes in real_ipca_mensal.index else np.nan
+            linha["real_ipca"] = round(float(v), 2) if pd.notna(v) else None
+        if real_igpdi_mensal is not None:
+            v = real_igpdi_mensal.loc[data_mes] if data_mes in real_igpdi_mensal.index else np.nan
+            linha["real_igpdi"] = round(float(v), 2) if pd.notna(v) else None
+        linhas.append(linha)
+
+    return linhas
+
+
 # ---------------------------------------------------------------------------
 # ETAPA 5 — SAZONALIDADE
 # ---------------------------------------------------------------------------
@@ -362,6 +427,128 @@ def razao_de_troca(df_boi: pd.DataFrame, df_outro: pd.DataFrame, fator_boi: floa
     merged = pd.merge(df_boi, df_outro, on="Data", suffixes=("_boi", "_outro"))
     merged["razao"] = (merged["Preco_RS_boi"] * fator_boi) / merged["Preco_RS_outro"]
     return merged[["Data", "razao"]]
+
+
+# ---------------------------------------------------------------------------
+# ETAPA 9 — ABATE POR SEXO (IBGE/SIDRA, Tabela 1092) × RAZÃO BOI/BEZERRO
+# ---------------------------------------------------------------------------
+#
+# O IBGE/SIDRA bloqueia acesso automatizado (confirmado via robots.txt),
+# então essa fonte não entra no download automático do Cepea. Ricardo baixa
+# manualmente o export .xlsx da Tabela 1092 no navegador (uma vez a cada
+# atualização trimestral do IBGE, bem menos frequente que os preços diários)
+# e fornece o caminho do arquivo abaixo.
+
+def parse_ibge_abate_xlsx(caminho_arquivo: str, aba: str = "Animais abatidos (Cabeças)") -> pd.DataFrame:
+    """Lê o export .xlsx do IBGE/SIDRA (Tabela 1092) e devolve uma série
+    trimestral de % de fêmeas no abate nacional (Tipo de inspeção = Total).
+
+    FORMATO REAL DO ARQUIVO (confirmado em teste com arquivo real, 13/07/2026):
+    exportação SIDRA em formato "espalhado" — linha 3 = rótulo do trimestre
+    (repete a cada bloco de 24 colunas), linha 4 = sub-período (Total do
+    trimestre / No 1º mês / No 2º mês / No 3º mês), linha 5 = categoria de
+    rebanho (Total, Bois, Vacas, Novilhos, Novilhas, Vitelos e vitelas),
+    linha 6 = dado da linha "Tipo de inspeção = Total" (agregado nacional,
+    federal + não-federal). Usamos só o bloco "Total do trimestre" (offset 0
+    dentro de cada bloco de 24 colunas), ignorando a quebra mensal.
+
+    ACHADO EM TESTE: a categoria "Vitelos e vitelas" tem valor "..." (dado
+    suprimido/não disponível) em vários trimestres — não afeta o cálculo de
+    % fêmea, que usa só Vacas/Novilhas/Total, mas pd.to_numeric(errors=
+    "coerce") protege contra isso mesmo assim.
+
+    NOME DA ABA VARIA ENTRE EXPORTS (achado em 13/07/2026): o primeiro
+    arquivo testado trazia a aba nomeada 'Animais abatidos (Cabeças)'; um
+    segundo export do mesmo Ricardo, reaberto/resalvo no OnlyOffice, veio
+    com a aba renomeada genericamente para 'Tabela'. O conteúdo e a
+    estrutura de linhas são idênticos nos dois casos — só o nome muda.
+    Por isso: tenta o nome esperado primeiro, e se não achar, cai pra
+    primeira aba do arquivo, que no export do SIDRA é sempre a aba de dados
+    (a de notas/fonte vem depois).
+    """
+    xl = pd.ExcelFile(caminho_arquivo)
+    aba_real = aba if aba in xl.sheet_names else xl.sheet_names[0]
+    df = pd.read_excel(xl, sheet_name=aba_real, header=None)
+    linha_trimestre = df.iloc[3]
+    linha_categoria = df.iloc[5]
+    linha_dados = df.iloc[6]  # Tipo de inspeção = Total
+
+    inicios = [c for c in range(2, df.shape[1]) if pd.notna(linha_trimestre.iloc[c])]
+    registros = []
+    for inicio in inicios:
+        label = str(linha_trimestre.iloc[inicio])
+        m = re.match(r"(\d)º trimestre (\d{4})", label)
+        if not m:
+            continue
+        trimestre, ano = int(m.group(1)), int(m.group(2))
+        for offset_cat in range(6):  # bloco "Total do trimestre" = offset 0
+            col = inicio + offset_cat
+            registros.append({
+                "ano": ano, "trimestre": trimestre,
+                "categoria": linha_categoria.iloc[col],
+                "valor": pd.to_numeric(linha_dados.iloc[col], errors="coerce"),
+            })
+
+    tidy = pd.DataFrame(registros)
+    piv = tidy.pivot_table(
+        index=["ano", "trimestre"], columns="categoria", values="valor", aggfunc="first"
+    ).reset_index()
+    piv["pct_femea"] = (piv["Vacas"] + piv["Novilhas"]) / piv["Total"] * 100
+    return piv.sort_values(["ano", "trimestre"]).reset_index(drop=True)
+
+
+def correlacionar_femea_razao_troca(
+    abate_trimestral: pd.DataFrame,
+    df_boi: pd.DataFrame,
+    df_bezerro: pd.DataFrame,
+    lags_trimestres=range(0, 5),
+) -> dict:
+    """Correlação entre % de fêmeas no abate e a razão de troca boi/bezerro,
+    testando defasagens de 0 a 4 trimestres. Teoria do ciclo pecuário: uma
+    decisão de retenção (segurar fêmeas na fazenda em vez de abater) ou
+    liquidação de rebanho hoje só costuma aparecer no preço relativo do
+    bezerro alguns trimestres depois, quando a oferta de bezerros do ano
+    seguinte reflete essa decisão.
+
+    LIMITAÇÃO IMPORTANTE (documentada em teste, 13/07/2026): esta é uma
+    correlação em NÍVEL, não em diferenças. Duas séries com tendência de
+    longo prazo no mesmo período (ex.: ambas subindo por inflação ou
+    crescimento geral do mercado) tendem a mostrar correlação alta mesmo
+    sem nenhuma relação causal real entre elas — o problema clássico de
+    correlação espúria entre séries não-estacionárias. Este número é um
+    indício exploratório, não uma prova de causalidade. O teste rigoroso
+    disso é exatamente o que ficou para a v2 do prompt original: cointegração
+    (Etapa 6) e causalidade de Granger (Etapa 7), que testam a relação
+    depois de remover a tendência comum.
+    """
+    rt = razao_de_troca(df_boi, df_bezerro)
+    rt = rt.set_index("Data")
+    rt_trimestral = rt["razao"].resample("QE").mean().to_frame("razao_boi_bezerro")
+    rt_trimestral["ano"] = rt_trimestral.index.year
+    rt_trimestral["trimestre"] = rt_trimestral.index.quarter
+
+    base = abate_trimestral.merge(rt_trimestral, on=["ano", "trimestre"], how="inner")
+    base = base.sort_values(["ano", "trimestre"]).reset_index(drop=True)
+
+    correlacoes = {}
+    for lag in lags_trimestres:
+        deslocado = base["pct_femea"].shift(lag)
+        valido = deslocado.notna() & base["razao_boi_bezerro"].notna()
+        if valido.sum() >= 8:  # mínimo de pontos pra uma correlação minimamente confiável
+            corr = float(np.corrcoef(deslocado[valido], base["razao_boi_bezerro"][valido])[0, 1])
+            correlacoes[f"lag_{lag}_trimestres"] = round(corr, 3)
+
+    return {
+        "correlacoes": correlacoes,
+        "serie": [
+            {
+                "ano": int(r["ano"]), "trimestre": int(r["trimestre"]),
+                "pct_femea": round(float(r["pct_femea"]), 2),
+                "razao_boi_bezerro": round(float(r["razao_boi_bezerro"]), 3),
+            }
+            for _, r in base.iterrows()
+        ],
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -400,7 +587,7 @@ def monte_carlo_gbm(precos: pd.Series, n_sim: int = 1000, n_dias: int = 180, see
 # MONTAGEM FINAL DO JSON
 # ---------------------------------------------------------------------------
 
-def montar_resultado(series: dict, indices_bcb: dict) -> dict:
+def montar_resultado(series: dict, indices_bcb: dict, caminho_ibge: str = None) -> dict:
     boi = series["boi"]
     saida = {
         "gerado_em": datetime.now(timezone.utc).isoformat(),
@@ -418,13 +605,23 @@ def montar_resultado(series: dict, indices_bcb: dict) -> dict:
             "ultimo_preco": round(float(df["Preco_RS"].iloc[-1]), 2) if len(df) else None,
         }
 
-    # Deflação (se os índices do BCB vieram)
-    if indices_bcb.get("ipca") is not None:
-        indice_ipca = montar_indice_diario(indices_bcb["ipca"])
-        for nome, df in series.items():
+    # Deflação (se os índices do BCB vieram) — IPCA e IGP-DI, os dois,
+    # comparados lado a lado (Etapa 3 do prompt original pedia exatamente isso).
+    indice_ipca = montar_indice_diario(indices_bcb["ipca"]) if indices_bcb.get("ipca") is not None else None
+    indice_igpdi = montar_indice_diario(indices_bcb["igpdi"]) if indices_bcb.get("igpdi") is not None else None
+
+    for nome, df in series.items():
+        if indice_ipca is not None:
             saida["tecnico"][nome]["preco_real_ipca_ultimo"] = round(
                 float(deflacionar(df, indice_ipca).iloc[-1]), 2
             )
+        if indice_igpdi is not None:
+            saida["tecnico"][nome]["preco_real_igpdi_ultimo"] = round(
+                float(deflacionar(df, indice_igpdi).iloc[-1]), 2
+            )
+        saida["tecnico"][nome]["serie_mensal"] = serie_mensal_com_medias_moveis(
+            df, indice_ipca, indice_igpdi
+        )
 
     # Razão de troca
     if "bezerro" in series and len(series["bezerro"]):
@@ -437,6 +634,19 @@ def montar_resultado(series: dict, indices_bcb: dict) -> dict:
     # Monte Carlo
     if len(boi):
         saida["tecnico"]["monte_carlo_boi"] = monte_carlo_gbm(boi["Preco_RS"])
+
+    # Etapa 9 — abate por sexo (IBGE) × razão boi/bezerro. Opcional: só roda
+    # se o arquivo existir, já que depende de download manual (IBGE bloqueia
+    # automação) e é atualizado bem menos frequentemente que os preços diários.
+    if caminho_ibge and os.path.exists(caminho_ibge) and "bezerro" in series and len(series["bezerro"]):
+        try:
+            abate_trimestral = parse_ibge_abate_xlsx(caminho_ibge)
+            saida["tecnico"]["abate_femea_x_razao_troca"] = correlacionar_femea_razao_troca(
+                abate_trimestral, boi, series["bezerro"]
+            )
+            print(f"  [IBGE] abate processado — {len(abate_trimestral)} trimestres")
+        except Exception as e:
+            print(f"  [IBGE] falha ao processar {caminho_ibge}: {e}")
 
     # Seção pública — leitura em linguagem simples, derivada do mesmo cálculo
     if len(boi):
@@ -498,7 +708,7 @@ def main():
         print("ERRO CRÍTICO: nenhuma série do Cepea foi coletada. Abortando sem sobrescrever o JSON anterior.")
         sys.exit(1)
 
-    saida = montar_resultado(resultado_coleta["series"], indices_bcb)
+    saida = montar_resultado(resultado_coleta["series"], indices_bcb, caminho_ibge=CAMINHO_IBGE_ABATE)
     saida = sanitizar_para_json(saida)
 
     # BUG ENCONTRADO E CORRIGIDO (retomada de 06/07/2026, teste real no Mac):
