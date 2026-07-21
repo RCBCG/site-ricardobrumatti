@@ -2074,10 +2074,15 @@
                                 <tbody>
                                     <tr><td>Peso Final (kg)</td><td>${formatNumber(resultados.pesoFinal, 2)} kg</td></tr>
                                     <tr><td>Peso Carcaça (kg)</td><td>${formatNumber(resultados.pesoCarcaca, 2)} kg</td></tr>
+                                    <tr><td>Arrobas Produzidas</td><td>${formatNumber(resultados.arrobasProduzidas, 2)} @</td></tr>
                                     <tr><td>Arrobas Totais</td><td>${formatNumber(resultados.arrobasTotais, 2)} @</td></tr>
                                     <tr><td>Receita Total</td><td>${formatBRL(resultados.receitaTotal)}</td></tr>
                                     <tr><td>Custo Total</td><td>${formatBRL(resultados.custoTotal)}</td></tr>
+                                    <tr><td>Lucro Bruto</td><td>${formatBRL(resultados.lucroBruto)}</td></tr>
+                                    <tr><td>Margem Bruta</td><td>${formatNumber(resultados.margemBruta, 2)}%</td></tr>
                                     <tr><td>Custo Total por Arroba (R$/@)</td><td>${formatBRL(resultados.custoTotalPorArroba)}</td></tr>
+                                    <tr><td>Custo @ Produzida</td><td>${formatBRL(resultados.custoArrobaProduzida)}</td></tr>
+                                    <tr><td>TIR (% ao mês)</td><td>${isNaN(resultados.tir) ? 'Não convergiu' : formatNumber(resultados.tir, 2) + '%'}</td></tr>
                                     <tr><td>Ponto de Equilíbrio</td><td>${isNaN(resultados.pontoDeEquilibrioArrobas) || resultados.pontoDeEquilibrioArrobas < 0 ? 'Inatingível' : formatNumber(resultados.pontoDeEquilibrioArrobas, 2) + ' @'}</td></tr>
                                 </tbody>
                             </table>
