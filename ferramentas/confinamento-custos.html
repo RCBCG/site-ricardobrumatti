@@ -763,7 +763,9 @@
                         <div>
                             <h3 class="text-xl font-bold text-emerald-800">Ponto de Equilíbrio Arrobas Totais</h3>
                             <p id="break-even-value" class="text-4xl font-extrabold text-emerald-700 mt-1">0,00 @</p>
-                            <p class="text-sm text-emerald-600 mt-2">Arrobas mínimas que o animal precisa produzir.</p>
+                            <p class="text-sm text-emerald-600 mt-2">Arrobas de carcaça que precisam ser vendidas, ao preço informado, para cobrir o custo total do lote (aquisição + diárias).</p>
+                            <p class="text-sm text-emerald-700 mt-3">Margem de segurança: <strong id="break-even-margin">0,00 @</strong></p>
+                            <p class="text-sm text-emerald-700">Preço mínimo de venda: <strong id="break-even-price">R$ 0,00</strong>/@</p>
                         </div>
                     </div>
 
@@ -1585,13 +1587,15 @@
                 const arrobasProduzidas = arrobasTotais - arrobasIniciaisEstimadas;
                 const custoArrobaProduzida = arrobasProduzidas > 0 ? custoTotalDiarias / arrobasProduzidas : 0;
 
-                // Ponto de equilíbrio
-                const custoVariavelPorArrobaProduzida = arrobasProduzidas > 0 ? custoTotalDiarias / arrobasProduzidas : 0;
-                const margemContribuicaoTotal = inputs.receita - custoVariavelPorArrobaProduzida;
-                let pontoDeEquilibrioArrobas = NaN;
-                if (margemContribuicaoTotal > 0) {
-                    pontoDeEquilibrioArrobas = ((inputs.custoAq / arrobasIniciaisEstimadas) / margemContribuicaoTotal) + arrobasIniciaisEstimadas;
-                }
+                // Ponto de equilíbrio em arrobas totais de carcaça.
+                // É o volume que, vendido ao preço informado, cobre exatamente o custo total
+                // do lote (aquisição + diárias): PE = custo total / preço da arroba.
+                // A margem de segurança mostra quantas arrobas acima do PE a simulação entrega.
+                const pontoDeEquilibrioArrobas = inputs.receita > 0 ? custoTotal / inputs.receita : NaN;
+                const margemSegurancaArrobas = arrobasTotais - pontoDeEquilibrioArrobas;
+                const margemSegurancaPercentual = arrobasTotais > 0 ? (margemSegurancaArrobas / arrobasTotais) * 100 : 0;
+                // Preço mínimo de venda: abaixo dele o lote fecha no vermelho.
+                const precoMinimoArroba = custoTotalPorArroba;
 
                 // Fluxo de caixa e TIR
                 const fluxoCaixa = [];
@@ -1622,7 +1626,10 @@
                     custoArrobaProduzida,
                     fluxoCaixa,
                     tir,
-                    pontoDeEquilibrioArrobas
+                    pontoDeEquilibrioArrobas,
+                    margemSegurancaArrobas,
+                    margemSegurancaPercentual,
+                    precoMinimoArroba
                 };
             }
 
@@ -1744,6 +1751,15 @@
                     breakEvenValueEl.classList.add('text-emerald-700');
                     breakEvenValueEl.classList.remove('text-red-600');
                 }
+
+                const marginEl = document.getElementById('break-even-margin');
+                const priceEl = document.getElementById('break-even-price');
+                if (marginEl) {
+                    marginEl.textContent = formatNumber(resultados.margemSegurancaArrobas, 2) + ' @ (' +
+                        formatNumber(resultados.margemSegurancaPercentual, 2) + '%)';
+                    marginEl.style.color = resultados.margemSegurancaArrobas >= 0 ? '' : '#dc2626';
+                }
+                if (priceEl) priceEl.textContent = formatBRL(resultados.precoMinimoArroba);
 
                 // Atualizar gráficos
                 updateCharts(inputs, resultados);
@@ -2084,6 +2100,8 @@
                                     <tr><td>Custo @ Produzida</td><td>${formatBRL(resultados.custoArrobaProduzida)}</td></tr>
                                     <tr><td>TIR (% ao mês)</td><td>${isNaN(resultados.tir) ? 'Não convergiu' : formatNumber(resultados.tir, 2) + '%'}</td></tr>
                                     <tr><td>Ponto de Equilíbrio</td><td>${isNaN(resultados.pontoDeEquilibrioArrobas) || resultados.pontoDeEquilibrioArrobas < 0 ? 'Inatingível' : formatNumber(resultados.pontoDeEquilibrioArrobas, 2) + ' @'}</td></tr>
+                                    <tr><td>Margem de Segurança</td><td>${formatNumber(resultados.margemSegurancaArrobas, 2)} @ (${formatNumber(resultados.margemSegurancaPercentual, 2)}%)</td></tr>
+                                    <tr><td>Preço Mínimo de Venda</td><td>${formatBRL(resultados.precoMinimoArroba)}/@</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -2159,7 +2177,10 @@
                     ['Custo Total por Arroba (R$/@)', resultados.custoTotalPorArroba],
                     ['Custo @ Produzida (R$)', resultados.custoArrobaProduzida],
                     ['TIR (% ao mês)', isNaN(resultados.tir) ? 'Não convergiu' : resultados.tir],
-                    ['Ponto de Equilíbrio (Arrobas)', isNaN(resultados.pontoDeEquilibrioArrobas) || resultados.pontoDeEquilibrioArrobas < 0 ? 'Inatingível' : resultados.pontoDeEquilibrioArrobas]
+                    ['Ponto de Equilíbrio (Arrobas)', isNaN(resultados.pontoDeEquilibrioArrobas) || resultados.pontoDeEquilibrioArrobas < 0 ? 'Inatingível' : resultados.pontoDeEquilibrioArrobas],
+                    ['Margem de Segurança (Arrobas)', resultados.margemSegurancaArrobas],
+                    ['Margem de Segurança (%)', resultados.margemSegurancaPercentual],
+                    ['Preço Mínimo de Venda (R$/@)', resultados.precoMinimoArroba]
                 ];
 
                 // Criar conteúdo CSV

@@ -740,6 +740,8 @@
                 Object.keys(c).forEach(key => costs[key].push(c[key]));
             });
 
+            // Acumula RESULTADO ECONÔMICO, não saldo de caixa: os custos mensais já incluem
+            // depreciação e amortização, que não representam desembolso no período.
             costs.accumulatedBalance = costs.grossProfit.reduce((acc, profit, i) => {
                 acc.push(i === 0 ? profit : (acc[i-1] || 0) + profit);
                 return acc;
@@ -792,8 +794,8 @@
             const allKpis = [
                 { label: 'Receita Total', value: formatCurrency(indicators.totalRevenue), icon: 'fa-solid fa-chart-line', color: 'bg-blue-600' },
                 { label: 'Custo Total', value: formatCurrency(indicators.totalCosts), icon: 'fa-solid fa-file-invoice-dollar', color: 'bg-red-600' },
-                { label: 'Lucro Bruto Total', value: formatCurrency(indicators.totalProfit), icon: 'fa-solid fa-sack-dollar', color: 'bg-green-600' },
-                { label: 'Margem Bruta', value: `${formatNumber(indicators.grossMarginPercent, 1)}%`, icon: 'fa-solid fa-percent', color: 'bg-teal-500' },
+                { label: 'Resultado Econômico', value: formatCurrency(indicators.totalProfit), icon: 'fa-solid fa-sack-dollar', color: 'bg-green-600' },
+                { label: 'Margem Econômica', value: `${formatNumber(indicators.grossMarginPercent, 1)}%`, icon: 'fa-solid fa-percent', color: 'bg-teal-500' },
                 { label: 'Receita/@', value: formatCurrency(indicators.revenuePerArroba, 2), icon: 'fa-solid fa-at', color: 'bg-blue-500' },
                 { label: 'Custo/@', value: formatCurrency(indicators.costPerArroba, 2), icon: 'fa-solid fa-at', color: 'bg-red-500' },
                 { label: 'Lucro/@', value: formatCurrency(indicators.profitPerArroba, 2), icon: 'fa-solid fa-at', color: 'bg-green-500' },
@@ -828,10 +830,10 @@
                 datasets: [
                     { label: 'Receitas', data: sales.totalRevenue, backgroundColor: CHART_COLORS.revenue, borderRadius: 4, order: 2 },
                     { label: 'Custos', data: costs.totalCosts, backgroundColor: CHART_COLORS.costs, borderRadius: 4, order: 2 },
-                    { label: 'Lucro', data: costs.grossProfit, backgroundColor: CHART_COLORS.profit, borderRadius: 4, order: 2 },
+                    { label: 'Resultado do Mês', data: costs.grossProfit, backgroundColor: CHART_COLORS.profit, borderRadius: 4, order: 2 },
                     {
                         type: 'line',
-                        label: 'Saldo Acumulado',
+                        label: 'Resultado Econômico Acumulado',
                         data: costs.accumulatedBalance,
                         borderColor: CHART_COLORS.accumulated,
                         backgroundColor: 'transparent',
@@ -846,7 +848,7 @@
             }, {
                 responsive: true, maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: 'Fluxo de Caixa Mensal e Saldo Acumulado', font: {size: 16} },
+                    title: { display: true, text: 'Resultado Econômico Mensal e Acumulado (inclui depreciação e amortização)', font: {size: 16} },
                     tooltip: {
                         callbacks: { label: (c) => `${c.dataset.label}: ${formatCurrency(c.raw, 2)}` },
                         backgroundColor: '#1f2937', titleFont: { size: 14 }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 8
@@ -1033,7 +1035,7 @@
                     ${costs.totalCosts.map(v => `<td class="px-2 py-2 text-right font-bold text-red-800">${formatCurrency(v, 0)}</td>`).join('')}
                     <td class="px-3 py-2 text-right font-extrabold text-red-900">${formatCurrency(sum(costs.totalCosts), 0)}</td>
                 </tr>
-                 <tr class="border-t border-gray-200 bg-green-50"><td class="px-3 py-2 font-bold text-green-800">Lucro Bruto</td>
+                 <tr class="border-t border-gray-200 bg-green-50"><td class="px-3 py-2 font-bold text-green-800">Resultado Econômico</td>
                     ${costs.grossProfit.map(v => `<td class="px-2 py-2 text-right font-bold text-green-800">${formatCurrency(v, 0)}</td>`).join('')}
                     <td class="px-3 py-2 text-right font-extrabold text-green-900">${formatCurrency(sum(costs.grossProfit), 0)}</td>
                 </tr>
@@ -1048,7 +1050,7 @@
             }
 
             const chartImages = [
-                { instance: chartInstances['cashFlowChart'], title: "Fluxo de Caixa Mensal e Saldo Acumulado" },
+                { instance: chartInstances['cashFlowChart'], title: "Resultado Econômico Mensal e Acumulado" },
                 { instance: chartInstances['costProportionsChart'], title: "Composição dos Custos Anuais (%)" },
                 { instance: chartInstances['revenueProportionsChart'], title: "Composição da Receita Anual (%)" }
             ].map(chart => ({

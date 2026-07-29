@@ -307,7 +307,7 @@
                     </div>
                     <div class="card p-4 bg-white dark:bg-slate-800 border-l-4 border-green-500">
                          <div class="flex justify-between items-start">
-                            <div><p class="text-slate-500 dark:text-slate-400 text-xs uppercase font-bold">Lucro Máximo</p><h3 class="text-3xl font-bold text-green-600 mt-1" id="resLucro">R$ --</h3><p class="text-sm text-slate-400 mt-1">por cabeça</p></div>
+                            <div><p class="text-slate-500 dark:text-slate-400 text-xs uppercase font-bold">Resultado da Engorda</p><h3 class="text-3xl font-bold text-green-600 mt-1" id="resLucro">R$ --</h3><p class="text-sm text-slate-400 mt-1">por cabeça, sem o custo do animal</p></div>
                             <i class="fa-solid fa-sack-dollar text-2xl text-green-200"></i>
                         </div>
                     </div>
@@ -357,6 +357,8 @@
                                     <li><span class="detail-label">Custo Op. (@):</span> <span class="detail-value text-red-600" id="detCustoOpArr">--</span></li>
                                     <li><span class="detail-label">Custo Médio Diária (R$):</span> <span class="detail-value text-red-600" id="detDiaria">--</span></li>
                                     <li><span class="detail-label">Margem Operacional (%):</span> <span class="detail-value text-green-600 font-bold" id="detMargem">--</span></li>
+                                    <li><span class="detail-label">Resultado da curva marginal (R$/cab):</span> <span class="detail-value" id="detLucroMarginal">--</span></li>
+                                    <li><span class="detail-label">Ganho por melhora de rendimento (R$/cab):</span> <span class="detail-value" id="detGanhoRendimento">--</span></li>
                                 </ul>
                             </div>
                         </div>
@@ -488,6 +490,12 @@
                 return {
                     days: d.day, finalWeight: d.weightEnd, initialArrobas: iArr, finalArrobas: fArr, gainedArrobas: gArr,
                     profit: rev - tCost, revenue: rev, totalCost: tCost,
+                    // Decomposição do resultado.
+                    // A curva marginal remunera apenas o ganho de peso do dia, ao rendimento final.
+                    // O resultado total inclui também a valorização do peso de entrada, que passa a
+                    // ser avaliado ao rendimento final em vez do rendimento inicial informado.
+                    marginalProfit: d.accumulatedProfit,
+                    yieldGain: ((inputs.rcFinal - inputs.rcInicial) * inputs.pvi / app.constants.ARROBA_FACTOR) * inputs.precoArroba,
                     costDietArroba: gArr>0?tDietCost/gArr:0, costOpArroba: gArr>0?tOpCost/gArr:0, costTotalArroba: gArr>0?tCost/gArr:0,
                     avgGPD: d.day>0?tGain/d.day:0, avgCMS: d.day>0?subset.reduce((a,c)=>a+c.cms,0)/d.day:0, feedConversion: tGain>0?subset.reduce((a,c)=>a+c.cms,0)/tGain:0
                 };
@@ -532,6 +540,8 @@
                 document.getElementById('detDiaria').innerText = fm(r.totalCost/r.days);
                 const m = r.revenue>0?(r.profit/r.revenue)*100:0;
                 document.getElementById('detMargem').innerText = f(m, 1) + "%";
+                document.getElementById('detLucroMarginal').innerText = fm(r.marginalProfit);
+                document.getElementById('detGanhoRendimento').innerText = fm(r.yieldGain);
             },
             renderTornado(baseInputs) {
                 const ctx = document.getElementById('chartTornado').getContext('2d');
