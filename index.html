@@ -959,6 +959,209 @@ footer {
     font-size: 11px;
   }
 }
+
+/* ─── MERCADO (phone mockup carousel) ─────────────────── */
+#mercado { background: var(--bg2); border-top: 1px solid var(--border); }
+
+.market-carousel-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.market-carousel-inner {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.phone-mockup {
+  position: relative;
+  width: min(78vw, 320px);
+  background: #1a1a1a;
+  border-radius: 34px;
+  padding: 12px 10px;
+  box-shadow:
+    0 1px 0 #555 inset,
+    0 28px 56px rgba(0,0,0,0.30),
+    0 8px 24px rgba(0,0,0,0.18),
+    0 0 0 1px rgba(0,0,0,0.12);
+}
+
+.phone-topbar {
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-camera-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #333;
+  box-shadow: inset 0 0 0 1.5px #4a4a4a;
+}
+
+.phone-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #0d2b2b;
+}
+
+.market-carousel-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.market-slide {
+  min-width: 100%;
+  height: 100%;
+  flex-shrink: 0;
+  cursor: zoom-in;
+}
+
+.market-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.market-zoom-hint {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(5,20,20,0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.phone-home-indicator {
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-home-bar {
+  width: 64px;
+  height: 4px;
+  border-radius: 2px;
+  background: #4a4a4a;
+}
+
+.market-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.88);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  color: #0d3030;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.market-nav-btn:hover {
+  background: rgba(255,255,255,1);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.market-prev { left: 2px; }
+.market-next { right: 2px; }
+
+.market-dots {
+  position: static;
+  transform: none;
+  display: flex;
+  gap: 6px;
+}
+
+.market-dots .dot {
+  background: var(--border2);
+}
+
+.market-dots .dot.active {
+  background: var(--green);
+  transform: scale(1.35);
+}
+
+.market-caption {
+  font-size: 0.78rem;
+  color: var(--light);
+  text-align: center;
+}
+
+.market-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,20,20,0.92);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.25rem;
+  z-index: 2000;
+  cursor: zoom-out;
+}
+
+.market-lightbox.active { display: flex; }
+
+.market-lightbox img {
+  max-width: min(92vw, 480px);
+  max-height: 88vh;
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  cursor: default;
+}
+
+.market-lightbox-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.market-lightbox-close:hover { background: rgba(255,255,255,0.24); }
+
+@media (min-width: 600px) {
+  .phone-mockup { width: 320px; }
+  .market-prev { left: -14px; }
+  .market-next { right: -14px; }
+}
+
+@media (min-width: 1024px) {
+  .phone-mockup { width: 360px; }
+}
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -1255,6 +1458,77 @@ footer {
     </div>
   </div>
 </section>
+
+<!-- ─── MERCADO ────────────────────────────────────────── -->
+<section id="mercado">
+  <div class="section-wrap">
+    <div class="section-head reveal">
+      <div>
+        <div class="section-eyebrow">Atualização Semanal</div>
+        <h2 class="section-title">Boletim de Mercado</h2>
+        <p class="section-desc">Cotações, sazonalidade e projeções do boi gordo, bezerro, milho e soja — atualizadas semanalmente com dados de Cepea/Esalq-USP, BCB, B3 e Abiec. Toque na imagem para ampliar.</p>
+      </div>
+    </div>
+
+    <div class="market-carousel-wrapper reveal">
+      <div class="market-carousel-inner">
+        <div class="phone-mockup">
+          <div class="phone-topbar">
+            <div class="phone-camera-dot"></div>
+          </div>
+          <div class="phone-screen">
+            <div class="market-carousel-track" id="mercadoTrack">
+              <div class="market-slide" onclick="openMarketLightbox('img/mercado-boi-gordo.png','Boi gordo — cotação do dia')">
+                <img src="img/mercado-boi-gordo.png" alt="Boi gordo — cotação do dia" loading="lazy">
+              </div>
+              <div class="market-slide" onclick="openMarketLightbox('img/mercado-bezerro.png','Bezerro — cotação do dia')">
+                <img src="img/mercado-bezerro.png" alt="Bezerro — cotação do dia" loading="lazy">
+              </div>
+              <div class="market-slide" onclick="openMarketLightbox('img/mercado-soja.png','Soja — cotação do dia')">
+                <img src="img/mercado-soja.png" alt="Soja — cotação do dia" loading="lazy">
+              </div>
+              <div class="market-slide" onclick="openMarketLightbox('img/mercado-milho.png','Milho — cotação do dia')">
+                <img src="img/mercado-milho.png" alt="Milho — cotação do dia" loading="lazy">
+              </div>
+              <div class="market-slide" onclick="openMarketLightbox('img/mercado-projecao.png','Projeção R$/@ — 180 dias úteis')">
+                <img src="img/mercado-projecao.png" alt="Projeção R$/@ — 180 dias úteis" loading="lazy">
+              </div>
+              <div class="market-slide" onclick="openMarketLightbox('img/mercado-agio-bezerro.png','Ágio do bezerro')">
+                <img src="img/mercado-agio-bezerro.png" alt="Ágio do bezerro" loading="lazy">
+              </div>
+              <div class="market-slide" onclick="openMarketLightbox('img/mercado-sazonalidade.png','Sazonalidade — boi gordo')">
+                <img src="img/mercado-sazonalidade.png" alt="Sazonalidade — boi gordo" loading="lazy">
+              </div>
+            </div>
+            <div class="market-zoom-hint" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </div>
+          </div>
+          <div class="phone-home-indicator">
+            <div class="phone-home-bar"></div>
+          </div>
+        </div>
+        <button class="market-nav-btn market-prev" id="mercadoPrev" aria-label="Anterior">&#8592;</button>
+        <button class="market-nav-btn market-next" id="mercadoNext" aria-label="Próximo">&#8594;</button>
+      </div>
+
+      <div class="carousel-dots market-dots" id="mercadoDots">
+        <button class="dot active" aria-label="Slide 1"></button>
+        <button class="dot" aria-label="Slide 2"></button>
+        <button class="dot" aria-label="Slide 3"></button>
+        <button class="dot" aria-label="Slide 4"></button>
+        <button class="dot" aria-label="Slide 5"></button>
+        <button class="dot" aria-label="Slide 6"></button>
+        <button class="dot" aria-label="Slide 7"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="market-lightbox" id="marketLightbox" onclick="closeMarketLightbox(event)">
+  <button class="market-lightbox-close" onclick="closeMarketLightbox(event)" aria-label="Fechar">&#10005;</button>
+  <img id="marketLightboxImg" src="" alt="">
+</div>
 
 <!-- ─── MODAL ─────────────────────────────────────────── -->
 <div class="modal-overlay" id="toolModal" onclick="handleOverlayClick(event)">
@@ -1779,6 +2053,86 @@ function submitForm(e) {
 
   startAuto();
 })();
+</script>
+
+<script>
+(function() {
+  var track = document.getElementById('mercadoTrack');
+  var dots = document.querySelectorAll('#mercadoDots .dot');
+  var total = 7;
+  var current = 0;
+  var timer;
+
+  function goTo(index) {
+    current = (index + total) % total;
+    track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    dots.forEach(function(d, i) {
+      d.classList.toggle('active', i === current);
+    });
+  }
+
+  function next() { goTo(current + 1); }
+  function prev() { goTo(current - 1); }
+
+  function startAuto() {
+    timer = setInterval(next, 5000);
+  }
+
+  function stopAuto() {
+    clearInterval(timer);
+  }
+
+  document.getElementById('mercadoNext').addEventListener('click', function(e) { e.stopPropagation(); stopAuto(); next(); startAuto(); });
+  document.getElementById('mercadoPrev').addEventListener('click', function(e) { e.stopPropagation(); stopAuto(); prev(); startAuto(); });
+
+  dots.forEach(function(dot, i) {
+    dot.addEventListener('click', function() { stopAuto(); goTo(i); startAuto(); });
+  });
+
+  var wrapper = document.querySelector('.market-carousel-wrapper');
+  if (wrapper) {
+    wrapper.addEventListener('mouseenter', stopAuto);
+    wrapper.addEventListener('mouseleave', startAuto);
+  }
+
+  var touchStartX = 0;
+  var screenEl = document.querySelector('.phone-screen');
+  if (screenEl) {
+    screenEl.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+      stopAuto();
+    }, { passive: true });
+    screenEl.addEventListener('touchend', function(e) {
+      var delta = e.changedTouches[0].screenX - touchStartX;
+      if (Math.abs(delta) > 40) {
+        delta < 0 ? next() : prev();
+      }
+      startAuto();
+    }, { passive: true });
+  }
+
+  startAuto();
+})();
+
+function openMarketLightbox(src, alt) {
+  var lb = document.getElementById('marketLightbox');
+  var img = document.getElementById('marketLightboxImg');
+  img.src = src;
+  img.alt = alt;
+  lb.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMarketLightbox(e) {
+  if (e.target.id === 'marketLightboxImg') return;
+  var lb = document.getElementById('marketLightbox');
+  lb.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeMarketLightbox({ target: {} });
+});
 </script>
 </body>
 </html>
