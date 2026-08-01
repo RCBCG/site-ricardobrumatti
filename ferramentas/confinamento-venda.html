@@ -143,8 +143,39 @@
         .pdf-table th { background: #1e3a8a; color: white; text-align: center; padding: 6px; font-weight: bold; text-transform: uppercase; }
         .pdf-table td { text-align: center; padding: 4px; border: 1px solid #e2e8f0; color: #334155; }
         .pdf-row-even { background-color: #f1f5f9; } .pdf-highlight { background-color: #dcfce7 !important; color: #166534 !important; font-weight: bold; border: 2px solid #22c55e !important; }
-        
+        .pdf-disclaimer { font-size: 8px; color: #94a3b8; text-align: center; line-height: 1.4; }
+
         @media print { .no-print { display: none !important; } body { background: white; color: black; } }
+
+        /* Social Share Styles */
+        .share-menu-wrap { position: relative; display: inline-flex; }
+        .share-dropdown {
+            position: absolute; top: calc(100% + 8px); right: 0; z-index: 40;
+            background: var(--bg-card); border: 1px solid #e2e8f0; border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 0.75rem; width: 240px;
+        }
+        .dark .share-dropdown { border-color: #334155; }
+
+        .social-card-container { position: absolute; top: -9999px; left: -9999px; width: 1080px; height: 1350px; background: #064e65; color: #ffffff; font-family: 'Inter', sans-serif; box-sizing: border-box; padding: 56px 64px; display: flex; flex-direction: column; }
+        .social-header { display: flex; justify-content: space-between; align-items: center; font-size: 22px; font-weight: 600; }
+        .social-header .site { color: #d4af37; font-weight: 600; }
+        .social-title { font-family: Georgia, Cambria, 'Times New Roman', serif; font-weight: 700; font-size: 54px; margin: 28px 0 6px; line-height: 1.1; }
+        .social-subtitle { font-size: 24px; color: #cfe3e9; margin: 0 0 20px; }
+        .social-kpi { font-family: Georgia, Cambria, 'Times New Roman', serif; font-weight: 800; font-size: 96px; color: #d4af37; line-height: 1.15; margin: 10px 0 0; }
+        .social-kpi-caption { font-size: 22px; color: #e2eef1; margin: 14px 0 32px; }
+        .social-card-body { background: #faf7f0; border-radius: 28px; flex: 1; padding: 32px; display: flex; flex-direction: column; overflow: hidden; }
+        .social-card-body img, .social-card-body canvas { max-width: 100%; }
+        .social-footer { text-align: center; margin-top: 28px; }
+        .social-footer .source { font-size: 18px; color: #cfe3e9; margin: 0 0 4px; }
+        .social-footer .author { font-size: 20px; font-weight: 700; color: #d4af37; margin: 0 0 14px; }
+        .social-footer .disclaimer { font-size: 14px; color: #9fc0c9; line-height: 1.5; max-width: 820px; margin: 0 auto; }
+        .social-kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: auto; }
+        .social-kpi-grid .box { background: #ffffff; border: 1px solid #e6e6e6; border-radius: 14px; padding: 18px; text-align: center; }
+        .social-kpi-grid .box .lbl { font-size: 15px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: .02em; }
+        .social-kpi-grid .box .val { font-family: Georgia, Cambria, 'Times New Roman', serif; font-size: 30px; font-weight: 800; color: #064e65; margin-top: 4px; }
+        .social-heatmap-table { width: 100%; border-collapse: collapse; font-size: 20px; }
+        .social-heatmap-table th, .social-heatmap-table td { padding: 14px 8px; text-align: center; border: 2px solid #faf7f0; }
+        .social-heatmap-table th { background: #064e65; color: #fff; font-weight: 700; }
     </style>
 
     <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
@@ -251,6 +282,20 @@
                  <button onclick="app.clearForm()" class="btn-outline text-red-500 border-red-200 hover:border-red-400 hover:text-red-600" title="Limpar Tudo"><i class="fa-solid fa-trash"></i></button>
                 <button onclick="app.exportPDF()" id="btnPdf" class="btn-outline" title="Gerar PDF"><i class="fa-solid fa-file-pdf"></i> PDF</button>
                 <button onclick="app.exportExcel()" id="btnExcel" class="btn-outline disabled:opacity-50" disabled title="Excel"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                <div class="share-menu-wrap">
+                    <button onclick="app.toggleShareMenu()" id="btnShare" class="btn-outline disabled:opacity-50" disabled title="Imagem para redes sociais"><i class="fa-solid fa-share-nodes"></i> Imagem</button>
+                    <div id="shareDropdown" class="share-dropdown hidden">
+                        <label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Escolha o conteúdo</label>
+                        <select id="shareType" class="input-field text-left text-sm mb-3">
+                            <option value="resumo">Resumo (KPIs)</option>
+                            <option value="marginal">Gráfico Marginal</option>
+                            <option value="tornado">Gráfico Tornado</option>
+                            <option value="matriz">Matriz de Sensibilidade</option>
+                        </select>
+                        <button onclick="app.generateSocialImage()" class="btn-primary w-full justify-center text-sm"><i class="fa-solid fa-image"></i> Gerar Imagem</button>
+                        <p class="text-[11px] text-slate-400 mt-2 leading-tight">Formato quadrado/vertical, pronto para Instagram, TikTok, X e WhatsApp.</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -298,6 +343,10 @@
 
             <!-- Resultados -->
             <div class="lg:col-span-8 space-y-6 hidden" id="resultsArea">
+                <div id="ceilingWarning" class="hidden card p-3 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 text-amber-800 dark:text-amber-300 text-sm flex items-start gap-2">
+                    <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                    <span>O resultado atingiu o limite de simulação (200 dias) sem o lucro marginal ficar negativo. Isso pode não ser um ponto ótimo real — revise "Redução GPD" e "Aumento CMS", que parecem baixos ou zerados para este cenário.</span>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="card p-4 bg-gradient-to-br from-blue-900 to-blue-800 text-white shadow-lg">
                         <div class="flex justify-between items-start">
@@ -385,6 +434,18 @@
         <footer class="text-center text-xs text-slate-400 mt-10 pb-4 no-print"><p>© <span id="year">2025</span> - Projetos Agropecuários - FAMEZ/UFMS.</p></footer>
     </main>
 
+    <div id="modalShareImage" class="fixed inset-0 bg-black bg-opacity-70 hidden z-[70] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-lg max-w-sm w-full p-5 shadow-2xl text-center">
+            <h3 class="text-lg font-bold text-blue-900 dark:text-white mb-1">Imagem pronta!</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">No celular ou iPad, toque e segure na imagem para salvar. No PC, clique com o botão direito e escolha "Salvar imagem". Ou use o botão abaixo.</p>
+            <div class="max-h-[55vh] overflow-auto border border-slate-200 dark:border-slate-600 rounded-lg mb-4 bg-slate-100 dark:bg-slate-900">
+                <img id="shareImagePreview" class="w-full block" alt="Imagem para compartilhar">
+            </div>
+            <a id="shareImageDownload" href="#" download="imagem.png" class="btn-primary w-full justify-center mb-2"><i class="fa-solid fa-download"></i> Baixar Imagem</a>
+            <button onclick="document.getElementById('modalShareImage').classList.add('hidden')" class="btn-outline w-full justify-center">Fechar</button>
+        </div>
+    </div>
+
     <div id="modalHelp" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[60] flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 rounded-lg max-w-lg w-full p-6 shadow-2xl">
             <h3 class="text-xl font-bold text-blue-900 dark:text-white mb-4">Como Funciona?</h3>
@@ -423,7 +484,13 @@
                     return val.includes(',') ? parseFloat(val.replace(/\./g, '').replace(',', '.')) : parseFloat(val);
                 },
                 formatBr: (num, decimals = 2) => isNaN(num) ? "0,00" : num.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }),
-                formatMoney: (num) => isNaN(num) ? "R$ 0,00" : num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                formatMoney: (num) => isNaN(num) ? "R$ 0,00" : num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+                heatColor: (prof) => {
+                    if (prof < 0) return '#dc2626';
+                    if (prof < 100) return '#f59e0b';
+                    if (prof < 300) return '#22c55e';
+                    return '#15803d';
+                }
             },
             getInputs() {
                 return {
@@ -460,6 +527,7 @@
                 document.querySelectorAll('input').forEach(i => i.value = '');
                 document.getElementById('resultsArea').classList.add('hidden');
                 document.getElementById('btnExcel').disabled = true;
+                document.getElementById('btnShare').disabled = true;
                 localStorage.removeItem('simulador_bovino_v6');
             },
             runSimulation(inputs) {
@@ -503,17 +571,25 @@
             calculate() {
                 try {
                     const inp = app.getInputs();
-                    if(inp.pvi <= 0) { alert("Preencha valores."); return; }
+                    if(inp.pvi <= 0 || inp.precoArroba <= 0 || inp.custoDieta <= 0 || inp.gpdInicial <= 0 || inp.cmsInicial <= 0 || inp.rcFinal <= 0 || inp.rcInicial <= 0) {
+                        alert("Preencha todos os campos com valores maiores que zero antes de calcular.");
+                        return;
+                    }
                     app.saveToStorage();
                     const daily = app.runSimulation(inp);
                     const res = app.analyzeResults(daily, inp);
                     app.state.simulationData = { dailyData: daily, results: res, inputs: inp };
-                    app.updateUI(); app.generateHeatmap(inp); app.renderCharts(); app.renderTornado(inp); app.renderTable(daily);
+                    // Mostra a área de resultados ANTES de criar os gráficos: um canvas criado
+                    // dentro de um container display:none nasce com 0x0px e fica quebrado até
+                    // uma correção assíncrona (ou nunca, se a aba nunca for aberta pelo usuário).
                     document.getElementById('resultsArea').classList.remove('hidden');
+                    document.getElementById('ceilingWarning').classList.toggle('hidden', res.days < app.constants.MAX_DAYS);
+                    app.updateUI(); app.generateHeatmap(inp); app.renderCharts(); app.renderTornado(inp); app.renderTable(daily);
                     requestAnimationFrame(() => {
                         [app.state.chart, app.state.tornadoChart].forEach(c => c && c.resize());
                     });
                     document.getElementById('btnExcel').disabled = false;
+                    document.getElementById('btnShare').disabled = false;
                     document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth' });
                 } catch(e) { console.error(e); alert("Erro ao calcular."); }
             },
@@ -587,8 +663,11 @@
                         const ti = {...base, precoArroba: p, custoDieta: d};
                         const tr = app.runSimulation(ti); const tres = app.analyzeResults(tr, ti);
                         const prof = tres.profit;
-                        let bg = prof<0?'bg-red-500':(prof<100?'bg-green-300 text-slate-800':(prof<300?'bg-green-500':'bg-green-700'));
-                        h+=`<td class="${bg} heatmap-cell" title="${tres.days} dias">${app.utils.formatMoney(prof)}</td>`;
+                        // Cores fixas em hex (não usa classes Tailwind bg-green-*): o tema visual
+                        // do site redefine a paleta "green" inteira para tons de petróleo, o que
+                        // apagava por completo o gradiente vermelho→verde do heatmap.
+                        const bg = app.utils.heatColor(prof);
+                        h+=`<td class="heatmap-cell" style="background:${bg};color:#fff;" title="${tres.days} dias">${app.utils.formatMoney(prof)}</td>`;
                     });
                     h+='</tr>';
                 });
@@ -612,6 +691,10 @@
                 const btns = document.querySelectorAll('.tab-btn');
                 let idx = 0; if(name==='financeiro') idx=1; if(name==='tornado') idx=2; if(name==='sensibilidade') idx=3; if(name==='tabela') idx=4;
                 btns[idx].classList.remove('border-transparent', 'text-slate-500'); btns[idx].classList.add('border-blue-600', 'text-blue-600', 'dark:text-blue-400');
+                // Um gráfico Chart.js criado enquanto sua aba estava oculta (display:none)
+                // nasce com tamanho 0x0 — força o recálculo assim que a aba é exibida.
+                if(name === 'marginal' && app.state.chart) app.state.chart.resize();
+                if(name === 'tornado' && app.state.tornadoChart) app.state.tornadoChart.resize();
             },
             renderCharts() {
                 const ctx = document.getElementById('chartMarginal').getContext('2d');
@@ -641,8 +724,34 @@
             exportExcel() {
                 if(!app.state.simulationData) return;
                 const wb = XLSX.utils.book_new();
-                const inputs = app.state.simulationData.inputs;
-                const wsData = app.state.simulationData.dailyData.map(row => ({ "Dia": row.day, "Peso Vivo (kg)": row.weightEnd, "GPD (kg)": row.gpd, "CMS (kg)": row.cms, "Custo Dieta (R$)": row.cms * inputs.custoDieta, "Custo Op. (R$)": inputs.custoOperacional, "CMg (R$)": row.cmg, "RMg (R$)": row.rmg, "Lucro Marginal (R$)": row.lmg, "Lucro Acumulado (R$)": row.accumulatedProfit }));
+                const { inputs, results: r } = app.state.simulationData;
+                const margem = r.revenue > 0 ? (r.profit / r.revenue) * 100 : 0;
+                const dataStr = inputs.dataSim ? inputs.dataSim.split('-').reverse().join('/') : '--';
+                const resumo = [
+                    ["Simulador de Ponto Ótimo de Venda — Prof. Ricardo C. Brumatti (FAMEZ/UFMS)"],
+                    ["Uso gratuito e não comercial. Ferramenta educacional — não constitui recomendação de investimento."],
+                    [],
+                    ["Fazenda", inputs.fazenda || "--"], ["Técnico", inputs.tecnico || "--"], ["Data da Simulação", dataStr],
+                    [],
+                    ["PREMISSAS", ""],
+                    ["Peso Vivo Inicial (kg)", inputs.pvi], ["RC Inicial (%)", inputs.rcInicial * 100],
+                    ["GPD Inicial (kg/dia)", inputs.gpdInicial], ["Redução GPD (kg/dia)", inputs.reducaoGPD],
+                    ["CMS Inicial (kg/dia)", inputs.cmsInicial], ["Aumento CMS (kg/dia)", inputs.aumentoCMS],
+                    ["RC Final Esperado (%)", inputs.rcFinal * 100], ["Preço da Arroba (R$)", inputs.precoArroba],
+                    ["Custo Dieta (R$/kg MS)", inputs.custoDieta], ["Custo Operacional (R$/dia)", inputs.custoOperacional],
+                    [],
+                    ["RESULTADOS", ""],
+                    ["Dia Ótimo de Venda", r.days], ["Peso Final (kg)", r.finalWeight],
+                    ["Resultado da Engorda (R$/cab)", r.profit],
+                    ["  Resultado da curva marginal (R$/cab)", r.marginalProfit],
+                    ["  Ganho por melhora de rendimento (R$/cab)", r.yieldGain],
+                    ["Receita Total (R$/cab)", r.revenue], ["Custo Total (R$/cab)", r.totalCost],
+                    ["Margem Operacional (%)", margem], ["Conversão Alimentar", r.feedConversion]
+                ];
+                const wsResumo = XLSX.utils.aoa_to_sheet(resumo);
+                wsResumo['!cols'] = [{ wch: 40 }, { wch: 22 }];
+                XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
+                const wsData = app.state.simulationData.dailyData.map(row => ({ "Dia": row.day, "Peso Vivo (kg)": row.weightEnd, "GPD (kg)": row.gpd, "CMS (kg)": row.cms, "Custo Dieta (R$)": row.cms * inputs.custoDieta, "Custo Op. (R$)": inputs.custoOperacional, "CMg (R$)": row.cmg, "RMg (R$)": row.rmg, "Lucro Marginal (R$)": row.lmg, "Lucro Acumulado (R$)": row.accumulatedProfit, "Dia Ótimo": row.day === r.days ? "◄" : "" }));
                 const ws = XLSX.utils.json_to_sheet(wsData);
                 XLSX.utils.book_append_sheet(wb, ws, "Evolução Diária");
                 XLSX.writeFile(wb, `Simulacao_Ponto_Otimo_${inputs.fazenda || 'Resultados'}.xlsx`);
@@ -651,14 +760,34 @@
                 if(!app.state.simulationData) { alert("Calcule primeiro!"); return; }
                 const btn = document.getElementById('btnPdf'); const org = btn.innerHTML;
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gerando...'; btn.disabled = true;
-                const c1 = document.createElement('div'); c1.className = 'pdf-page-container'; document.body.appendChild(c1);
-                const c2 = document.createElement('div'); c2.className = 'pdf-page-container'; document.body.appendChild(c2);
+
+                // As imagens do PDF são renderizadas em canvases próprios, dedicados e já
+                // no tamanho final (em vez de reaproveitar os canvases das abas na tela).
+                // Um gráfico Chart.js que vive numa aba escondida (display:none) fica com
+                // 0x0px, e mesmo forçando resize() antes de capturar, o Chart.js encolhe o
+                // canvas de novo, de forma assíncrona, assim que a aba volta a ficar oculta
+                // — então uma 2ª exportação (ou exportar sem nunca ter aberto a aba Tornado)
+                // saía com o gráfico em branco. Gerar um canvas isolado elimina esse problema.
+                const marginalRender = app.renderOffscreenChart('marginal', 1000, 560);
+                const marginalImg = marginalRender.canvas.toDataURL('image/png');
+                marginalRender.chart.destroy();
+                const tornadoRender = app.renderOffscreenChart('tornado', 1000, 560);
+                const tornadoImg = tornadoRender.canvas.toDataURL('image/png');
+                tornadoRender.chart.destroy();
+
+                const c1 = document.createElement('div'); c1.className = 'pdf-page-container'; c1.style.minHeight = 'auto'; document.body.appendChild(c1);
+                const c2 = document.createElement('div'); c2.className = 'pdf-page-container'; c2.style.minHeight = 'auto'; document.body.appendChild(c2);
+                const c3 = document.createElement('div'); c3.className = 'pdf-page-container'; c3.style.minHeight = 'auto'; document.body.appendChild(c3);
                 const data = app.state.simulationData, r = data.results, f = app.utils.formatBr, fm = app.utils.formatMoney;
                 const inp = data.inputs;
-                const dateStr = inp.dataSim ? new Date(inp.dataSim).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
+                // Datas de <input type="date"> já vêm como "AAAA-MM-DD": reformatar o texto
+                // direto evita o bug de fuso horário do Date() (que "voltava" o dia em 1
+                // sempre que o fuso local é negativo, como em todo o Brasil).
+                const dateStr = inp.dataSim ? inp.dataSim.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
                 const margem = r.revenue > 0 ? (r.profit / r.revenue) * 100 : 0;
+                const disclaimerHtml = `<div class="pdf-disclaimer">Simulador desenvolvido por Prof. Ricardo C. Brumatti — FAMEZ/UFMS · ricardobrumatti.pro.br<br>Uso gratuito e não comercial. Ferramenta educacional de apoio à decisão — não constitui recomendação de investimento.</div>`;
                 c1.innerHTML = `
-                    <div class="pdf-header"><div><h1 style="font-size: 18px; font-weight: bold; color: #1e3a8a;">RELATÓRIO DE SIMULAÇÃO</h1><p style="font-size: 12px; color: #666;">Página 1/2</p></div><div style="text-align: right; font-size: 10px;"><p><strong>Fazenda:</strong> ${inp.fazenda || '--'}</p><p><strong>Data:</strong> ${dateStr}</p></div></div>
+                    <div class="pdf-header"><div><h1 style="font-size: 18px; font-weight: bold; color: #1e3a8a;">RELATÓRIO DE SIMULAÇÃO</h1><p style="font-size: 12px; color: #666;">Página 1/3</p></div><div style="text-align: right; font-size: 10px;"><p><strong>Fazenda:</strong> ${inp.fazenda || '--'}</p><p><strong>Data:</strong> ${dateStr}</p></div></div>
                     <div class="pdf-section-title">1. Premissas</div>
                     <div class="pdf-grid-3">
                         <div class="pdf-card"><div class="pdf-label">Peso Inicial</div><div class="pdf-value">${f(inp.pvi, 1)} kg</div></div>
@@ -688,7 +817,8 @@
                         </ul></div>
                     </div>
                     <div class="pdf-section-title">5. Gráfico Marginal</div>
-                    <div style="height: 180px; text-align:center;"><img src="${app.state.chart.toBase64Image()}" style="max-height: 100%; max-width: 100%;" /></div>
+                    <div style="text-align:center;"><img src="${marginalImg}" width="700" height="392" /></div>
+                    <div style="margin-top:16px; padding-top:8px; border-top:1px solid #eee;">${disclaimerHtml}</div>
                 `;
                 let tableHtml = ''; let idx = 0;
                 data.dailyData.forEach(r => {
@@ -700,31 +830,210 @@
                         idx++;
                     }
                 });
+                // O gráfico Tornado ganha página própria, em largura cheia (igual ao Gráfico
+                // Marginal): dividindo a página com a Matriz (metade da largura), a mesma
+                // imagem ficava pequena demais e os rótulos dos eixos saíam ilegíveis.
                 c2.innerHTML = `
-                    <div class="pdf-header"><div><h1 style="font-size: 18px; font-weight: bold; color: #1e3a8a;">CONTINUAÇÃO</h1><p style="font-size: 12px; color: #666;">Página 2/2</p></div><div style="text-align: right; font-size: 10px;"><p><strong>Técnico:</strong> ${inp.tecnico || '--'}</p></div></div>
-                    <div class="pdf-grid-2">
-                        <div><div class="pdf-section-title">6. Sensibilidade (Tornado)</div><div style="height: 180px; text-align:center;"><img src="${app.state.tornadoChart.toBase64Image()}" style="max-height: 100%; max-width: 100%;" /></div></div>
-                        <div><div class="pdf-section-title">7. Matriz de Sensibilidade</div><div style="transform: scale(0.75); transform-origin: top left;">${document.getElementById('heatmapContainer').innerHTML}</div></div>
-                    </div>
+                    <div class="pdf-header"><div><h1 style="font-size: 18px; font-weight: bold; color: #1e3a8a;">CONTINUAÇÃO</h1><p style="font-size: 12px; color: #666;">Página 2/3</p></div><div style="text-align: right; font-size: 10px;"><p><strong>Técnico:</strong> ${inp.tecnico || '--'}</p></div></div>
+                    <div class="pdf-section-title">6. Análise de Sensibilidade (Tornado)</div>
+                    <p style="font-size: 11px; color: #64748b; margin-bottom: 10px;">Impacto no lucro ao variar cada premissa individualmente em +/- 10%, mantendo as demais constantes.</p>
+                    <div style="text-align:center;"><img src="${tornadoImg}" width="700" height="392" /></div>
+                    <div style="margin-top:16px; padding-top:8px; border-top:1px solid #eee;">${disclaimerHtml}</div>
+                `;
+                c3.innerHTML = `
+                    <div class="pdf-header"><div><h1 style="font-size: 18px; font-weight: bold; color: #1e3a8a;">CONTINUAÇÃO</h1><p style="font-size: 12px; color: #666;">Página 3/3</p></div><div style="text-align: right; font-size: 10px;"><p><strong>Técnico:</strong> ${inp.tecnico || '--'}</p></div></div>
+                    <div class="pdf-section-title">7. Matriz de Sensibilidade</div>
+                    <div style="display:flex; justify-content:center;">${document.getElementById('heatmapContainer').innerHTML}</div>
                     <div class="pdf-section-title" style="margin-top: 15px;">8. Evolução (Resumo)</div>
                     <table class="pdf-table"><thead><tr><th>Dia</th><th>Peso (kg)</th><th>RMg (R$)</th><th>CMg (R$)</th><th>Lucro Acum. (R$)</th></tr></thead><tbody>${tableHtml}</tbody></table>
-                    <div style="margin-top: 40px; border-top: 1px solid #ccc; padding-top: 10px; text-align: center; font-size: 10px; color: #999;">Simulador Desenvolvido por Prof. Ricardo C. Brumatti - FAMEZ/UFMS</div>
+                    <div style="margin-top: 30px; padding-top: 10px; border-top: 1px solid #ccc;">${disclaimerHtml}</div>
                 `;
-                html2canvas(c1, {scale: 2}).then(cv1 => {
-                    const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-                    const w = pdf.internal.pageSize.getWidth();
-                    pdf.addImage(cv1.toDataURL('image/png'), 'PNG', 0, 0, w, (cv1.height * w) / cv1.width);
-                    pdf.addPage();
-                    html2canvas(c2, {scale: 2}).then(cv2 => {
-                        pdf.addImage(cv2.toDataURL('image/png'), 'PNG', 0, 0, w, (cv2.height * w) / cv2.width);
-                        pdf.save(`Relatorio_${inp.fazenda || 'Confinamento'}.pdf`);
-                        document.body.removeChild(c1); document.body.removeChild(c2);
-                        btn.innerHTML = org; btn.disabled = false;
+                // Página com altura ajustada ao conteúdo real (em vez de sempre A4 inteiro,
+                // que deixava mais de meia página em branco) e JPEG em vez de PNG na imagem
+                // final (o mesmo relatório de 2 páginas chegava a ~28MB em PNG a 2x escala).
+                // Chamado direto (sem requestAnimationFrame): as mutações no DOM acima já são
+                // síncronas, e depender de rAF faz a exportação travar indefinidamente numa
+                // aba em segundo plano/sem foco, onde o navegador pode nunca disparar o frame.
+                // As imagens dos gráficos (data URI) acabaram de ser atribuídas ao <img> — sem
+                // esperar a decodificação, o html2canvas pode capturar a página com a imagem
+                // ainda em branco (reproduzido: o gráfico Tornado saía vazio no PDF).
+                const allImgs = [...c1.querySelectorAll('img'), ...c2.querySelectorAll('img'), ...c3.querySelectorAll('img')];
+                Promise.all(allImgs.map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
+                .then(() => Promise.all([
+                    html2canvas(c1, { scale: 2 }),
+                    html2canvas(c2, { scale: 2 }),
+                    html2canvas(c3, { scale: 2 })
+                ])).then(([cv1, cv2, cv3]) => {
+                    const wmm = 210;
+                    const h1mm = (cv1.height * wmm) / cv1.width;
+                    const h2mm = (cv2.height * wmm) / cv2.width;
+                    const h3mm = (cv3.height * wmm) / cv3.width;
+                    // A página do Tornado é mais curta que larga (conteúdo enxuto). Sem
+                    // avisar explicitamente a orientação, o jsPDF assume retrato por padrão
+                    // e "corrige" sozinho um formato mais largo que alto invertendo largura x
+                    // altura — a página nascia estreita e alta, cortando o gráfico à direita
+                    // e sobrando um vão em branco embaixo. Escolher 'p'/'l' pela proporção
+                    // real do conteúdo evita essa troca indevida.
+                    const orient = (h) => h >= wmm ? 'p' : 'l';
+                    const pdf = new jspdf.jsPDF(orient(h1mm), 'mm', [wmm, h1mm]);
+                    pdf.addImage(cv1.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, wmm, h1mm);
+                    pdf.addPage([wmm, h2mm], orient(h2mm));
+                    pdf.addImage(cv2.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, wmm, h2mm);
+                    pdf.addPage([wmm, h3mm], orient(h3mm));
+                    pdf.addImage(cv3.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, wmm, h3mm);
+                    pdf.save(`Relatorio_${inp.fazenda || 'Confinamento'}.pdf`);
+                    document.body.removeChild(c1); document.body.removeChild(c2); document.body.removeChild(c3);
+                    btn.innerHTML = org; btn.disabled = false;
+                }).catch(err => {
+                    console.error(err);
+                    alert('Não foi possível gerar o PDF.');
+                    if(c1.parentNode) document.body.removeChild(c1);
+                    if(c2.parentNode) document.body.removeChild(c2);
+                    if(c3.parentNode) document.body.removeChild(c3);
+                    btn.innerHTML = org; btn.disabled = false;
+                });
+            },
+            toggleShareMenu() {
+                document.getElementById('shareDropdown').classList.toggle('hidden');
+            },
+            buildSocialFrame(bodyHtml, opts) {
+                return `
+                    <div class="social-header"><span>Prof. Ricardo Brumatti</span><span class="site">ricardobrumatti.pro.br</span></div>
+                    <h1 class="social-title">${opts.title}</h1>
+                    <p class="social-subtitle">${opts.subtitle}</p>
+                    ${opts.kpi !== undefined ? `<div class="social-kpi">${opts.kpi}</div><p class="social-kpi-caption">${opts.kpiCaption || ''}</p>` : ''}
+                    <div class="social-card-body">${bodyHtml}</div>
+                    <div class="social-footer">
+                        <p class="source">Fonte: Simulador de Ponto Ótimo de Venda</p>
+                        <p class="author">Prof. Ricardo Brumatti · FAMEZ/UFMS</p>
+                        <p class="disclaimer">Uso gratuito, sem fins comerciais. Simulação educacional — não constitui recomendação de investimento.</p>
+                    </div>
+                `;
+            },
+            renderOffscreenChart(type, width, height) {
+                const canvas = document.createElement('canvas');
+                canvas.width = width; canvas.height = height;
+                canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
+                const ctx = canvas.getContext('2d');
+                const cTx = '#334155', cGr = '#e2e8f0';
+                const data = app.state.simulationData;
+                let chart;
+                if(type === 'marginal') {
+                    const limit = data.results.days + 15;
+                    const view = data.dailyData.slice(0, Math.min(data.dailyData.length, limit + 10));
+                    chart = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels: view.map(d => d.day), datasets: [
+                            { label: 'RMg', data: view.map(d => d.rmg), borderColor: '#10b981', backgroundColor: '#10b981', borderWidth: 3, tension: 0.4, yAxisID: 'y', pointRadius: 0 },
+                            { label: 'CMg', data: view.map(d => d.cmg), borderColor: '#ef4444', backgroundColor: '#ef4444', borderWidth: 3, tension: 0.4, yAxisID: 'y', pointRadius: 0 },
+                            { label: 'Lucro Acum.', data: view.map(d => d.accumulatedProfit), borderColor: '#064e65', backgroundColor: 'rgba(6,78,101,0.12)', borderWidth: 3, fill: true, yAxisID: 'y1', pointRadius: 0 }
+                        ] },
+                        options: {
+                            responsive: false, animation: false,
+                            plugins: { legend: { labels: { color: cTx, font: { size: 20 }, usePointStyle: false, boxWidth: 24, boxHeight: 14 } }, annotation: { annotations: { line1: { type: 'line', xMin: data.results.days - 1, xMax: data.results.days - 1, borderColor: '#1e293b', borderWidth: 3, borderDash: [6, 6], label: { content: 'Ponto Ótimo: dia ' + data.results.days, display: true, position: 'start', backgroundColor: '#1e293b', color: 'white', font: { size: 16 } } } } } },
+                            scales: {
+                                x: { grid: { color: cGr }, ticks: { color: cTx, font: { size: 16 } } },
+                                y: { type: 'linear', position: 'left', grid: { color: cGr }, ticks: { color: cTx, font: { size: 16 } } },
+                                y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#064e65', font: { size: 16 } } }
+                            }
+                        }
                     });
+                } else if(type === 'tornado') {
+                    const vars = [ { key: 'precoArroba', label: 'Preço @' }, { key: 'custoDieta', label: 'Custo Dieta' }, { key: 'pvi', label: 'Peso Inicial' }, { key: 'gpdInicial', label: 'GPD Inicial' }, { key: 'custoOperacional', label: 'Custo Op.' } ];
+                    const baseInputs = data.inputs;
+                    const dataPoints = [];
+                    vars.forEach(v => {
+                        let inLow = {...baseInputs}; inLow[v.key] = baseInputs[v.key] * 0.9;
+                        let resLow = app.analyzeResults(app.runSimulation(inLow), inLow).profit;
+                        let inHigh = {...baseInputs}; inHigh[v.key] = baseInputs[v.key] * 1.1;
+                        let resHigh = app.analyzeResults(app.runSimulation(inHigh), inHigh).profit;
+                        dataPoints.push({ label: v.label, min: Math.min(resLow, resHigh), max: Math.max(resLow, resHigh), impact: Math.abs(resHigh - resLow) });
+                    });
+                    dataPoints.sort((a, b) => b.impact - a.impact);
+                    chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: { labels: dataPoints.map(d => d.label), datasets: [{ data: dataPoints.map(d => [d.min, d.max]), backgroundColor: (c) => { const v = c.raw; if(v && v[0] >= 0 && v[1] >= 0) return '#4ade80'; if(v && v[0] < 0 && v[1] < 0) return '#f87171'; return '#60a5fa'; }, barPercentage: 0.6 }] },
+                        options: { indexAxis: 'y', responsive: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: cGr }, ticks: { color: cTx, font: { size: 15 }, callback: v => app.utils.formatMoney(v) } }, y: { grid: { display: false }, ticks: { color: cTx, font: { size: 18, weight: 'bold' } } } } }
+                    });
+                }
+                return { canvas, chart };
+            },
+            generateSocialImage() {
+                if(!app.state.simulationData) { alert("Calcule primeiro!"); return; }
+                const type = document.getElementById('shareType').value;
+                const data = app.state.simulationData, r = data.results, inp = data.inputs, f = app.utils.formatBr, fm = app.utils.formatMoney;
+                const holder = document.createElement('div'); holder.className = 'social-card-container'; document.body.appendChild(holder);
+                let tempChart = null;
+                let bodyHtml = '', opts = {};
+
+                if(type === 'resumo') {
+                    const margemPct = r.revenue > 0 ? (r.profit / r.revenue) * 100 : 0;
+                    opts = { title: 'Ponto Ótimo de Venda', subtitle: (inp.fazenda ? inp.fazenda + ' — ' : '') + 'Simulação de confinamento', kpi: fm(r.profit), kpiCaption: `resultado da engorda, vendendo no dia ${r.days} de cocho` };
+                    bodyHtml = `
+                        <div style="flex:1; display:flex; flex-direction:column; justify-content:space-evenly; gap:24px;">
+                            <div class="social-kpi-grid" style="grid-template-columns:1fr; margin-top:0;">
+                                <div class="box" style="padding:32px;"><div class="lbl">Dia Ótimo de Venda</div><div class="val" style="font-size:52px;">${r.days} dias</div></div>
+                            </div>
+                            <div class="social-kpi-grid" style="margin-top:0;">
+                                <div class="box"><div class="lbl">Peso Final</div><div class="val">${f(r.finalWeight, 0)} kg</div></div>
+                                <div class="box"><div class="lbl">Arrobas Ganhas</div><div class="val">${f(r.gainedArrobas, 1)} @</div></div>
+                                <div class="box"><div class="lbl">Conversão</div><div class="val">${f(r.feedConversion, 2)}</div></div>
+                            </div>
+                            <div class="social-kpi-grid" style="margin-top:0; grid-template-columns:1fr 1fr;">
+                                <div class="box"><div class="lbl">Receita Total</div><div class="val">${fm(r.revenue)}</div></div>
+                                <div class="box"><div class="lbl">Margem Operacional</div><div class="val">${f(margemPct,1)} %</div></div>
+                            </div>
+                        </div>`;
+                    holder.innerHTML = app.buildSocialFrame(bodyHtml, opts);
+                    app.rasterizeSocialCard(holder, `resumo_${inp.fazenda || 'simulacao'}.png`);
+                } else if(type === 'marginal') {
+                    opts = { title: 'Ponto Ótimo de Venda', subtitle: 'Curva de Receita e Custo Marginal (RMg = CMg)', kpi: 'Dia ' + r.days, kpiCaption: 'ponto ótimo de venda encontrado' };
+                    const { canvas, chart } = app.renderOffscreenChart('marginal', 900, 620);
+                    tempChart = chart;
+                    holder.innerHTML = app.buildSocialFrame('<div style="flex:1;display:flex;align-items:center;justify-content:center;"></div>', opts);
+                    holder.querySelector('.social-card-body').appendChild(canvas);
+                    app.rasterizeSocialCard(holder, `grafico_marginal_${inp.fazenda || 'simulacao'}.png`, tempChart);
+                    return;
+                } else if(type === 'tornado') {
+                    opts = { title: 'Análise de Sensibilidade', subtitle: 'Impacto no lucro (+/- 10% em cada premissa)', kpi: fm(r.profit), kpiCaption: 'lucro na simulação base' };
+                    const { canvas, chart } = app.renderOffscreenChart('tornado', 900, 620);
+                    tempChart = chart;
+                    holder.innerHTML = app.buildSocialFrame('<div style="flex:1;display:flex;align-items:center;justify-content:center;"></div>', opts);
+                    holder.querySelector('.social-card-body').appendChild(canvas);
+                    app.rasterizeSocialCard(holder, `analise_sensibilidade_${inp.fazenda || 'simulacao'}.png`, tempChart);
+                    return;
+                } else if(type === 'matriz') {
+                    opts = { title: 'Matriz de Lucro', subtitle: 'Preço da Arroba × Custo da Dieta (R$/cab)', kpi: fm(r.profit), kpiCaption: 'cenário atual da simulação' };
+                    const heatmap = document.getElementById('heatmapContainer').querySelector('table').cloneNode(true);
+                    heatmap.className = 'social-heatmap-table';
+                    bodyHtml = `<div style="flex:1;display:flex;align-items:center;justify-content:center;">${heatmap.outerHTML}</div>`;
+                    holder.innerHTML = app.buildSocialFrame(bodyHtml, opts);
+                    app.rasterizeSocialCard(holder, `matriz_sensibilidade_${inp.fazenda || 'simulacao'}.png`);
+                }
+                document.getElementById('shareDropdown').classList.add('hidden');
+            },
+            rasterizeSocialCard(holder, filename, tempChart) {
+                html2canvas(holder, { scale: 1, backgroundColor: '#064e65' }).then(canvas => {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    document.getElementById('shareImagePreview').src = dataUrl;
+                    const dl = document.getElementById('shareImageDownload');
+                    dl.href = dataUrl; dl.setAttribute('download', filename);
+                    document.getElementById('modalShareImage').classList.remove('hidden');
+                    document.body.removeChild(holder);
+                    if(tempChart) tempChart.destroy();
+                }).catch(err => {
+                    console.error(err);
+                    alert('Não foi possível gerar a imagem.');
+                    if(holder.parentNode) document.body.removeChild(holder);
+                    if(tempChart) tempChart.destroy();
                 });
             }
         };
         document.addEventListener('DOMContentLoaded', app.init);
+        document.addEventListener('click', (e) => {
+            const wrap = document.querySelector('.share-menu-wrap');
+            if(wrap && !wrap.contains(e.target)) document.getElementById('shareDropdown').classList.add('hidden');
+        });
     </script>
 
     <!-- Rodapé Acadêmico/Profissional -->
