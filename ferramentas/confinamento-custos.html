@@ -387,6 +387,34 @@
             background-color: #b91c1c !important;
         }
     </style>
+
+    <!-- Social Share Styles -->
+    <style>
+        .share-menu-wrap { position: relative; display: inline-flex; }
+        .share-dropdown {
+            position: absolute; top: calc(100% + 8px); right: 0; z-index: 40;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 0.75rem; width: 240px;
+        }
+
+        .social-card-container { position: absolute; top: -9999px; left: -9999px; width: 1080px; height: 1350px; background: #064e65; color: #ffffff; font-family: 'Inter', sans-serif; box-sizing: border-box; padding: 56px 64px; display: flex; flex-direction: column; }
+        .social-header { display: flex; justify-content: space-between; align-items: center; font-size: 22px; font-weight: 600; }
+        .social-header .site { color: #d4af37; font-weight: 600; }
+        .social-title { font-family: Georgia, Cambria, 'Times New Roman', serif; font-weight: 700; font-size: 54px; margin: 28px 0 6px; line-height: 1.1; }
+        .social-subtitle { font-size: 24px; color: #cfe3e9; margin: 0 0 20px; }
+        .social-kpi { font-family: Georgia, Cambria, 'Times New Roman', serif; font-weight: 800; font-size: 96px; color: #d4af37; line-height: 1.15; margin: 10px 0 0; }
+        .social-kpi-caption { font-size: 22px; color: #e2eef1; margin: 14px 0 32px; }
+        .social-card-body { background: #faf7f0; border-radius: 28px; flex: 1; padding: 32px; display: flex; flex-direction: column; overflow: hidden; }
+        .social-card-body img, .social-card-body canvas { max-width: 100%; }
+        .social-footer { text-align: center; margin-top: 28px; }
+        .social-footer .source { font-size: 18px; color: #cfe3e9; margin: 0 0 4px; }
+        .social-footer .author { font-size: 20px; font-weight: 700; color: #d4af37; margin: 0 0 14px; }
+        .social-footer .disclaimer { font-size: 14px; color: #9fc0c9; line-height: 1.5; max-width: 820px; margin: 0 auto; }
+        .social-kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: auto; }
+        .social-kpi-grid .box { background: #ffffff; border: 1px solid #e6e6e6; border-radius: 14px; padding: 18px; text-align: center; }
+        .social-kpi-grid .box .lbl { font-size: 15px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: .02em; }
+        .social-kpi-grid .box .val { font-family: Georgia, Cambria, 'Times New Roman', serif; font-size: 30px; font-weight: 800; color: #064e65; margin-top: 4px; }
+    </style>
     <script defer src="/_vercel/insights/script.js"></script>
 </head>
 
@@ -739,6 +767,24 @@
                                 <button id="exportExcelBtn" class="btn-hover px-4 py-2 bg-green-600 text-white rounded-lg font-medium">
                                     <i class="fas fa-file-excel mr-2"></i>Excel
                                 </button>
+                                <div class="share-menu-wrap">
+                                    <button id="btnShare" onclick="App.toggleShareMenu()" class="btn-hover px-4 py-2 bg-purple-600 text-white rounded-lg font-medium" title="Imagem para redes sociais">
+                                        <i class="fas fa-share-nodes mr-2"></i>Imagem
+                                    </button>
+                                    <div id="shareDropdown" class="share-dropdown hidden">
+                                        <label class="block text-xs font-medium mb-1 text-gray-600">Escolha o conteúdo</label>
+                                        <select id="shareType" class="input-focus w-full p-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 text-left text-sm mb-3">
+                                            <option value="resumo">Resumo (KPIs)</option>
+                                            <option value="economico">Resultados Econômicos</option>
+                                            <option value="fluxoCaixa">Fluxo de Caixa Mensal</option>
+                                            <option value="indicadores">Indicadores Complementares</option>
+                                            <option value="sensibilidadeLucro">Análise de Sensibilidade do Lucro</option>
+                                            <option value="tornado">Tornado de Sensibilidade</option>
+                                        </select>
+                                        <button onclick="App.generateSocialImage()" class="btn-hover w-full py-2 px-4 bg-purple-600 text-white rounded-lg font-medium text-sm"><i class="fas fa-image mr-2"></i>Gerar Imagem</button>
+                                        <p class="text-[11px] text-gray-400 mt-2 leading-tight">Formato quadrado/vertical, pronto para Instagram, TikTok, X e WhatsApp.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <table class="w-full border-collapse bg-white rounded-xl shadow-lg overflow-hidden result-table">
@@ -1016,6 +1062,19 @@
         </div>
     </div>
 
+    <!-- Modal de imagem para redes sociais -->
+    <div id="modalShareImage" class="fixed inset-0 bg-black bg-opacity-70 hidden z-[110] flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-sm w-full p-5 shadow-2xl text-center">
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Imagem pronta!</h3>
+            <p class="text-xs text-gray-500 mb-3">No celular ou iPad, toque e segure na imagem para salvar. No PC, clique com o botão direito e escolha "Salvar imagem". Ou use o botão abaixo.</p>
+            <div class="max-h-[55vh] overflow-auto border border-gray-200 rounded-lg mb-4 bg-gray-100">
+                <img id="shareImagePreview" class="w-full block" alt="Imagem para compartilhar">
+            </div>
+            <a id="shareImageDownload" href="#" download="imagem.png" class="btn-hover w-full inline-flex items-center justify-center py-2 px-4 bg-blue-700 text-white rounded-lg font-bold mb-2"><i class="fas fa-download mr-2"></i>Baixar Imagem</a>
+            <button onclick="document.getElementById('modalShareImage').classList.add('hidden')" class="w-full py-2 px-4 bg-gray-300 text-gray-800 rounded-lg font-medium">Fechar</button>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-gray-100 py-6 mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1144,6 +1203,14 @@
                 window.addEventListener('click', (event) => {
                     if (event.target.classList.contains('modal')) {
                         event.target.classList.add('hidden');
+                    }
+                });
+
+                // Fechar o dropdown de imagem ao clicar fora dele
+                document.addEventListener('click', (event) => {
+                    const wrap = document.querySelector('.share-menu-wrap');
+                    if (wrap && !wrap.contains(event.target)) {
+                        document.getElementById('shareDropdown').classList.add('hidden');
                     }
                 });
             }
@@ -3157,6 +3224,298 @@
                 });
             }
 
+            // Alternar menu de compartilhamento (imagem para redes sociais)
+            function toggleShareMenu() {
+                document.getElementById('shareDropdown').classList.toggle('hidden');
+            }
+
+            // Monta a moldura padrão (cabeçalho, título, KPI e rodapé) do cartão social
+            function buildSocialFrame(bodyHtml, opts) {
+                return `
+                    <div class="social-header"><span>Prof. Ricardo Brumatti</span><span class="site">ricardobrumatti.pro.br</span></div>
+                    <h1 class="social-title">${opts.title}</h1>
+                    <p class="social-subtitle">${opts.subtitle}</p>
+                    ${opts.kpi !== undefined ? `<div class="social-kpi">${opts.kpi}</div><p class="social-kpi-caption">${opts.kpiCaption || ''}</p>` : ''}
+                    <div class="social-card-body">${bodyHtml}</div>
+                    <div class="social-footer">
+                        <p class="source">Fonte: Simulação Econômica de Confinamento</p>
+                        <p class="author">Prof. Ricardo Brumatti · FAMEZ/UFMS</p>
+                        <p class="disclaimer">Uso gratuito, sem fins comerciais. Simulação educacional — não constitui recomendação de investimento.</p>
+                    </div>
+                `;
+            }
+
+            // Renderiza um gráfico em canvas isolado (fora da tela, tamanho fixo em pixel).
+            // Nunca reaproveita os canvases das abas na tela: um Chart.js criado enquanto o
+            // gráfico correspondente nunca foi aberto/está fora do viewport nasce 0x0px.
+            function renderOffscreenChart(type, width, height) {
+                const canvas = document.createElement('canvas');
+                canvas.width = width; canvas.height = height;
+                canvas.style.width = width + 'px'; canvas.style.height = height + 'px';
+                const ctx = canvas.getContext('2d');
+                const cTx = '#334155', cGr = '#e2e8f0';
+                const { inputs, resultados } = state.currentSimulation;
+                let chart;
+
+                if (type === 'economico') {
+                    const { receitaTotal, custoTotal, lucroBruto } = resultados;
+                    chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Receita Total', 'Custo Total', 'Lucro Bruto'],
+                            datasets: [{
+                                data: [receitaTotal, custoTotal, lucroBruto],
+                                backgroundColor: ['#3b82f6', '#ef4444', lucroBruto >= 0 ? '#10b981' : '#ef4444'],
+                                borderColor: ['#2563eb', '#dc2626', lucroBruto >= 0 ? '#059669' : '#dc2626'],
+                                borderWidth: 1, borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: false, animation: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { grid: { color: cGr }, ticks: { color: cTx, font: { size: 20, weight: 'bold' } } },
+                                y: { grid: { color: cGr }, ticks: { color: cTx, font: { size: 16 }, callback: v => 'R$ ' + v.toLocaleString('pt-BR') } }
+                            }
+                        }
+                    });
+                } else if (type === 'fluxoCaixa') {
+                    const { fluxoCaixa } = resultados;
+                    const saldoAcumulado = [];
+                    let acumulado = 0;
+                    fluxoCaixa.forEach(v => { acumulado += v; saldoAcumulado.push(acumulado); });
+                    const labels = fluxoCaixa.map((_, i) => i === 0 ? 'Investim.' : `Mês ${i}`);
+                    chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels,
+                            datasets: [
+                                { label: 'Saldo Acumulado', type: 'line', data: saldoAcumulado, borderColor: '#2563eb', backgroundColor: 'rgba(59,130,246,0.3)', fill: true, tension: 0.3, pointRadius: 5, pointBackgroundColor: '#2563eb', pointBorderColor: '#1d4ed8', pointBorderWidth: 2, order: 1 },
+                                { label: 'Fluxo de Caixa', data: fluxoCaixa, backgroundColor: fluxoCaixa.map(v => v >= 0 ? '#10b981' : '#ef4444'), borderColor: fluxoCaixa.map(v => v >= 0 ? '#059669' : '#dc2626'), borderWidth: 1, borderRadius: 6, barPercentage: 0.6, order: 2 }
+                            ]
+                        },
+                        options: {
+                            responsive: false, animation: false,
+                            plugins: { legend: { display: true, position: 'top', labels: { color: cTx, font: { size: 18 }, boxWidth: 24, boxHeight: 14 } } },
+                            scales: {
+                                x: { grid: { color: cGr }, ticks: { color: cTx, font: { size: 15 } } },
+                                y: { grid: { color: cGr }, ticks: { color: cTx, font: { size: 15 }, callback: v => 'R$ ' + v.toLocaleString('pt-BR') } }
+                            }
+                        }
+                    });
+                } else if (type === 'sensibilidadeLucro') {
+                    const numPassos = 21;
+                    const receitaMin = inputs.receita * 0.85, receitaMax = inputs.receita * 1.15;
+                    const gmdMin = Math.max(0, inputs.gmd * 0.85), gmdMax = inputs.gmd * 1.15;
+                    const custoDiariaMin = inputs.custoDiaria * 0.85, custoDiariaMax = inputs.custoDiaria * 1.15;
+                    const custoAqMin = inputs.custoAq * 0.85, custoAqMax = inputs.custoAq * 1.15;
+                    const incReceita = (receitaMax - receitaMin) / (numPassos - 1);
+                    const incGmd = (gmdMax - gmdMin) / (numPassos - 1);
+                    const incCustoDiaria = (custoDiariaMin - custoDiariaMax) / (numPassos - 1);
+                    const incCustoAq = (custoAqMin - custoAqMax) / (numPassos - 1);
+                    const labels = [], receitas = [], diarias = [], aquisicoes = [], gmds = [], lucros = [];
+                    for (let i = 0; i < numPassos; i++) {
+                        const receitaAtual = receitaMin + i * incReceita;
+                        const gmdAtual = gmdMin + i * incGmd;
+                        const custoDiariaAtual = custoDiariaMax + i * incCustoDiaria;
+                        const custoAqAtual = custoAqMax + i * incCustoAq;
+                        const pesoFinalSim = inputs.peso + inputs.dias * gmdAtual;
+                        const pesoCarcacaSim = pesoFinalSim * (inputs.rendimento / 100);
+                        const arrobasSim = pesoCarcacaSim / 15;
+                        const receitaTotalSim = arrobasSim * receitaAtual;
+                        const custoTotalDiariasSim = inputs.dias * custoDiariaAtual;
+                        const custoTotalSim = custoTotalDiariasSim + custoAqAtual;
+                        labels.push(`${i - 10}`);
+                        receitas.push(receitaTotalSim);
+                        diarias.push(custoTotalDiariasSim);
+                        aquisicoes.push(custoAqAtual);
+                        gmds.push(gmdAtual);
+                        lucros.push(receitaTotalSim - custoTotalSim);
+                    }
+                    // Linha do zero no eixo do Lucro Total (y1), para deixar claro onde o
+                    // cenário deixa de ser lucrativo — mesmo recurso visual do gráfico original.
+                    const zeroLinePlugin = {
+                        id: 'zeroLine',
+                        afterDraw: chartInst => {
+                            const yAxis = chartInst.scales.y1;
+                            const c2 = chartInst.ctx;
+                            const yZero = yAxis.getPixelForValue(0);
+                            if (yZero >= yAxis.top && yZero <= yAxis.bottom) {
+                                c2.save(); c2.beginPath(); c2.strokeStyle = '#334155'; c2.lineWidth = 2;
+                                c2.moveTo(chartInst.chartArea.left, yZero); c2.lineTo(chartInst.chartArea.right, yZero); c2.stroke(); c2.restore();
+                            }
+                        }
+                    };
+                    chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels,
+                            datasets: [
+                                { label: 'Receita Total', data: receitas, borderColor: '#10b981', backgroundColor: '#10b981', borderWidth: 2, pointRadius: 0, tension: 0.3, yAxisID: 'y' },
+                                { label: 'Custo Diárias', data: diarias, borderColor: '#ef4444', backgroundColor: '#ef4444', borderWidth: 2, pointRadius: 0, tension: 0.3, yAxisID: 'y' },
+                                { label: 'Custo Aquisição', data: aquisicoes, borderColor: '#f59e0b', backgroundColor: '#f59e0b', borderWidth: 2, pointRadius: 0, tension: 0.3, yAxisID: 'y' },
+                                { label: 'GMD', data: gmds, borderColor: '#84cc16', backgroundColor: '#84cc16', borderWidth: 2, pointRadius: 0, tension: 0.3, yAxisID: 'y2' },
+                                { label: 'Lucro Total', data: lucros, borderColor: '#3b82f6', backgroundColor: '#3b82f6', borderWidth: 4, pointBackgroundColor: lucros.map(v => v >= 0 ? '#3b82f6' : '#ef4444'), pointBorderColor: lucros.map(v => v >= 0 ? '#2563eb' : '#dc2626'), pointBorderWidth: 2, pointRadius: 4, tension: 0.3, yAxisID: 'y1' }
+                            ]
+                        },
+                        plugins: [zeroLinePlugin],
+                        options: {
+                            responsive: false, animation: false,
+                            scales: {
+                                x: { title: { display: true, text: 'Variação do Cenário', color: cTx, font: { size: 15, weight: 'bold' } }, grid: { color: cGr }, ticks: { color: cTx, font: { size: 11 } } },
+                                y: { position: 'left', title: { display: true, text: 'Receita e Custos (R$)', color: cTx, font: { size: 14, weight: 'bold' } }, grid: { color: cGr }, ticks: { color: cTx, font: { size: 12 }, callback: v => 'R$ ' + v.toLocaleString('pt-BR') } },
+                                y1: { position: 'right', title: { display: true, text: 'Lucro (R$)', color: '#2563eb', font: { size: 14, weight: 'bold' } }, grid: { drawOnChartArea: false }, ticks: { color: '#2563eb', font: { size: 12 }, callback: v => 'R$ ' + v.toLocaleString('pt-BR') } },
+                                y2: { display: false }
+                            },
+                            plugins: {
+                                legend: { display: true, position: 'top', labels: { color: cTx, font: { size: 14 }, boxWidth: 18, boxHeight: 12 } }
+                            }
+                        }
+                    });
+                } else if (type === 'tornado') {
+                    const resultadoBase = resultados.lucroBruto;
+                    const variaveisParaAnalisar = [
+                        { id: 'receita', label: 'Preço da Arroba' },
+                        { id: 'custoAq', label: 'Custo de Aquisição' },
+                        { id: 'custoDiaria', label: 'Custo da Diária' },
+                        { id: 'gmd', label: 'Ganho de Peso (GMD)' },
+                        { id: 'rendimento', label: 'Rend. de Carcaça' }
+                    ];
+                    const variacaoPercentualGeral = 0.10, variacaoPercentualRendimento = 0.05;
+                    const resultadosSensibilidade = variaveisParaAnalisar.map(v => {
+                        const valorOriginal = inputs[v.id];
+                        const variacao = v.id === 'rendimento' ? variacaoPercentualRendimento : variacaoPercentualGeral;
+                        const inputsOtimista = { ...inputs };
+                        const inputsPessimista = { ...inputs };
+                        if (v.id.includes('custo')) {
+                            inputsOtimista[v.id] = valorOriginal * (1 - variacao);
+                            inputsPessimista[v.id] = valorOriginal * (1 + variacao);
+                        } else {
+                            inputsOtimista[v.id] = valorOriginal * (1 + variacao);
+                            inputsPessimista[v.id] = valorOriginal * (1 - variacao);
+                        }
+                        const lucroOtimista = calcularValores(inputsOtimista).lucroBruto;
+                        const lucroPessimista = calcularValores(inputsPessimista).lucroBruto;
+                        return { label: v.label, faixa: [lucroPessimista, lucroOtimista].sort((a, b) => a - b), impacto: Math.abs(lucroOtimista - lucroPessimista) };
+                    }).sort((a, b) => b.impacto - a.impacto);
+                    chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: resultadosSensibilidade.map(r => r.label),
+                            datasets: [{ data: resultadosSensibilidade.map(r => r.faixa), backgroundColor: 'rgba(59,130,246,0.7)', borderColor: '#2563eb', borderWidth: 1, borderRadius: 6, borderSkipped: false }]
+                        },
+                        options: {
+                            indexAxis: 'y', responsive: false, animation: false,
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: `Lucro Base: ${formatBRL(resultadoBase)}`, color: cTx, font: { size: 20 }, padding: { bottom: 16 } }
+                            },
+                            scales: {
+                                x: { grid: { color: cGr }, ticks: { color: cTx, font: { size: 15 }, callback: v => formatBRL(v) } },
+                                y: { grid: { display: false }, ticks: { color: cTx, font: { size: 18, weight: 'bold' } } }
+                            }
+                        }
+                    });
+                }
+                return { canvas, chart };
+            }
+
+            // Gera a imagem para redes sociais escolhida no dropdown
+            function generateSocialImage() {
+                if (!state.currentSimulation) { showModal('Erro', 'Calcule uma simulação primeiro.'); return; }
+                const type = document.getElementById('shareType').value;
+                document.getElementById('shareDropdown').classList.add('hidden');
+                const { inputs, resultados: r } = state.currentSimulation;
+                const holder = document.createElement('div');
+                holder.className = 'social-card-container';
+                document.body.appendChild(holder);
+
+                if (type === 'resumo') {
+                    const opts = {
+                        title: 'Simulação Econômica de Confinamento',
+                        subtitle: (inputs.fazenda ? inputs.fazenda + ' — ' : '') + `${formatNumber(inputs.dias, 0)} dias de confinamento`,
+                        kpi: formatBRL(r.lucroBruto), kpiCaption: 'lucro bruto estimado do lote'
+                    };
+                    const bodyHtml = `
+                        <div style="flex:1; display:flex; flex-direction:column; justify-content:space-evenly; gap:24px;">
+                            <div class="social-kpi-grid" style="grid-template-columns:1fr; margin-top:0;">
+                                <div class="box" style="padding:32px;"><div class="lbl">Peso Final</div><div class="val" style="font-size:52px;">${formatNumber(r.pesoFinal, 0)} kg</div></div>
+                            </div>
+                            <div class="social-kpi-grid" style="margin-top:0;">
+                                <div class="box"><div class="lbl">Arrobas Totais</div><div class="val">${formatNumber(r.arrobasTotais, 1)} @</div></div>
+                                <div class="box"><div class="lbl">Rendimento</div><div class="val">${formatNumber(inputs.rendimento, 1)} %</div></div>
+                                <div class="box"><div class="lbl">Margem Bruta</div><div class="val">${formatNumber(r.margemBruta, 1)} %</div></div>
+                            </div>
+                            <div class="social-kpi-grid" style="margin-top:0; grid-template-columns:1fr 1fr;">
+                                <div class="box"><div class="lbl">Receita Total</div><div class="val">${formatBRL(r.receitaTotal)}</div></div>
+                                <div class="box"><div class="lbl">Custo Total</div><div class="val">${formatBRL(r.custoTotal)}</div></div>
+                            </div>
+                        </div>`;
+                    holder.innerHTML = buildSocialFrame(bodyHtml, opts);
+                    rasterizeSocialCard(holder, `resumo_${inputs.fazenda || 'confinamento'}.png`);
+                    return;
+                }
+
+                if (type === 'indicadores') {
+                    const beInatingivel = isNaN(r.pontoDeEquilibrioArrobas) || r.pontoDeEquilibrioArrobas < 0;
+                    const opts = {
+                        title: 'Indicadores Complementares',
+                        subtitle: (inputs.fazenda ? inputs.fazenda + ' — ' : '') + 'Margem, retorno e ponto de equilíbrio',
+                        kpi: beInatingivel ? 'Inatingível' : formatNumber(r.pontoDeEquilibrioArrobas, 2) + ' @',
+                        kpiCaption: 'ponto de equilíbrio em arrobas totais'
+                    };
+                    const bodyHtml = `
+                        <div style="flex:1; display:flex; flex-direction:column; justify-content:space-evenly; gap:24px;">
+                            <div class="social-kpi-grid" style="grid-template-columns:1fr; margin-top:0;">
+                                <div class="box" style="padding:32px;"><div class="lbl">Margem de Segurança</div><div class="val" style="font-size:44px;">${formatNumber(r.margemSegurancaArrobas, 2)} @ (${formatNumber(r.margemSegurancaPercentual, 1)}%)</div></div>
+                            </div>
+                            <div class="social-kpi-grid" style="margin-top:0;">
+                                <div class="box"><div class="lbl">Margem Bruta</div><div class="val">${formatNumber(r.margemBruta, 1)} %</div></div>
+                                <div class="box"><div class="lbl">TIR (ao mês)</div><div class="val">${isNaN(r.tir) ? 'N/A' : formatNumber(r.tir, 2) + ' %'}</div></div>
+                                <div class="box"><div class="lbl">Custo Total R$/@</div><div class="val" style="font-size:26px;">${formatBRL(r.custoTotalPorArroba)}</div></div>
+                            </div>
+                            <div class="social-kpi-grid" style="margin-top:0; grid-template-columns:1fr 1fr;">
+                                <div class="box"><div class="lbl">Custo @ Produzida</div><div class="val" style="font-size:26px;">${formatBRL(r.custoArrobaProduzida)}</div></div>
+                                <div class="box"><div class="lbl">Preço Mínimo de Venda</div><div class="val" style="font-size:26px;">${formatBRL(r.precoMinimoArroba)}</div></div>
+                            </div>
+                        </div>`;
+                    holder.innerHTML = buildSocialFrame(bodyHtml, opts);
+                    rasterizeSocialCard(holder, `indicadores_${inputs.fazenda || 'confinamento'}.png`);
+                    return;
+                }
+
+                const chartCards = {
+                    economico: { title: 'Resultados Econômicos', subtitle: 'Receita, Custo e Lucro Bruto do lote', kpi: formatBRL(r.lucroBruto), kpiCaption: 'lucro bruto estimado do lote', file: 'resultados_economicos' },
+                    fluxoCaixa: { title: 'Fluxo de Caixa', subtitle: 'Saldo mensal ao longo do confinamento', kpi: isNaN(r.tir) ? formatBRL(r.lucroBruto) : formatNumber(r.tir, 2) + ' %', kpiCaption: isNaN(r.tir) ? 'lucro bruto do lote' : 'TIR estimada (ao mês)', file: 'fluxo_caixa' },
+                    sensibilidadeLucro: { title: 'Análise de Sensibilidade do Lucro', subtitle: 'Receita, custos e lucro conforme o cenário oscila', kpi: formatBRL(r.lucroBruto), kpiCaption: 'lucro bruto na simulação base', file: 'analise_sensibilidade_lucro' },
+                    tornado: { title: 'Análise de Sensibilidade', subtitle: 'Impacto no lucro bruto ao variar cada premissa', kpi: formatBRL(r.lucroBruto), kpiCaption: 'lucro bruto na simulação base', file: 'sensibilidade' }
+                };
+                const cfg = chartCards[type];
+                if (!cfg) { document.body.removeChild(holder); return; }
+                const { canvas, chart } = renderOffscreenChart(type, 900, 620);
+                holder.innerHTML = buildSocialFrame('<div style="flex:1;display:flex;align-items:center;justify-content:center;"></div>', cfg);
+                holder.querySelector('.social-card-body').appendChild(canvas);
+                rasterizeSocialCard(holder, `${cfg.file}_${inputs.fazenda || 'confinamento'}.png`, chart);
+            }
+
+            // Rasteriza o cartão montado fora da tela e abre o modal de preview/download
+            function rasterizeSocialCard(holder, filename, tempChart) {
+                html2canvas(holder, { scale: 1, backgroundColor: '#064e65' }).then(canvas => {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    document.getElementById('shareImagePreview').src = dataUrl;
+                    const dl = document.getElementById('shareImageDownload');
+                    dl.href = dataUrl; dl.setAttribute('download', filename);
+                    document.getElementById('modalShareImage').classList.remove('hidden');
+                    document.body.removeChild(holder);
+                    if (tempChart) tempChart.destroy();
+                }).catch(err => {
+                    console.error(err);
+                    showModal('Erro', 'Não foi possível gerar a imagem.');
+                    if (holder.parentNode) document.body.removeChild(holder);
+                    if (tempChart) tempChart.destroy();
+                });
+            }
+
             // Retornar métodos públicos
             return {
                 init: init,
@@ -3170,7 +3529,9 @@
                 exportToPDF: exportToPDF,
                 downloadChart: downloadChart,
                 showModal: showModal,
-                showConfirmModal: showConfirmModal
+                showConfirmModal: showConfirmModal,
+                toggleShareMenu: toggleShareMenu,
+                generateSocialImage: generateSocialImage
             };
         })();
 
