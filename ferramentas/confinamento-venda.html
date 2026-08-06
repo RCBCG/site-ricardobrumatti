@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Simulador de Ponto Ótimo de Venda em Confinamento (v7.4 - Theme Fix)
+    Simulador de Ponto Ótimo de Venda em Confinamento (v9.1 - Publicação)
     Baseado no modelo de Análise Marginal (RMg = CMg)
     
     Desenvolvido para: Prof. Ricardo C. Brumatti - FAMEZ/UFMS
@@ -318,15 +318,40 @@
                             <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">CMS Inicial (kg/dia)</label><input type="text" id="cmsInicial" class="input-field" placeholder="10,00"></div>
                             <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Aumento CMS (kg/dia)</label><input type="text" id="aumentoCMS" class="input-field text-green-500" placeholder="0,025"></div>
                         </div>
-                        <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">RC Final Esperado (%)</label><input type="text" id="rcFinal" class="input-field" placeholder="56,00"></div>
+                        <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Rendimento de Carcaça na Venda (%)</label><input type="text" id="rcFinal" class="input-field" placeholder="56,00"></div>
                     </div>
                     <div class="space-y-3">
                         <h3 class="text-sm uppercase tracking-wide font-bold text-slate-400 border-b pb-1">Econômico</h3>
-                        <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Preço da Arroba (R$/@)</label><div class="relative"><span class="absolute left-3 top-2 text-slate-400 text-sm">R$</span><input type="text" id="precoArroba" class="input-field pl-8 font-semibold text-blue-700 dark:text-blue-400" placeholder="300,00"></div></div>
+                        <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Preço de Venda da Arroba (R$/@)</label><div class="relative"><span class="absolute left-3 top-2 text-slate-400 text-sm">R$</span><input type="text" id="precoArroba" class="input-field pl-8 font-semibold text-blue-700 dark:text-blue-400" placeholder="300,00"></div></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Preço de Compra (R$/@)</label><input type="text" id="precoCompraArroba" class="input-field font-semibold" placeholder="280,00"></div>
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Despesas de Compra (R$/cab)</label><input type="text" id="despesasCompra" class="input-field" placeholder="0,00"></div>
+                        </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Custo Dieta (R$/kg MS)</label><input type="text" id="custoDieta" class="input-field font-semibold" placeholder="1,30"></div>
                             <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Custo Op. (R$/dia)</label><input type="text" id="custoOperacional" class="input-field" placeholder="1,50"></div>
                         </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Capital (% a.a.)</label><input type="text" id="taxaCapitalAnual" class="input-field" placeholder="12,00"></div>
+                            <div><label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Despesas de Venda (R$/cab)</label><input type="text" id="despesasVenda" class="input-field" placeholder="0,00"></div>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">A compra entra no lucro total. A taxa de capital remunera diariamente o animal e os custos já desembolsados, podendo antecipar o ponto ótimo.</p>
+                        <details class="mt-3 border-t pt-3 border-slate-200 dark:border-slate-700">
+                            <summary class="font-semibold cursor-pointer text-sm text-slate-600 dark:text-slate-300">Custos avançados e lote</summary>
+                            <div class="mt-3 grid grid-cols-2 gap-3">
+                                <div><label class="block text-xs mb-1">Animais alojados</label><input type="text" id="quantidadeAnimais" class="input-field" placeholder="100"></div>
+                                <div><label class="block text-xs mb-1">Mortalidade esperada (%)</label><input type="text" id="mortalidadePct" class="input-field" placeholder="0,00"></div>
+                                <div><label class="block text-xs mb-1">Frete entrada (R$/cab)</label><input type="text" id="freteEntrada" class="input-field" placeholder="0,00"></div>
+                                <div><label class="block text-xs mb-1">Frete saída (R$/vendido)</label><input type="text" id="freteSaida" class="input-field" placeholder="0,00"></div>
+                                <div><label class="block text-xs mb-1">Sanidade (R$/cab)</label><input type="text" id="sanidade" class="input-field" placeholder="0,00"></div>
+                                <div><label class="block text-xs mb-1">Outros entrada (R$/cab)</label><input type="text" id="outrosEntrada" class="input-field" placeholder="0,00"></div>
+                                <div><label class="block text-xs mb-1">Comissão compra (%)</label><input type="text" id="comissaoCompraPct" class="input-field" placeholder="0,00"></div>
+                                <div><label class="block text-xs mb-1">Comissão venda (%)</label><input type="text" id="comissaoVendaPct" class="input-field" placeholder="0,00"></div>
+                                <div><label class="block text-xs mb-1">Impostos sobre venda (%)</label><input type="text" id="impostoVendaPct" class="input-field" placeholder="0,00"></div>
+                                <div><label class="block text-xs mb-1">Custo fixo do lote (R$)</label><input type="text" id="custoFixoLote" class="input-field" placeholder="0,00"></div>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2">Na mortalidade, o consumo dos animais perdidos é estimado até a metade do ciclo. Resultados unitários são por animal alojado.</p>
+                        </details>
                     </div>
                 </div>
                 <div class="card p-4">
@@ -347,6 +372,7 @@
                     <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
                     <span>O resultado atingiu o limite de simulação (200 dias) sem o lucro marginal ficar negativo. Isso pode não ser um ponto ótimo real — revise "Redução GPD" e "Aumento CMS", que parecem baixos ou zerados para este cenário.</span>
                 </div>
+                <div id="validationPanel" class="hidden card p-3 border-l-4 border-amber-400 text-sm"></div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="card p-4 bg-gradient-to-br from-blue-900 to-blue-800 text-white shadow-lg">
                         <div class="flex justify-between items-start">
@@ -356,7 +382,7 @@
                     </div>
                     <div class="card p-4 bg-white dark:bg-slate-800 border-l-4 border-green-500">
                          <div class="flex justify-between items-start">
-                            <div><p class="text-slate-500 dark:text-slate-400 text-xs uppercase font-bold">Resultado da Engorda</p><h3 class="text-3xl font-bold text-green-600 mt-1" id="resLucro">R$ --</h3><p class="text-sm text-slate-400 mt-1">por cabeça, sem o custo do animal</p></div>
+                            <div><p class="text-slate-500 dark:text-slate-400 text-xs uppercase font-bold">Lucro Econômico</p><h3 class="text-3xl font-bold text-green-600 mt-1" id="resLucro">R$ --</h3><p class="text-sm text-slate-400 mt-1">por animal alojado, após compra e capital</p></div>
                             <i class="fa-solid fa-sack-dollar text-2xl text-green-200"></i>
                         </div>
                     </div>
@@ -367,6 +393,11 @@
                        </div>
                    </div>
                 </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="card p-4"><p class="text-xs uppercase font-bold text-slate-400">Janela econômica (1%)</p><p class="text-xl font-bold text-blue-800 dark:text-blue-300" id="resJanela">--</p></div>
+                    <div class="card p-4"><p class="text-xs uppercase font-bold text-slate-400">Equilíbrio no ótimo atual</p><p class="text-xl font-bold text-slate-700 dark:text-slate-200" id="resEquilibrio">--</p></div>
+                    <div class="card p-4"><p class="text-xs uppercase font-bold text-slate-400">Lucro estimado do lote</p><p class="text-xl font-bold text-green-700" id="resLucroLote">--</p></div>
+                </div>
 
                 <div class="card min-h-[500px] flex flex-col">
                     <div class="flex border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
@@ -374,6 +405,8 @@
                         <button class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" onclick="app.switchTab('financeiro')">Detalhamento</button>
                         <button class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" onclick="app.switchTab('tornado')">Tornado</button>
                         <button class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" onclick="app.switchTab('sensibilidade')">Matriz</button>
+                        <button class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" onclick="app.switchTab('cenarios')">Cenários</button>
+                        <button class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" onclick="app.switchTab('risco')">Monte Carlo</button>
                         <button class="tab-btn px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" onclick="app.switchTab('tabela')">Tabela</button>
                     </div>
                     
@@ -399,32 +432,59 @@
                                     <li><span class="detail-label">Carcaça Inicial (@):</span> <span class="detail-value" id="detCarcacaIni">--</span></li>
                                     <li><span class="detail-label">Carcaça Final (@):</span> <span class="detail-value" id="detCarcacaFim">--</span></li>
                                     <li><span class="detail-label">Arrobas Ganhas (@):</span> <span class="detail-value" id="detArrobasGanhas">--</span></li>
-                                    <li><span class="detail-label">Custo Total (@):</span> <span class="detail-value text-red-600" id="detCustoTotalArr">--</span></li>
-                                    <li><span class="detail-label">Custo Total (R$/cab):</span> <span class="detail-value text-red-600 font-bold" id="detCustoTotal">--</span></li>
-                                    <li><span class="detail-label">Receita Total (R$/cab):</span> <span class="detail-value text-green-600 font-bold" id="detReceita">--</span></li>
+                                    <li><span class="detail-label">Valor de compra:</span> <span class="detail-value text-red-600" id="detCustoCompra">--</span></li>
+                                    <li><span class="detail-label">Custo de capital:</span> <span class="detail-value text-red-600" id="detCustoCapital">--</span></li>
+                                    <li><span class="detail-label">Custo da engorda (R$/cab):</span> <span class="detail-value text-red-600" id="detCustoTotal">--</span></li>
+                                    <li><span class="detail-label">Custo econômico total:</span> <span class="detail-value text-red-600 font-bold" id="detCustoEconomico">--</span></li>
+                                    <li><span class="detail-label">Receita bruta de venda:</span> <span class="detail-value text-green-600 font-bold" id="detReceita">--</span></li>
                                     <li><span class="detail-label">Custo Dieta (@):</span> <span class="detail-value text-red-600" id="detCustoDietaArr">--</span></li>
                                     <li><span class="detail-label">Custo Op. (@):</span> <span class="detail-value text-red-600" id="detCustoOpArr">--</span></li>
                                     <li><span class="detail-label">Custo Médio Diária (R$):</span> <span class="detail-value text-red-600" id="detDiaria">--</span></li>
-                                    <li><span class="detail-label">Margem Operacional (%):</span> <span class="detail-value text-green-600 font-bold" id="detMargem">--</span></li>
-                                    <li><span class="detail-label">Resultado da curva marginal (R$/cab):</span> <span class="detail-value" id="detLucroMarginal">--</span></li>
-                                    <li><span class="detail-label">Ganho por melhora de rendimento (R$/cab):</span> <span class="detail-value" id="detGanhoRendimento">--</span></li>
+                                    <li><span class="detail-label">Margem líquida sobre venda:</span> <span class="detail-value text-green-600 font-bold" id="detMargem">--</span></li>
+                                    <li><span class="detail-label">ROI do ciclo:</span> <span class="detail-value" id="detROI">--</span></li>
+                                    <li><span class="detail-label">Resultado incremental da engorda:</span> <span class="detail-value" id="detLucroMarginal">--</span></li>
+                                    <li class="hidden"><span id="detCustoTotalArr">--</span><span id="detGanhoRendimento">--</span></li>
                                 </ul>
                             </div>
                         </div>
 
                         <div id="tab-tornado" class="tab-content hidden h-96 w-full">
-                            <h4 class="text-center font-bold mb-4 text-sm text-slate-600 dark:text-slate-300">Análise de Sensibilidade (Impacto no Lucro +/- 10%)</h4>
+                            <h4 class="text-center font-bold mb-4 text-sm text-slate-600 dark:text-slate-300">Análise de Sensibilidade — 10 maiores impactos (±10%)</h4>
                             <canvas id="chartTornado"></canvas>
                             <p class="text-center text-xs text-slate-400 mt-2 italic">A barra indica a variação do lucro ao alterar cada premissa individualmente em 10% para mais ou para menos.</p>
                         </div>
 
                         <div id="tab-sensibilidade" class="tab-content hidden">
-                            <h4 class="text-center font-bold mb-4 text-sm text-slate-600 dark:text-slate-300">Matriz de Lucro (R$/cab) - Preço x Dieta</h4>
+                            <h4 class="text-center font-bold mb-4 text-sm text-slate-600 dark:text-slate-300">Matrizes de Lucro Econômico (R$/animal alojado)</h4>
                             <div class="overflow-x-auto flex justify-center"><div id="heatmapContainer"></div></div>
+                        </div>
+                        <div id="tab-cenarios" class="tab-content hidden"><h4 class="text-center font-bold mb-4 text-sm text-slate-600 dark:text-slate-300">Cenários Integrados</h4><div id="scenarioContainer" class="overflow-x-auto"></div></div>
+                        <div id="tab-risco" class="tab-content hidden">
+                            <div class="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-blue-900 dark:border-slate-600 dark:bg-slate-700 dark:text-blue-100">
+                                <strong>Como preencher:</strong> informe quanto cada premissa pode variar para baixo ou para cima. O valor atual permanece como o resultado mais provável.
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                                <div><label class="block text-xs font-semibold mb-1">Preço de venda ±%</label><input id="mcVendaPct" class="input-field" value="8,00"><p class="text-[11px] text-slate-400 mt-1">Ex.: 8% sorteia entre 92% e 108% do preço atual.</p></div>
+                                <div><label class="block text-xs font-semibold mb-1">Preço de compra ±%</label><input id="mcCompraPct" class="input-field" value="6,00"><p class="text-[11px] text-slate-400 mt-1">Amplitude possível do preço da reposição.</p></div>
+                                <div><label class="block text-xs font-semibold mb-1">GPD inicial ±%</label><input id="mcGpdPct" class="input-field" value="10,00"><p class="text-[11px] text-slate-400 mt-1">Incerteza do ganho de peso diário.</p></div>
+                                <div><label class="block text-xs font-semibold mb-1">Custo da dieta ±%</label><input id="mcDietaPct" class="input-field" value="8,00"><p class="text-[11px] text-slate-400 mt-1">Variação possível do custo por kg de MS.</p></div>
+                                <div><label class="block text-xs font-semibold mb-1">RC de venda ± pontos percentuais</label><input id="mcRcPp" class="input-field" value="1,00"><p class="text-[11px] text-slate-400 mt-1">Ex.: RC 56% e ±1 p.p. sorteia de 55% a 57%.</p></div>
+                                <div><label class="block text-xs font-semibold mb-1">Cenários simulados</label><input id="mcIteracoes" class="input-field" value="5000"><p class="text-[11px] text-slate-400 mt-1">Recomendado: 5.000. Máximo: 10.000.</p></div>
+                            </div>
+                            <details class="mb-4 rounded-lg border border-slate-200 p-3 dark:border-slate-600">
+                                <summary class="cursor-pointer text-sm font-semibold text-slate-600 dark:text-slate-300">Configurações avançadas</summary>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                                    <div><label class="block text-xs font-semibold mb-1">Relação entre preços de compra e venda (%)</label><input id="mcCorrelacao" class="input-field" value="70,00"><p class="text-xs text-slate-400 mt-1">Quanto a reposição tende a acompanhar a direção da arroba de venda. Use 0% para movimentos independentes e 100% para forte movimento conjunto. Padrão sugerido: 70%.</p></div>
+                                    <div><label class="block text-xs font-semibold mb-1">Código para repetir a simulação</label><input id="mcSemente" class="input-field" value="20260805"><p class="text-xs text-slate-400 mt-1">Mantenha o mesmo código para reproduzir exatamente os mesmos sorteios. Normalmente não é necessário alterar.</p></div>
+                                </div>
+                            </details>
+                            <button onclick="app.runMonteCarloUI()" class="btn-primary mb-4"><i class="fa-solid fa-dice"></i> Executar análise de risco</button>
+                            <p class="text-xs text-slate-400 mb-3">Distribuições triangulares centradas no cenário-base. Probabilidades condicionais aos intervalos informados.</p>
+                            <div id="mcSummary" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"></div><div class="h-80"><canvas id="chartMonteCarlo"></canvas></div>
                         </div>
                          <div id="tab-tabela" class="tab-content hidden">
                              <div class="table-container">
-                                 <table class="data-table"><thead><tr><th>Dia</th><th>Peso</th><th>GPD</th><th>CMS</th><th>RMg</th><th>CMg</th><th>LMg</th><th>L. Acum.</th></tr></thead><tbody id="dailyTableBody"></tbody></table>
+                                 <table class="data-table"><thead><tr><th>Dia</th><th>Peso</th><th>GPD</th><th>CMS</th><th>RMg</th><th>CMg</th><th>LMg</th><th>Lucro econômico</th></tr></thead><tbody id="dailyTableBody"></tbody></table>
                              </div>
                          </div>
                     </div>
@@ -456,7 +516,7 @@
 
     <script>
         const app = {
-            state: { chart: null, tornadoChart: null, simulationData: null, inputs: {} },
+            state: { chart: null, tornadoChart: null, monteCarloChart: null, monteCarloData: null, simulationData: null, inputs: {} },
             constants: { ARROBA_FACTOR: 15, MAX_DAYS: 200 },
             init() {
                 if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
@@ -490,6 +550,14 @@
                     if (prof < 100) return '#f59e0b';
                     if (prof < 300) return '#22c55e';
                     return '#15803d';
+                },
+                pearsonCorrelation: (xs, ys) => {
+                    const n = xs.length; if(!n) return 0;
+                    const meanX = xs.reduce((a,b)=>a+b,0)/n, meanY = ys.reduce((a,b)=>a+b,0)/n;
+                    let num=0, denX=0, denY=0;
+                    for(let i=0;i<n;i++){ const dx=xs[i]-meanX, dy=ys[i]-meanY; num+=dx*dy; denX+=dx*dx; denY+=dy*dy; }
+                    const den = Math.sqrt(denX*denY);
+                    return den ? num/den : 0;
                 }
             },
             getInputs() {
@@ -498,7 +566,14 @@
                     gpdInicial: app.utils.parseBr('gpdInicial'), reducaoGPD: app.utils.parseBr('reducaoGPD'),
                     cmsInicial: app.utils.parseBr('cmsInicial'), aumentoCMS: app.utils.parseBr('aumentoCMS'),
                     rcFinal: app.utils.parseBr('rcFinal') / 100, precoArroba: app.utils.parseBr('precoArroba'),
+                    precoCompraArroba: app.utils.parseBr('precoCompraArroba'), despesasCompra: app.utils.parseBr('despesasCompra'),
                     custoDieta: app.utils.parseBr('custoDieta'), custoOperacional: app.utils.parseBr('custoOperacional'),
+                    taxaCapitalAnual: app.utils.parseBr('taxaCapitalAnual') / 100, despesasVenda: app.utils.parseBr('despesasVenda'),
+                    quantidadeAnimais: app.utils.parseBr('quantidadeAnimais') || 1, mortalidadePct: app.utils.parseBr('mortalidadePct') / 100,
+                    freteEntrada: app.utils.parseBr('freteEntrada'), freteSaida: app.utils.parseBr('freteSaida'),
+                    sanidade: app.utils.parseBr('sanidade'), outrosEntrada: app.utils.parseBr('outrosEntrada'),
+                    comissaoCompraPct: app.utils.parseBr('comissaoCompraPct') / 100, comissaoVendaPct: app.utils.parseBr('comissaoVendaPct') / 100,
+                    impostoVendaPct: app.utils.parseBr('impostoVendaPct') / 100, custoFixoLote: app.utils.parseBr('custoFixoLote'),
                     fazenda: document.getElementById('fazenda').value, tecnico: document.getElementById('tecnico').value,
                     dataSim: document.getElementById('dataSimulacao').value
                 };
@@ -508,8 +583,13 @@
                 sv('pvi', data.pvi); sv('rcInicial', data.rcInicial*100); sv('gpdInicial', data.gpdInicial, 3);
                 sv('reducaoGPD', data.reducaoGPD, 3); sv('cmsInicial', data.cmsInicial); sv('aumentoCMS', data.aumentoCMS, 3);
                 sv('rcFinal', data.rcFinal*100); sv('precoArroba', data.precoArroba);
+                sv('precoCompraArroba', data.precoCompraArroba || data.precoArroba || 280); sv('despesasCompra', data.despesasCompra || 0);
                 let c = data.custoDieta; if(!c && data.custoDietaDiario) c = data.custoDietaDiario/data.cmsInicial;
                 sv('custoDieta', c||1.30); sv('custoOperacional', data.custoOperacional);
+                sv('taxaCapitalAnual', (data.taxaCapitalAnual || 0.12)*100); sv('despesasVenda', data.despesasVenda || 0);
+                sv('quantidadeAnimais', data.quantidadeAnimais || 100, 0); sv('mortalidadePct', (data.mortalidadePct || 0)*100);
+                ['freteEntrada','freteSaida','sanidade','outrosEntrada','custoFixoLote'].forEach(id => sv(id, data[id] || 0));
+                sv('comissaoCompraPct',(data.comissaoCompraPct||0)*100); sv('comissaoVendaPct',(data.comissaoVendaPct||0)*100); sv('impostoVendaPct',(data.impostoVendaPct||0)*100);
                 if(data.fazenda) document.getElementById('fazenda').value = data.fazenda;
                 if(data.tecnico) document.getElementById('tecnico').value = data.tecnico;
             },
@@ -518,73 +598,196 @@
             loadExample() {
                 app.setInputs({
                     pvi: 380, rcInicial: 0.50, gpdInicial: 1.800, reducaoGPD: 0.003, cmsInicial: 10.0,
-                    aumentoCMS: 0.025, rcFinal: 0.56, precoArroba: 300.00, custoDieta: 1.30, custoOperacional: 1.50,
+                    aumentoCMS: 0.025, rcFinal: 0.56, precoArroba: 300.00,
+                    precoCompraArroba: 280.00, despesasCompra: 50.00, taxaCapitalAnual: 0.12, despesasVenda: 30.00,
+                    custoDieta: 1.30, custoOperacional: 1.50,
+                    quantidadeAnimais: 100, mortalidadePct: 0, freteEntrada: 0, freteSaida: 0, sanidade: 0, outrosEntrada: 0,
+                    comissaoCompraPct: 0, comissaoVendaPct: 0, impostoVendaPct: 0, custoFixoLote: 0,
                     fazenda: "Fazenda Modelo FAMEZ", tecnico: "Prof. Brumatti"
                 });
                 setTimeout(() => app.calculate(), 100);
             },
             clearForm() {
                 document.querySelectorAll('input').forEach(i => i.value = '');
+                const mcDefaults={mcVendaPct:'8,00',mcCompraPct:'6,00',mcGpdPct:'10,00',mcDietaPct:'8,00',mcRcPp:'1,00',mcCorrelacao:'70,00',mcIteracoes:'5000',mcSemente:'20260805'};
+                Object.entries(mcDefaults).forEach(([id,v])=>document.getElementById(id).value=v);
                 document.getElementById('resultsArea').classList.add('hidden');
                 document.getElementById('btnExcel').disabled = true;
                 document.getElementById('btnShare').disabled = true;
                 localStorage.removeItem('simulador_bovino_v6');
             },
             runSimulation(inputs) {
-                let results = [], w = inputs.pvi, gpd = inputs.gpdInicial, cms = inputs.cmsInicial, acc = 0;
+                const initialArrobas = (inputs.pvi * inputs.rcInicial) / app.constants.ARROBA_FACTOR;
+                const animalPrice = initialArrobas * inputs.precoCompraArroba;
+                const purchaseCost = animalPrice * (1 + inputs.comissaoCompraPct) + inputs.despesasCompra + inputs.freteEntrada + inputs.sanidade + inputs.outrosEntrada;
+                const dailyCapitalRate = Math.pow(1 + inputs.taxaCapitalAnual, 1 / 365) - 1;
+                const survival = 1 - inputs.mortalidadePct, exposure = 1 - inputs.mortalidadePct / 2;
+                const saleRate = inputs.comissaoVendaPct + inputs.impostoVendaPct;
+                const fixedLotPerHead = inputs.custoFixoLote / inputs.quantidadeAnimais;
+                let results = [], w = inputs.pvi, gpd = inputs.gpdInicial, cms = inputs.cmsInicial;
+                let accumulatedMargin = 0, accumulatedOperatingCost = 0, accumulatedCapitalCost = 0;
+                // O RC de venda informado é constante em todos os dias. Assim, a RMg
+                // decorre exclusivamente do GPD diário, sem rampa de rendimento.
+                let previousGrossSale = (inputs.pvi * inputs.rcFinal / app.constants.ARROBA_FACTOR) * inputs.precoArroba;
                 for (let day = 1; day <= app.constants.MAX_DAYS; day++) {
                     let dGpd = Math.max(0, gpd), dCms = Math.max(0, cms);
-                    let cmg = (dCms * inputs.custoDieta) + inputs.custoOperacional;
-                    let rmg = ((dGpd * inputs.rcFinal) / app.constants.ARROBA_FACTOR) * inputs.precoArroba;
-                    acc += (rmg - cmg);
-                    results.push({ day, weightEnd: w + dGpd, gpd: dGpd, cms: dCms, cmg, rmg, lmg: rmg - cmg, accumulatedProfit: acc });
+                    const weightEnd = w + dGpd;
+                    const rc = inputs.rcFinal;
+                    const grossSale = (weightEnd * rc / app.constants.ARROBA_FACTOR) * inputs.precoArroba;
+                    const saleValue = grossSale * survival;
+                    const feedAndOperatingCost = ((dCms * inputs.custoDieta) + inputs.custoOperacional) * exposure;
+                    const capitalCost = (purchaseCost + accumulatedOperatingCost) * dailyCapitalRate;
+                    const cmg = feedAndOperatingCost + capitalCost;
+                    const rmg = (grossSale - previousGrossSale) * survival * (1 - saleRate);
+                    const lmg = rmg - cmg;
+                    accumulatedMargin += lmg;
+                    accumulatedOperatingCost += feedAndOperatingCost;
+                    accumulatedCapitalCost += capitalCost;
+                    const saleExpenses = survival * (inputs.despesasVenda + inputs.freteSaida + grossSale * saleRate) + fixedLotPerHead;
+                    const economicProfit = saleValue - purchaseCost - accumulatedOperatingCost - accumulatedCapitalCost - saleExpenses;
+                    results.push({ day, weightEnd, rc, gpd: dGpd, cms: dCms, cmg, rmg, lmg,
+                        accumulatedProfit: accumulatedMargin, operatingCost: accumulatedOperatingCost,
+                        capitalCost: accumulatedCapitalCost, saleValue, grossSale, saleExpenses, economicProfit });
+                    previousGrossSale = grossSale;
                     w += dGpd; gpd -= inputs.reducaoGPD; cms += inputs.aumentoCMS; if(gpd <= 0) break;
                 }
                 return results;
             },
             analyzeResults(daily, inputs) {
-                const pos = daily.filter(d => d.lmg >= -0.01);
-                let opt = pos.length > 0 ? pos[pos.length - 1].day - 1 : 0;
-                if(daily[0].lmg < 0) opt = 0;
-                const d = daily[opt];
+                const iArr = (inputs.pvi * inputs.rcInicial) / app.constants.ARROBA_FACTOR;
+                const animalPrice = iArr * inputs.precoCompraArroba;
+                const purchaseCost = animalPrice * (1 + inputs.comissaoCompraPct) + inputs.despesasCompra + inputs.freteEntrada + inputs.sanidade + inputs.outrosEntrada;
+                const survival = 1 - inputs.mortalidadePct, exposure = 1 - inputs.mortalidadePct / 2;
+                const saleRate = inputs.comissaoVendaPct + inputs.impostoVendaPct;
+                const fixedLotPerHead = inputs.custoFixoLote / inputs.quantidadeAnimais;
+                const dayZeroGrossSale = (inputs.pvi * inputs.rcFinal / app.constants.ARROBA_FACTOR) * inputs.precoArroba;
+                const dayZeroSaleValue = dayZeroGrossSale * survival;
+                const dayZeroSaleExpenses = survival * (inputs.despesasVenda + inputs.freteSaida + dayZeroGrossSale * saleRate) + fixedLotPerHead;
+                const dayZero = { day: 0, weightEnd: inputs.pvi, rc: inputs.rcFinal, saleValue: dayZeroSaleValue,
+                    grossSale: dayZeroGrossSale, saleExpenses: dayZeroSaleExpenses, operatingCost: 0, capitalCost: 0, accumulatedProfit: 0,
+                    economicProfit: dayZeroSaleValue - purchaseCost - dayZeroSaleExpenses };
+                const d = [dayZero, ...daily].reduce((best, row) => row.economicProfit > best.economicProfit ? row : best, dayZero);
                 const subset = daily.slice(0, d.day);
                 const tGain = d.weightEnd - inputs.pvi;
-                const tDietCost = subset.reduce((a,c)=>a+(c.cms*inputs.custoDieta),0);
-                const tOpCost = d.day * inputs.custoOperacional;
+                const tDietCost = subset.reduce((a,c)=>a+(c.cms*inputs.custoDieta),0) * exposure;
+                const tOpCost = d.day * inputs.custoOperacional * exposure;
                 const tCost = tDietCost + tOpCost;
-                const fArr = (d.weightEnd * inputs.rcFinal)/15, iArr = (inputs.pvi*inputs.rcInicial)/15;
+                const fArr = (d.weightEnd * d.rc)/15;
                 const gArr = fArr - iArr;
-                const rev = gArr * inputs.precoArroba;
+                const rev = d.saleValue;
+                const economicTotalCost = purchaseCost + tCost + d.capitalCost + d.saleExpenses;
+                const tolerance = Math.abs(d.economicProfit) * 0.01;
+                const windowRows = [dayZero, ...daily].filter(row => row.economicProfit >= d.economicProfit - tolerance);
+                const windowStart = Math.min(...windowRows.map(row=>row.day)), windowEnd = Math.max(...windowRows.map(row=>row.day));
+                const animalsSold = inputs.quantidadeAnimais * survival, lotProfit = d.economicProfit * inputs.quantidadeAnimais;
                 return {
-                    days: d.day, finalWeight: d.weightEnd, initialArrobas: iArr, finalArrobas: fArr, gainedArrobas: gArr,
-                    profit: rev - tCost, revenue: rev, totalCost: tCost,
-                    // Decomposição do resultado.
-                    // A curva marginal remunera apenas o ganho de peso do dia, ao rendimento final.
-                    // O resultado total inclui também a valorização do peso de entrada, que passa a
-                    // ser avaliado ao rendimento final em vez do rendimento inicial informado.
-                    marginalProfit: d.accumulatedProfit,
-                    yieldGain: ((inputs.rcFinal - inputs.rcInicial) * inputs.pvi / app.constants.ARROBA_FACTOR) * inputs.precoArroba,
+                    days: d.day, finalWeight: d.weightEnd, finalRC: d.rc, initialArrobas: iArr, finalArrobas: fArr, gainedArrobas: gArr,
+                    profit: d.economicProfit, revenue: rev, totalCost: tCost, purchaseCost,
+                    capitalCost: d.capitalCost, saleExpenses: d.saleExpenses, economicTotalCost,
+                    marginalProfit: d.accumulatedProfit, yieldGain: 0,
                     costDietArroba: gArr>0?tDietCost/gArr:0, costOpArroba: gArr>0?tOpCost/gArr:0, costTotalArroba: gArr>0?tCost/gArr:0,
-                    avgGPD: d.day>0?tGain/d.day:0, avgCMS: d.day>0?subset.reduce((a,c)=>a+c.cms,0)/d.day:0, feedConversion: tGain>0?subset.reduce((a,c)=>a+c.cms,0)/tGain:0
+                    avgGPD: d.day>0?tGain/d.day:0, avgCMS: d.day>0?subset.reduce((a,c)=>a+c.cms,0)/d.day:0,
+                    feedConversion: tGain>0?subset.reduce((a,c)=>a+c.cms,0)/tGain:0,
+                    roi: economicTotalCost>0 ? d.economicProfit/economicTotalCost : 0,
+                    breakEvenPrice: (fArr * survival * (1-saleRate))>0 ? (economicTotalCost - d.grossSale*survival*saleRate)/(fArr*survival*(1-saleRate)) : 0,
+                    windowStart, windowEnd, animalsSold, lotProfit, profitPerSold: animalsSold>0 ? lotProfit/animalsSold : 0,
+                    reconciliationError: rev - economicTotalCost - d.economicProfit
                 };
+            },
+            validateInputs(inp) {
+                const errors=[], warnings=[];
+                if(inp.pvi<=0 || inp.precoArroba<=0 || inp.precoCompraArroba<=0 || inp.custoDieta<=0 || inp.gpdInicial<=0 || inp.cmsInicial<=0 || inp.rcFinal<=0 || inp.rcInicial<=0) errors.push('Preencha os campos essenciais com valores maiores que zero.');
+                if(inp.quantidadeAnimais<1) errors.push('A quantidade de animais deve ser pelo menos 1.');
+                if(inp.mortalidadePct<0 || inp.mortalidadePct>=0.5) errors.push('A mortalidade deve ficar entre 0% e menos de 50%.');
+                if(inp.taxaCapitalAnual<0) errors.push('A taxa de capital não pode ser negativa.');
+                if(inp.rcFinal<0.45 || inp.rcFinal>0.65) warnings.push('RC de venda fora da faixa usual de 45% a 65%.');
+                if(inp.gpdInicial<0.5 || inp.gpdInicial>2.5) warnings.push('GPD inicial fora da faixa de referência de 0,5 a 2,5 kg/dia.');
+                if(inp.cmsInicial/inp.pvi<0.015 || inp.cmsInicial/inp.pvi>0.04) warnings.push('CMS inicial equivale a menos de 1,5% ou mais de 4,0% do peso vivo.');
+                if(inp.rcInicial>inp.rcFinal) warnings.push('O RC inicial é maior que o RC informado para venda.');
+                if(inp.mortalidadePct>0.05) warnings.push('Mortalidade superior a 5%; revise a premissa e o protocolo sanitário.');
+                return {errors,warnings};
+            },
+            renderValidation(validation, res) {
+                const panel=document.getElementById('validationPanel');
+                const notes=[...validation.warnings];
+                if(res.days===0) notes.push('O maior lucro ocorre no dia 0: a engorda não cria valor adicional neste cenário.');
+                if(res.days===app.constants.MAX_DAYS) notes.push('O ótimo atingiu o limite de 200 dias; amplie ou revise o horizonte e as curvas.');
+                if(res.profit<0) notes.push('Mesmo o melhor dia apresenta prejuízo econômico.');
+                if(Math.abs(res.reconciliationError)>0.01) notes.push('Falha de reconciliação econômica superior a R$ 0,01.');
+                panel.classList.toggle('hidden',notes.length===0);
+                panel.innerHTML=notes.length?`<strong>Atenção às premissas:</strong><ul class="list-disc ml-5 mt-1">${notes.map(n=>`<li>${n}</li>`).join('')}</ul>`:'';
+            },
+            generateScenarios(base) {
+                const defs=[
+                    {name:'Pessimista', changes:{precoArroba:.92,precoCompraArroba:1.05,gpdInicial:.90,custoDieta:1.10}, rc:-.02},
+                    {name:'Base', changes:{}, rc:0},
+                    {name:'Otimista', changes:{precoArroba:1.05,precoCompraArroba:.97,gpdInicial:1.08,custoDieta:.95}, rc:.01}
+                ];
+                const rows=defs.map(def=>{const inp={...base};Object.entries(def.changes).forEach(([k,v])=>inp[k]=base[k]*v);inp.rcFinal=Math.min(.65,Math.max(.45,base.rcFinal+def.rc));const r=app.analyzeResults(app.runSimulation(inp),inp);return{name:def.name,inputs:inp,result:r};});
+                const fm=app.utils.formatMoney,f=app.utils.formatBr;
+                document.getElementById('scenarioContainer').innerHTML=`<table class="data-table"><thead><tr><th>Cenário</th><th>Dia ótimo</th><th>Janela</th><th>Peso</th><th>Lucro/cab</th><th>Lucro lote</th><th>ROI</th><th>Equilíbrio</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.name}</td><td>${x.result.days}</td><td>${x.result.windowStart}–${x.result.windowEnd}</td><td>${f(x.result.finalWeight,1)} kg</td><td>${fm(x.result.profit)}</td><td>${fm(x.result.lotProfit)}</td><td>${f(x.result.roi*100,1)}%</td><td>${fm(x.result.breakEvenPrice)}/@</td></tr>`).join('')}</tbody></table><p class="text-xs text-slate-400 mt-3">Pessimista: venda −8%, compra +5%, GPD −10%, dieta +10% e RC −2 p.p. Otimista: venda +5%, compra −3%, GPD +8%, dieta −5% e RC +1 p.p.</p>`;
+                app.state.scenarios=rows; return rows;
+            },
+            seededRandom(seed) { return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}; },
+            triangular(rng,min,mode,max) { const u=rng(),p=(mode-min)/(max-min||1);return u<p?min+Math.sqrt(u*(max-min)*(mode-min)):max-Math.sqrt((1-u)*(max-min)*(max-mode)); },
+            percentile(sorted,p) { if(!sorted.length)return 0;const i=(sorted.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo); },
+            async runMonteCarloUI() {
+                if(!app.state.simulationData)return;
+                const p=id=>app.utils.parseBr(id), base=app.state.simulationData.inputs;
+                const cfg={sale:p('mcVendaPct')/100,buy:p('mcCompraPct')/100,gpd:p('mcGpdPct')/100,diet:p('mcDietaPct')/100,rc:p('mcRcPp')/100,rho:Math.max(0,Math.min(1,p('mcCorrelacao')/100)),n:Math.max(500,Math.min(10000,Math.round(p('mcIteracoes')))),seed:Math.round(p('mcSemente'))||20260805};
+                const rng=app.seededRandom(cfg.seed), sims=[];
+                const triDev=a=>app.triangular(rng,-a,0,a);
+                for(let i=0;i<cfg.n;i++){
+                    const saleDev=triDev(cfg.sale), independentBuy=triDev(cfg.buy);
+                    const normalizedSale=cfg.sale? saleDev/cfg.sale:0;
+                    const buyDev=Math.max(-cfg.buy,Math.min(cfg.buy,cfg.rho*normalizedSale*cfg.buy+Math.sqrt(1-cfg.rho*cfg.rho)*independentBuy));
+                    const inp={...base,precoArroba:base.precoArroba*(1+saleDev),precoCompraArroba:base.precoCompraArroba*(1+buyDev),gpdInicial:base.gpdInicial*(1+triDev(cfg.gpd)),custoDieta:base.custoDieta*(1+triDev(cfg.diet)),rcFinal:Math.max(.45,Math.min(.65,base.rcFinal+triDev(cfg.rc)))};
+                    const r=app.analyzeResults(app.runSimulation(inp),inp);sims.push({profit:r.profit,day:r.days,roi:r.roi,precoArroba:inp.precoArroba});
+                    if(i>0&&i%500===0) await new Promise(resolve=>setTimeout(resolve,0));
+                }
+                const profits=sims.map(x=>x.profit).sort((a,b)=>a-b),days=sims.map(x=>x.day).sort((a,b)=>a-b);
+                const priceProfitCorr=app.utils.pearsonCorrelation(sims.map(x=>x.precoArroba),sims.map(x=>x.profit));
+                const summary={iterations:cfg.n,seed:cfg.seed,mean:profits.reduce((a,b)=>a+b,0)/cfg.n,p10:app.percentile(profits,.1),p50:app.percentile(profits,.5),p90:app.percentile(profits,.9),lossProbability:profits.filter(x=>x<0).length/cfg.n,dayP10:app.percentile(days,.1),dayP50:app.percentile(days,.5),dayP90:app.percentile(days,.9),priceProfitCorr};
+                app.state.monteCarloData={config:cfg,simulations:sims,summary};app.renderMonteCarlo(summary,sims);return app.state.monteCarloData;
+            },
+            renderMonteCarlo(s,sims) {
+                const fm=app.utils.formatMoney,f=app.utils.formatBr;
+                const corrAbs=Math.abs(s.priceProfitCorr), corrLabel = corrAbs>=0.7?'forte':corrAbs>=0.3?'moderada':'fraca';
+                document.getElementById('mcSummary').innerHTML=[['Lucro médio',fm(s.mean)],['P10 / P50 / P90',`${fm(s.p10)} / ${fm(s.p50)} / ${fm(s.p90)}`],['Prob. prejuízo',f(s.lossProbability*100,1)+'%'],['Dia ótimo P10/P50/P90',`${Math.round(s.dayP10)} / ${Math.round(s.dayP50)} / ${Math.round(s.dayP90)}`],['Correlação preço × lucro',`r = ${f(s.priceProfitCorr,2)} (${corrLabel})`]].map(([a,b])=>`<div class="card p-3"><p class="text-xs text-slate-400">${a}</p><p class="font-bold">${b}</p></div>`).join('');
+                // Cada barra do histograma de lucro guarda também os R$/@ de venda sorteados
+                // nas rodadas que caíram naquela faixa: como o lucro depende de 5 variáveis
+                // conjuntas (não só o preço), não existe um preço único por faixa — por isso
+                // reporta-se a mediana e o intervalo P25–P75 dos preços daquele grupo, e não
+                // um valor exato. A correlação acima indica o quão confiável é essa leitura.
+                const profits=sims.map(x=>x.profit);
+                const bins=20,min=Math.min(...profits),max=Math.max(...profits),step=(max-min)/bins||1;
+                const buckets=Array.from({length:bins},()=>[]);
+                sims.forEach(x=>{ buckets[Math.min(bins-1,Math.floor((x.profit-min)/step))].push(x); });
+                const counts=buckets.map(b=>b.length);
+                const priceRanges=buckets.map(b=>{
+                    if(!b.length) return null;
+                    const prices=b.map(x=>x.precoArroba).sort((a,c)=>a-c);
+                    return { p25:app.percentile(prices,.25), p50:app.percentile(prices,.5), p75:app.percentile(prices,.75) };
+                });
+                const labels=counts.map((_,i)=>fm(min+(i+.5)*step));
+                if(app.state.monteCarloChart)app.state.monteCarloChart.destroy();
+                app.state.monteCarloChart=new Chart(document.getElementById('chartMonteCarlo'),{type:'bar',data:{labels,datasets:[{label:'Frequência',data:counts,backgroundColor:'#0d6b83'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:`Distribuição do lucro — ${s.iterations} simulações (semente ${s.seed})`},tooltip:{callbacks:{label:(ctx)=>{const pr=priceRanges[ctx.dataIndex],base=`Cenários: ${ctx.parsed.y}`;return pr?[base,`R$/@ venda: ${fm(pr.p50)} (P25 ${fm(pr.p25)} – P75 ${fm(pr.p75)})`]:base;}}}},scales:{x:{ticks:{maxTicksLimit:8}},y:{title:{display:true,text:'Cenários'}}}}});
             },
             calculate() {
                 try {
                     const inp = app.getInputs();
-                    if(inp.pvi <= 0 || inp.precoArroba <= 0 || inp.custoDieta <= 0 || inp.gpdInicial <= 0 || inp.cmsInicial <= 0 || inp.rcFinal <= 0 || inp.rcInicial <= 0) {
-                        alert("Preencha todos os campos com valores maiores que zero antes de calcular.");
-                        return;
-                    }
+                    const validation=app.validateInputs(inp);if(validation.errors.length){alert(validation.errors.join('\n'));return;}
                     app.saveToStorage();
                     const daily = app.runSimulation(inp);
                     const res = app.analyzeResults(daily, inp);
+                    app.state.monteCarloData=null;if(app.state.monteCarloChart){app.state.monteCarloChart.destroy();app.state.monteCarloChart=null;}document.getElementById('mcSummary').innerHTML='';
                     app.state.simulationData = { dailyData: daily, results: res, inputs: inp };
                     // Mostra a área de resultados ANTES de criar os gráficos: um canvas criado
                     // dentro de um container display:none nasce com 0x0px e fica quebrado até
                     // uma correção assíncrona (ou nunca, se a aba nunca for aberta pelo usuário).
                     document.getElementById('resultsArea').classList.remove('hidden');
                     document.getElementById('ceilingWarning').classList.toggle('hidden', res.days < app.constants.MAX_DAYS);
-                    app.updateUI(); app.generateHeatmap(inp); app.renderCharts(); app.renderTornado(inp); app.renderTable(daily);
+                    app.updateUI(); app.renderValidation(validation,res); app.generateHeatmap(inp); app.generateScenarios(inp); app.renderCharts(); app.renderTornado(inp); app.renderTable(daily);
                     requestAnimationFrame(() => {
                         [app.state.chart, app.state.tornadoChart].forEach(c => c && c.resize());
                     });
@@ -598,32 +801,57 @@
                 const inp = app.state.simulationData.inputs;
                 document.getElementById('resDiaOtimo').innerText = r.days; document.getElementById('resLucro').innerText = fm(r.profit);
                 document.getElementById('resPeso').innerText = f(r.finalWeight, 1) + " kg"; document.getElementById('resArrobas').innerText = f(r.finalArrobas, 1) + " @";
+                document.getElementById('resJanela').innerText = `dias ${r.windowStart} a ${r.windowEnd}`;
+                document.getElementById('resEquilibrio').innerText = fm(r.breakEvenPrice) + "/@";
+                document.getElementById('resLucroLote').innerText = fm(r.lotProfit);
                 document.getElementById('detPesoInicial').innerText = f(inp.pvi, 1) + " kg";
                 document.getElementById('detGpdMedio').innerText = f(r.avgGPD, 3) + " kg/dia";
                 document.getElementById('detGanhoTotal').innerText = f(r.finalWeight - inp.pvi, 1) + " kg";
                 document.getElementById('detCmsMedio').innerText = f(r.avgCMS, 2) + " kg";
                 document.getElementById('detConsumoTotal').innerText = f(r.avgCMS * r.days, 1) + " kg";
                 document.getElementById('detCA').innerText = f(r.feedConversion, 2);
-                document.getElementById('detRC').innerText = f(inp.rcFinal * 100, 1) + "%";
+                document.getElementById('detRC').innerText = f(r.finalRC * 100, 1) + "%";
                 document.getElementById('detCarcacaIni').innerText = f(r.initialArrobas, 2) + " @";
                 document.getElementById('detCarcacaFim').innerText = f(r.finalArrobas, 2) + " @";
                 document.getElementById('detArrobasGanhas').innerText = f(r.gainedArrobas, 2) + " @";
                 document.getElementById('detCustoTotalArr').innerText = fm(r.costTotalArroba);
+                document.getElementById('detCustoCompra').innerText = fm(r.purchaseCost);
+                document.getElementById('detCustoCapital').innerText = fm(r.capitalCost);
                 document.getElementById('detCustoTotal').innerText = fm(r.totalCost);
+                document.getElementById('detCustoEconomico').innerText = fm(r.economicTotalCost);
                 document.getElementById('detReceita').innerText = fm(r.revenue);
                 document.getElementById('detCustoDietaArr').innerText = fm(r.costDietArroba);
                 document.getElementById('detCustoOpArr').innerText = fm(r.costOpArroba);
-                document.getElementById('detDiaria').innerText = fm(r.totalCost/r.days);
+                document.getElementById('detDiaria').innerText = fm(r.days > 0 ? r.totalCost/r.days : 0);
                 const m = r.revenue>0?(r.profit/r.revenue)*100:0;
                 document.getElementById('detMargem').innerText = f(m, 1) + "%";
+                document.getElementById('detROI').innerText = f(r.roi * 100, 1) + "%";
                 document.getElementById('detLucroMarginal').innerText = fm(r.marginalProfit);
                 document.getElementById('detGanhoRendimento').innerText = fm(r.yieldGain);
+            },
+            sensitivityVariables(baseInputs) {
+                return [
+                    { key: 'precoArroba', label: 'Preço de venda @' },
+                    { key: 'precoCompraArroba', label: 'Preço de compra @' },
+                    { key: 'rcFinal', label: 'RC de venda' },
+                    { key: 'custoDieta', label: 'Custo da dieta' },
+                    { key: 'gpdInicial', label: 'GPD inicial' },
+                    { key: 'pvi', label: 'Peso inicial' },
+                    { key: 'taxaCapitalAnual', label: 'Taxa de capital' },
+                    { key: 'custoOperacional', label: 'Custo operacional' },
+                    { key: 'despesasCompra', label: 'Despesas de compra' },
+                    { key: 'despesasVenda', label: 'Despesas de venda' },
+                    { key: 'freteEntrada', label: 'Frete de entrada' }, { key: 'freteSaida', label: 'Frete de saída' },
+                    { key: 'sanidade', label: 'Sanidade' }, { key: 'mortalidadePct', label: 'Mortalidade' },
+                    { key: 'comissaoCompraPct', label: 'Comissão de compra' }, { key: 'comissaoVendaPct', label: 'Comissão de venda' },
+                    { key: 'impostoVendaPct', label: 'Impostos sobre venda' }, { key: 'custoFixoLote', label: 'Custo fixo do lote' }
+                ].filter(v => Math.abs(baseInputs[v.key]) > 0.0000001);
             },
             renderTornado(baseInputs) {
                 const ctx = document.getElementById('chartTornado').getContext('2d');
                 const dark = document.documentElement.classList.contains('dark');
                 const cTx = dark ? '#94a3b8' : '#64748b';
-                const vars = [ { key: 'precoArroba', label: 'Preço @' }, { key: 'custoDieta', label: 'Custo Dieta' }, { key: 'pvi', label: 'Peso Inicial' }, { key: 'gpdInicial', label: 'GPD Inicial' }, { key: 'custoOperacional', label: 'Custo Op.' } ];
+                const vars = app.sensitivityVariables(baseInputs);
                 const baseRes = app.analyzeResults(app.runSimulation(baseInputs), baseInputs);
                 const baseProfit = baseRes.profit;
                 const dataPoints = [];
@@ -636,6 +864,7 @@
                     dataPoints.push({ label: v.label, min, max, impact });
                 });
                 dataPoints.sort((a,b) => b.impact - a.impact);
+                if(dataPoints.length>10) dataPoints.length=10;
                 const labels = dataPoints.map(d => d.label), floatData = dataPoints.map(d => [d.min, d.max]);
                 if(app.state.tornadoChart) app.state.tornadoChart.destroy();
                 const formatMoney = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -651,27 +880,10 @@
                 });
             },
             generateHeatmap(base) {
-                const steps=5, prices=[], diets=[];
-                for(let i=0;i<steps;i++) { const fac = 1 + (i-2)*0.05; prices.push(base.precoArroba * fac); diets.push(base.custoDieta * fac); }
-                prices.sort((a,b)=>b-a); diets.sort((a,b)=>a-b);
-                let h = '<table class="heatmap-table"><thead><tr><th class="bg-slate-100 dark:bg-slate-700">@ \\ Dieta (Kg)</th>';
-                diets.forEach(d => h+=`<th class="bg-slate-50 dark:bg-slate-800 text-xs">${app.utils.formatMoney(d)}</th>`);
-                h+='</tr></thead><tbody>';
-                prices.forEach(p => {
-                    h+=`<tr><th class="bg-slate-50 dark:bg-slate-800 text-xs font-bold text-blue-700 dark:text-blue-300">${app.utils.formatMoney(p)}</th>`;
-                    diets.forEach(d => {
-                        const ti = {...base, precoArroba: p, custoDieta: d};
-                        const tr = app.runSimulation(ti); const tres = app.analyzeResults(tr, ti);
-                        const prof = tres.profit;
-                        // Cores fixas em hex (não usa classes Tailwind bg-green-*): o tema visual
-                        // do site redefine a paleta "green" inteira para tons de petróleo, o que
-                        // apagava por completo o gradiente vermelho→verde do heatmap.
-                        const bg = app.utils.heatColor(prof);
-                        h+=`<td class="heatmap-cell" style="background:${bg};color:#fff;" title="${tres.days} dias">${app.utils.formatMoney(prof)}</td>`;
-                    });
-                    h+='</tr>';
-                });
-                document.getElementById('heatmapContainer').innerHTML = h+'</tbody></table>';
+                const factors=[.90,.95,1,1.05,1.10], sales=factors.map(x=>base.precoArroba*x).sort((a,b)=>b-a);
+                const makeMatrix=(columns,key,label)=>{let h=`<h5 class="font-bold text-sm mt-4 mb-2">${label}</h5><table class="heatmap-table"><thead><tr><th>Venda R$/@</th>`;columns.forEach(v=>h+=`<th>${app.utils.formatMoney(v)}</th>`);h+='</tr></thead><tbody>';sales.forEach(p=>{h+=`<tr><th>${app.utils.formatMoney(p)}</th>`;columns.forEach(v=>{const ti={...base,precoArroba:p,[key]:v},tres=app.analyzeResults(app.runSimulation(ti),ti),bg=app.utils.heatColor(tres.profit);h+=`<td class="heatmap-cell" style="background:${bg};color:#fff" title="Ótimo: ${tres.days} dias">${app.utils.formatMoney(tres.profit)}</td>`;});h+='</tr>';});return h+'</tbody></table>';};
+                const diets=factors.map(x=>base.custoDieta*x).sort((a,b)=>a-b), purchases=factors.map(x=>base.precoCompraArroba*x).sort((a,b)=>a-b);
+                document.getElementById('heatmapContainer').innerHTML=makeMatrix(diets,'custoDieta','Preço de venda × custo da dieta (R$/kg MS)')+makeMatrix(purchases,'precoCompraArroba','Preço de venda × preço de compra (R$/@)');
             },
             renderTable(data) {
                 const tb = document.getElementById('dailyTableBody'); tb.innerHTML = '';
@@ -680,7 +892,7 @@
                     const tr = document.createElement('tr');
                     if(r.day === app.state.simulationData.results.days) tr.classList.add('bg-blue-100', 'dark:bg-blue-900', 'font-bold');
                     if(r.lmg < 0 && r.day > app.state.simulationData.results.days) tr.classList.add('text-red-400', 'dark:text-red-400');
-                    tr.innerHTML = `<td>${r.day}</td><td>${f(r.weightEnd, 1)}</td><td>${f(r.gpd, 3)}</td><td>${f(r.cms, 2)}</td><td class="text-green-600">${fm(r.rmg)}</td><td class="text-red-500">${fm(r.cmg)}</td><td class="${r.lmg>=0?'text-blue-600':'text-red-600 font-bold'}">${fm(r.lmg)}</td><td>${fm(r.accumulatedProfit)}</td>`;
+                    tr.innerHTML = `<td>${r.day}</td><td>${f(r.weightEnd, 1)}</td><td>${f(r.gpd, 3)}</td><td>${f(r.cms, 2)}</td><td class="text-green-600">${fm(r.rmg)}</td><td class="text-red-500">${fm(r.cmg)}</td><td class="${r.lmg>=0?'text-blue-600':'text-red-600 font-bold'}">${fm(r.lmg)}</td><td>${fm(r.economicProfit)}</td>`;
                     tb.appendChild(tr);
                 });
             },
@@ -689,12 +901,13 @@
                 document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('border-blue-600', 'text-blue-600', 'dark:text-blue-400'); btn.classList.add('border-transparent', 'text-slate-500'); });
                 document.getElementById(`tab-${name}`).classList.remove('hidden');
                 const btns = document.querySelectorAll('.tab-btn');
-                let idx = 0; if(name==='financeiro') idx=1; if(name==='tornado') idx=2; if(name==='sensibilidade') idx=3; if(name==='tabela') idx=4;
+                let idx = 0; if(name==='financeiro') idx=1; if(name==='tornado') idx=2; if(name==='sensibilidade') idx=3; if(name==='cenarios') idx=4; if(name==='risco') idx=5; if(name==='tabela') idx=6;
                 btns[idx].classList.remove('border-transparent', 'text-slate-500'); btns[idx].classList.add('border-blue-600', 'text-blue-600', 'dark:text-blue-400');
                 // Um gráfico Chart.js criado enquanto sua aba estava oculta (display:none)
                 // nasce com tamanho 0x0 — força o recálculo assim que a aba é exibida.
                 if(name === 'marginal' && app.state.chart) app.state.chart.resize();
                 if(name === 'tornado' && app.state.tornadoChart) app.state.tornadoChart.resize();
+                if(name === 'risco' && app.state.monteCarloChart) app.state.monteCarloChart.resize();
             },
             renderCharts() {
                 const ctx = document.getElementById('chartMarginal').getContext('2d');
@@ -711,12 +924,12 @@
                         datasets: [
                             { label: 'RMg', data: view.map(d=>d.rmg), borderColor: '#10b981', borderWidth: 2, tension: 0.4, yAxisID: 'y' },
                             { label: 'CMg', data: view.map(d=>d.cmg), borderColor: '#ef4444', borderWidth: 2, tension: 0.4, yAxisID: 'y' },
-                            { label: 'Lucro Acum.', data: view.map(d=>d.accumulatedProfit), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 2, fill: true, yAxisID: 'y1', pointRadius: 0 }
+                            { label: 'Lucro Econômico', data: view.map(d=>d.economicProfit), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 2, fill: true, yAxisID: 'y1', pointRadius: 0 }
                         ]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-                        plugins: { legend: { labels: { color: cTx } }, annotation: { annotations: { line1: { type: 'line', xMin: app.state.simulationData.results.days - 1, xMax: app.state.simulationData.results.days - 1, borderColor: dark?'#fff':'#1e293b', borderWidth: 2, borderDash: [5, 5], label: { content: 'Ponto Ótimo', display: true, position: 'start', backgroundColor: dark?'#334155':'#1e293b', color: 'white' } } } } },
+                        plugins: { legend: { labels: { color: cTx } }, annotation: { annotations: { window: {type:'box',xMin:app.state.simulationData.results.windowStart,xMax:app.state.simulationData.results.windowEnd,backgroundColor:'rgba(59,130,246,0.08)',borderWidth:0}, line1: { type: 'line', xMin: app.state.simulationData.results.days, xMax: app.state.simulationData.results.days, borderColor: dark?'#fff':'#1e293b', borderWidth: 2, borderDash: [5, 5], label: { content: 'Ponto Ótimo', display: true, position: 'start', backgroundColor: dark?'#334155':'#1e293b', color: 'white' } } } } },
                         scales: { x: { grid: { color: cGr }, ticks: { color: cTx } }, y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Marginal (R$)', color: cTx }, grid: { color: cGr }, ticks: { color: cTx } }, y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Lucro (R$)', color: '#3b82f6' }, ticks: { color: '#3b82f6' } } }
                     }
                 });
@@ -737,159 +950,114 @@
                     ["Peso Vivo Inicial (kg)", inputs.pvi], ["RC Inicial (%)", inputs.rcInicial * 100],
                     ["GPD Inicial (kg/dia)", inputs.gpdInicial], ["Redução GPD (kg/dia)", inputs.reducaoGPD],
                     ["CMS Inicial (kg/dia)", inputs.cmsInicial], ["Aumento CMS (kg/dia)", inputs.aumentoCMS],
-                    ["RC Final Esperado (%)", inputs.rcFinal * 100], ["Preço da Arroba (R$)", inputs.precoArroba],
+                    ["Rendimento de Carcaça na Venda (%)", inputs.rcFinal * 100],
+                    ["Preço de Venda da Arroba (R$)", inputs.precoArroba], ["Preço de Compra da Arroba (R$)", inputs.precoCompraArroba],
+                    ["Despesas de Compra (R$/cab)", inputs.despesasCompra], ["Capital (% a.a.)", inputs.taxaCapitalAnual * 100],
+                    ["Despesas de Venda (R$/cab)", inputs.despesasVenda],
                     ["Custo Dieta (R$/kg MS)", inputs.custoDieta], ["Custo Operacional (R$/dia)", inputs.custoOperacional],
+                    ["Animais Alojados", inputs.quantidadeAnimais], ["Mortalidade Esperada (%)", inputs.mortalidadePct*100],
+                    ["Frete Entrada (R$/cab)", inputs.freteEntrada], ["Frete Saída (R$/vendido)", inputs.freteSaida],
+                    ["Sanidade (R$/cab)", inputs.sanidade], ["Outros Entrada (R$/cab)", inputs.outrosEntrada],
+                    ["Comissão Compra (%)", inputs.comissaoCompraPct*100], ["Comissão Venda (%)", inputs.comissaoVendaPct*100],
+                    ["Impostos Venda (%)", inputs.impostoVendaPct*100], ["Custo Fixo Lote (R$)", inputs.custoFixoLote],
                     [],
                     ["RESULTADOS", ""],
                     ["Dia Ótimo de Venda", r.days], ["Peso Final (kg)", r.finalWeight],
-                    ["Resultado da Engorda (R$/cab)", r.profit],
-                    ["  Resultado da curva marginal (R$/cab)", r.marginalProfit],
-                    ["  Ganho por melhora de rendimento (R$/cab)", r.yieldGain],
+                    ["Lucro Econômico (R$/cab)", r.profit],
+                    ["Resultado incremental da engorda (R$/cab)", r.marginalProfit],
+                    ["Valor de Compra (R$/cab)", r.purchaseCost], ["Custo de Capital (R$/cab)", r.capitalCost],
+                    ["Custo Econômico Total (R$/cab)", r.economicTotalCost], ["ROI do Ciclo (%)", r.roi * 100],
+                    ["Preço de Equilíbrio no Dia Ótimo Atual (R$/@)", r.breakEvenPrice],
+                    ["Janela Econômica Inicial", r.windowStart], ["Janela Econômica Final", r.windowEnd],
+                    ["Animais Vendidos Estimados", r.animalsSold], ["Lucro do Lote (R$)", r.lotProfit], ["Lucro por Vendido (R$)", r.profitPerSold],
                     ["Receita Total (R$/cab)", r.revenue], ["Custo Total (R$/cab)", r.totalCost],
-                    ["Margem Operacional (%)", margem], ["Conversão Alimentar", r.feedConversion]
+                    ["Margem Econômica sobre a Venda (%)", margem], ["Conversão Alimentar", r.feedConversion]
                 ];
                 const wsResumo = XLSX.utils.aoa_to_sheet(resumo);
                 wsResumo['!cols'] = [{ wch: 40 }, { wch: 22 }];
                 XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
-                const wsData = app.state.simulationData.dailyData.map(row => ({ "Dia": row.day, "Peso Vivo (kg)": row.weightEnd, "GPD (kg)": row.gpd, "CMS (kg)": row.cms, "Custo Dieta (R$)": row.cms * inputs.custoDieta, "Custo Op. (R$)": inputs.custoOperacional, "CMg (R$)": row.cmg, "RMg (R$)": row.rmg, "Lucro Marginal (R$)": row.lmg, "Lucro Acumulado (R$)": row.accumulatedProfit, "Dia Ótimo": row.day === r.days ? "◄" : "" }));
+                const wsData = app.state.simulationData.dailyData.map(row => ({ "Dia": row.day, "Peso Vivo (kg)": row.weightEnd, "RC (%)": row.rc * 100, "GPD (kg)": row.gpd, "CMS (kg)": row.cms, "Custo Dieta (R$)": row.cms * inputs.custoDieta, "Custo Op. (R$)": inputs.custoOperacional, "CMg com Capital (R$)": row.cmg, "RMg (R$)": row.rmg, "Lucro Marginal (R$)": row.lmg, "Resultado Incremental (R$)": row.accumulatedProfit, "Lucro Econômico (R$)": row.economicProfit, "Dia Ótimo": row.day === r.days ? "◄" : "" }));
                 const ws = XLSX.utils.json_to_sheet(wsData);
                 XLSX.utils.book_append_sheet(wb, ws, "Evolução Diária");
+                const scenarioRows=(app.state.scenarios||app.generateScenarios(inputs)).map(x=>({"Cenário":x.name,"Dia Ótimo":x.result.days,"Janela Inicial":x.result.windowStart,"Janela Final":x.result.windowEnd,"Peso Final (kg)":x.result.finalWeight,"Lucro por Alojado (R$)":x.result.profit,"Lucro do Lote (R$)":x.result.lotProfit,"ROI (%)":x.result.roi*100,"Preço Equilíbrio (R$/@)":x.result.breakEvenPrice}));
+                XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(scenarioRows),"Cenários");
+                {const mc=app.state.monteCarloData, s=mc?.summary, c=mc?.config;const mcRows=s?[["MONTE CARLO — CONFIGURAÇÃO",""],["Preço de Venda (±%)",c.sale*100],["Preço de Compra (±%)",c.buy*100],["GPD Inicial (±%)",c.gpd*100],["Custo da Dieta (±%)",c.diet*100],["RC de Venda (± pontos percentuais)",c.rc*100],["Relação Compra/Venda (%)",c.rho*100],["Cenários Simulados",s.iterations],["Código de Repetição",s.seed],[],["MONTE CARLO — RESULTADOS",""],["Lucro Médio (R$)",s.mean],["P10 (R$)",s.p10],["P50 (R$)",s.p50],["P90 (R$)",s.p90],["Probabilidade de Prejuízo (%)",s.lossProbability*100],["Dia Ótimo P10",s.dayP10],["Dia Ótimo P50",s.dayP50],["Dia Ótimo P90",s.dayP90],["Correlação Preço de Venda × Lucro (r)",s.priceProfitCorr],[],["Nota","Probabilidades condicionais às distribuições triangulares e intervalos informados pelo usuário."]]:[["MONTE CARLO","Análise ainda não executada"],["Instrução","Execute a análise na aba Monte Carlo antes de exportar para incluir percentis e probabilidades."]];XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(mcRows),"Monte Carlo");}
                 XLSX.writeFile(wb, `Simulacao_Ponto_Otimo_${inputs.fazenda || 'Resultados'}.xlsx`);
             },
             exportPDF() {
                 if(!app.state.simulationData) { alert("Calcule primeiro!"); return; }
                 const btn = document.getElementById('btnPdf'); const org = btn.innerHTML;
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gerando...'; btn.disabled = true;
-
-                // As imagens do PDF são renderizadas em canvases próprios, dedicados e já
-                // no tamanho final (em vez de reaproveitar os canvases das abas na tela).
-                // Um gráfico Chart.js que vive numa aba escondida (display:none) fica com
-                // 0x0px, e mesmo forçando resize() antes de capturar, o Chart.js encolhe o
-                // canvas de novo, de forma assíncrona, assim que a aba volta a ficar oculta
-                // — então uma 2ª exportação (ou exportar sem nunca ter aberto a aba Tornado)
-                // saía com o gráfico em branco. Gerar um canvas isolado elimina esse problema.
                 const marginalRender = app.renderOffscreenChart('marginal', 1000, 560);
                 const marginalImg = marginalRender.canvas.toDataURL('image/png');
                 marginalRender.chart.destroy();
                 const tornadoRender = app.renderOffscreenChart('tornado', 1000, 560);
                 const tornadoImg = tornadoRender.canvas.toDataURL('image/png');
                 tornadoRender.chart.destroy();
-
-                const c1 = document.createElement('div'); c1.className = 'pdf-page-container'; c1.style.minHeight = 'auto'; document.body.appendChild(c1);
-                const c2 = document.createElement('div'); c2.className = 'pdf-page-container'; c2.style.minHeight = 'auto'; document.body.appendChild(c2);
-                const c3 = document.createElement('div'); c3.className = 'pdf-page-container'; c3.style.minHeight = 'auto'; document.body.appendChild(c3);
+                let mcImg=null;if(app.state.monteCarloData){const mcRender=app.renderOffscreenChart('montecarlo',1000,520);mcImg=mcRender.canvas.toDataURL('image/png');mcRender.chart.destroy();}
                 const data = app.state.simulationData, r = data.results, f = app.utils.formatBr, fm = app.utils.formatMoney;
                 const inp = data.inputs;
-                // Datas de <input type="date"> já vêm como "AAAA-MM-DD": reformatar o texto
-                // direto evita o bug de fuso horário do Date() (que "voltava" o dia em 1
-                // sempre que o fuso local é negativo, como em todo o Brasil).
                 const dateStr = inp.dataSim ? inp.dataSim.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
                 const margem = r.revenue > 0 ? (r.profit / r.revenue) * 100 : 0;
+                const pages = Array.from({length: 6}, () => {
+                    const el = document.createElement('div'); el.className = 'pdf-page-container';
+                    el.style.height = '1123px'; el.style.minHeight = '1123px'; el.style.overflow = 'hidden';
+                    document.body.appendChild(el); return el;
+                });
+                const header = (page, title='RELATÓRIO DE SIMULAÇÃO') => `<div class="pdf-header"><div><h1 style="font-size:18px;font-weight:bold;color:#1e3a8a;">${title}</h1><p style="font-size:11px;color:#666;">Página ${page}/6</p></div><div style="text-align:right;font-size:10px;"><p><strong>Fazenda:</strong> ${inp.fazenda || '--'}</p><p><strong>Técnico:</strong> ${inp.tecnico || '--'}</p><p><strong>Data:</strong> ${dateStr}</p></div></div>`;
                 const disclaimerHtml = `<div class="pdf-disclaimer">Simulador desenvolvido por Prof. Ricardo C. Brumatti — FAMEZ/UFMS · ricardobrumatti.pro.br<br>Uso gratuito e não comercial. Ferramenta educacional de apoio à decisão — não constitui recomendação de investimento.</div>`;
-                c1.innerHTML = `
-                    <div class="pdf-header"><div><h1 style="font-size: 18px; font-weight: bold; color: #1e3a8a;">RELATÓRIO DE SIMULAÇÃO</h1><p style="font-size: 12px; color: #666;">Página 1/3</p></div><div style="text-align: right; font-size: 10px;"><p><strong>Fazenda:</strong> ${inp.fazenda || '--'}</p><p><strong>Data:</strong> ${dateStr}</p></div></div>
-                    <div class="pdf-section-title">1. Premissas</div>
-                    <div class="pdf-grid-3">
-                        <div class="pdf-card"><div class="pdf-label">Peso Inicial</div><div class="pdf-value">${f(inp.pvi, 1)} kg</div></div>
-                        <div class="pdf-card"><div class="pdf-label">Preço @</div><div class="pdf-value" style="color:#1e3a8a">${fm(inp.precoArroba)}</div></div>
-                        <div class="pdf-card"><div class="pdf-label">Custo Dieta</div><div class="pdf-value">${fm(inp.custoDieta)} /kg MS</div></div>
-                    </div>
-                    <div class="pdf-section-title">2. Resultados Principais</div>
+                const list = rows => `<ul class="pdf-list">${rows.map(([a,b])=>`<li><span>${a}:</span><strong>${b}</strong></li>`).join('')}</ul>`;
+                pages[0].innerHTML = `${header(1)}
+                    <div class="pdf-section-title">1. Premissas zootécnicas</div><div class="pdf-grid-2">
+                    <div>${list([['Peso vivo inicial',f(inp.pvi,1)+' kg'],['RC inicial',f(inp.rcInicial*100,1)+' %'],['RC de venda (fixo)',f(inp.rcFinal*100,1)+' %'],['GPD inicial',f(inp.gpdInicial,3)+' kg/d'],['Redução do GPD',f(inp.reducaoGPD,3)+' kg/dia']])}</div>
+                    <div>${list([['CMS inicial',f(inp.cmsInicial,2)+' kg MS/d'],['Aumento do CMS',f(inp.aumentoCMS,3)+' kg/dia'],['Preço de venda',fm(inp.precoArroba)+' /@'],['Preço de compra',fm(inp.precoCompraArroba)+' /@'],['Custo da dieta',fm(inp.custoDieta)+' /kg MS']])}</div></div>
+                    <div class="pdf-section-title">2. Premissas econômicas</div><div class="pdf-grid-2">
+                    <div>${list([['Despesas de compra',fm(inp.despesasCompra)],['Frete de entrada',fm(inp.freteEntrada)],['Sanidade',fm(inp.sanidade)],['Custo operacional',fm(inp.custoOperacional)+' /dia'],['Animais alojados',f(inp.quantidadeAnimais,0)]])}</div>
+                    <div>${list([['Capital',f(inp.taxaCapitalAnual*100,2)+' % a.a.'],['Despesas de venda',fm(inp.despesasVenda)],['Frete de saída',fm(inp.freteSaida)],['Mortalidade',f(inp.mortalidadePct*100,2)+' %'],['Comissão + impostos venda',f((inp.comissaoVendaPct+inp.impostoVendaPct)*100,2)+' %']])}</div></div>
+                    <div class="pdf-section-title">3. Resultados principais</div>
                     <div class="pdf-grid-3">
                         <div class="pdf-card" style="background:#eff6ff; border-color:#bfdbfe;"><div class="pdf-label">Dia Ótimo</div><div class="pdf-kpi-val">${r.days}</div><div class="pdf-label">dias</div></div>
-                        <div class="pdf-card" style="background:#f0fdf4; border-color:#bbf7d0;"><div class="pdf-label">Lucro Máx.</div><div class="pdf-kpi-val" style="color:#15803d; font-size:20px">${fm(r.profit)}</div></div>
+                        <div class="pdf-card" style="background:#f0fdf4; border-color:#bbf7d0;"><div class="pdf-label">Lucro econômico</div><div class="pdf-kpi-val" style="color:#15803d;font-size:20px">${fm(r.profit)}</div></div>
                         <div class="pdf-card"><div class="pdf-label">Peso Final</div><div class="pdf-kpi-val" style="color:#334155; font-size:20px">${f(r.finalWeight, 1)} kg</div></div>
                     </div>
-                    <div class="pdf-grid-2" style="margin-top:10px">
-                        <div><div class="pdf-section-title" style="margin-top:0">3. Zootécnico</div><ul class="pdf-list">
-                            <li><span>Peso Inicial:</span> <strong>${f(inp.pvi, 1)} kg</strong></li><li><span>GPD Médio:</span> <strong>${f(r.avgGPD, 3)} kg/d</strong></li>
-                            <li><span>Ganho Total:</span> <strong>${f(r.finalWeight - inp.pvi, 1)} kg</strong></li><li><span>CMS Médio:</span> <strong>${f(r.avgCMS, 2)} kg</strong></li>
-                            <li><span>Consumo Total:</span> <strong>${f(r.avgCMS * r.days, 1)} kg</strong></li><li><span>Conversão:</span> <strong>${f(r.feedConversion, 2)}</strong></li>
-                            <li><span>Rend. Carcaça:</span> <strong>${f(inp.rcFinal * 100, 1)} %</strong></li>
-                        </ul></div>
-                        <div><div class="pdf-section-title" style="margin-top:0">4. Econômico</div><ul class="pdf-list">
-                            <li><span>Carcaça Inicial:</span> <strong>${f(r.initialArrobas, 2)} @</strong></li><li><span>Carcaça Final:</span> <strong>${f(r.finalArrobas, 2)} @</strong></li>
-                            <li><span>Arrobas Ganhas:</span> <strong>${f(r.gainedArrobas, 2)} @</strong></li>
-                            <li><span>Custo Total (@):</span> <strong style="color:#dc2626">${fm(r.costTotalArroba)}</strong></li>
-                            <li><span>Custo Total:</span> <strong style="color:#dc2626">${fm(r.totalCost)}</strong></li>
-                            <li><span>Receita Total:</span> <strong style="color:#16a34a">${fm(r.revenue)}</strong></li>
-                            <li><span>Margem Op.:</span> <strong style="color:#16a34a">${f(margem, 1)} %</strong></li>
-                        </ul></div>
-                    </div>
-                    <div class="pdf-section-title">5. Gráfico Marginal</div>
-                    <div style="text-align:center;"><img src="${marginalImg}" width="700" height="392" /></div>
-                    <div style="margin-top:16px; padding-top:8px; border-top:1px solid #eee;">${disclaimerHtml}</div>
-                `;
+                    <div class="pdf-grid-2"><div><div class="pdf-section-title">4. Zootécnico</div>${list([['GPD médio',f(r.avgGPD,3)+' kg/d'],['Ganho total',f(r.finalWeight-inp.pvi,1)+' kg'],['CMS médio',f(r.avgCMS,2)+' kg MS/d'],['Consumo total',f(r.avgCMS*r.days,1)+' kg MS'],['Conversão alimentar',f(r.feedConversion,2)]])}</div>
+                    <div><div class="pdf-section-title">5. Econômico e financeiro</div>${list([['Receita bruta',fm(r.revenue)],['Compra do animal',fm(r.purchaseCost)],['Custo da engorda',fm(r.totalCost)],['Custo de capital',fm(r.capitalCost)],['Despesas de venda',fm(r.saleExpenses)],['Custo econômico total',fm(r.economicTotalCost)],['Resultado incremental',fm(r.marginalProfit)],['Margem econômica',f(margem,1)+' %'],['ROI do ciclo',f(r.roi*100,1)+' %'],['Equilíbrio no ótimo atual',fm(r.breakEvenPrice)+' /@'],['Janela econômica',r.windowStart+'–'+r.windowEnd+' dias'],['Lucro do lote',fm(r.lotProfit)]])}</div></div>
+                    <div style="margin-top:18px;border-top:1px solid #eee;padding-top:8px;">${disclaimerHtml}</div>`;
                 let tableHtml = ''; let idx = 0;
-                data.dailyData.forEach(r => {
-                    const isKey = r.day===1 || r.day%15===0 || r.day===data.results.days || r.day===data.dailyData.length;
+                data.dailyData.forEach(row => {
+                    const isKey = row.day===1 || row.day%15===0 || row.day===data.results.days || row.day===data.dailyData.length;
                     if(isKey) {
-                        const isOptimal = r.day===data.results.days;
+                        const isOptimal = row.day===data.results.days;
                         let rowClass = isOptimal ? 'class="pdf-highlight"' : (idx%2===0 ? 'class="pdf-row-even"' : '');
-                        tableHtml += `<tr ${rowClass}><td>${r.day}</td><td>${f(r.weightEnd, 0)}</td><td>${fm(r.rmg)}</td><td>${fm(r.cmg)}</td><td>${fm(r.accumulatedProfit)}</td></tr>`;
+                        tableHtml += `<tr ${rowClass}><td>${row.day}</td><td>${f(row.weightEnd,0)}</td><td>${fm(row.rmg)}</td><td>${fm(row.cmg)}</td><td>${fm(row.economicProfit)}</td></tr>`;
                         idx++;
                     }
                 });
-                // O gráfico Tornado ganha página própria, em largura cheia (igual ao Gráfico
-                // Marginal): dividindo a página com a Matriz (metade da largura), a mesma
-                // imagem ficava pequena demais e os rótulos dos eixos saíam ilegíveis.
-                c2.innerHTML = `
-                    <div class="pdf-header"><div><h1 style="font-size: 18px; font-weight: bold; color: #1e3a8a;">CONTINUAÇÃO</h1><p style="font-size: 12px; color: #666;">Página 2/3</p></div><div style="text-align: right; font-size: 10px;"><p><strong>Técnico:</strong> ${inp.tecnico || '--'}</p></div></div>
-                    <div class="pdf-section-title">6. Análise de Sensibilidade (Tornado)</div>
-                    <p style="font-size: 11px; color: #64748b; margin-bottom: 10px;">Impacto no lucro ao variar cada premissa individualmente em +/- 10%, mantendo as demais constantes.</p>
-                    <div style="text-align:center;"><img src="${tornadoImg}" width="700" height="392" /></div>
-                    <div style="margin-top:16px; padding-top:8px; border-top:1px solid #eee;">${disclaimerHtml}</div>
-                `;
-                c3.innerHTML = `
-                    <div class="pdf-header"><div><h1 style="font-size: 18px; font-weight: bold; color: #1e3a8a;">CONTINUAÇÃO</h1><p style="font-size: 12px; color: #666;">Página 3/3</p></div><div style="text-align: right; font-size: 10px;"><p><strong>Técnico:</strong> ${inp.tecnico || '--'}</p></div></div>
-                    <div class="pdf-section-title">7. Matriz de Sensibilidade</div>
-                    <div style="display:flex; justify-content:center;">${document.getElementById('heatmapContainer').innerHTML}</div>
-                    <div class="pdf-section-title" style="margin-top: 15px;">8. Evolução (Resumo)</div>
-                    <table class="pdf-table"><thead><tr><th>Dia</th><th>Peso (kg)</th><th>RMg (R$)</th><th>CMg (R$)</th><th>Lucro Acum. (R$)</th></tr></thead><tbody>${tableHtml}</tbody></table>
-                    <div style="margin-top: 30px; padding-top: 10px; border-top: 1px solid #ccc;">${disclaimerHtml}</div>
-                `;
-                // Página com altura ajustada ao conteúdo real (em vez de sempre A4 inteiro,
-                // que deixava mais de meia página em branco) e JPEG em vez de PNG na imagem
-                // final (o mesmo relatório de 2 páginas chegava a ~28MB em PNG a 2x escala).
-                // Chamado direto (sem requestAnimationFrame): as mutações no DOM acima já são
-                // síncronas, e depender de rAF faz a exportação travar indefinidamente numa
-                // aba em segundo plano/sem foco, onde o navegador pode nunca disparar o frame.
-                // As imagens dos gráficos (data URI) acabaram de ser atribuídas ao <img> — sem
-                // esperar a decodificação, o html2canvas pode capturar a página com a imagem
-                // ainda em branco (reproduzido: o gráfico Tornado saía vazio no PDF).
-                const allImgs = [...c1.querySelectorAll('img'), ...c2.querySelectorAll('img'), ...c3.querySelectorAll('img')];
+                const tornadoRows = app.sensitivityVariables(inp).map(v => {
+                    const low={...inp}, high={...inp}; low[v.key]*=.9; high[v.key]*=1.1;
+                    const lp=app.analyzeResults(app.runSimulation(low),low).profit, hp=app.analyzeResults(app.runSimulation(high),high).profit;
+                    return {html:`<tr><td style="text-align:left">${v.label}</td><td>${fm(lp)}</td><td>${fm(r.profit)}</td><td>${fm(hp)}</td></tr>`,impact:Math.abs(hp-lp)};
+                }).sort((a,b)=>b.impact-a.impact).slice(0,10).map(x=>x.html).join('');
+                const optimalRow = r.days > 0 ? data.dailyData[r.days - 1] : null;
+                pages[1].innerHTML = `${header(2,'ANÁLISE MARGINAL')}<div class="pdf-section-title">6. Receita marginal, custo marginal e lucro econômico</div><p style="font-size:11px;color:#64748b;">A RMg usa RC de venda fixo e varia com o GPD. A CMg inclui dieta, operação e capital. A curva azul é o lucro econômico total, já deduzido o animal de entrada.</p><div style="text-align:center;margin-top:20px;"><img src="${marginalImg}" width="700" height="392" /></div><div style="margin-top:25px;">${list([['Dia ótimo',r.days+' dias'],['RMg no ótimo',fm(optimalRow?.rmg||0)],['CMg no ótimo',fm(optimalRow?.cmg||0)],['Lucro econômico',fm(r.profit)]])}</div><div style="margin-top:100px;">${disclaimerHtml}</div>`;
+                pages[2].innerHTML = `${header(3,'ANÁLISE DE SENSIBILIDADE')}<div class="pdf-section-title">7. Tornado — impacto no lucro econômico</div><p style="font-size:11px;color:#64748b;">Cada premissa varia isoladamente em ±10%. O preço de compra e as despesas de compra estão explicitamente incluídos; o dia ótimo é recalculado em cada cenário.</p><div style="text-align:center;"><img src="${tornadoImg}" width="700" height="392" /></div><table class="pdf-table"><thead><tr><th>Premissa</th><th>−10%</th><th>Base</th><th>+10%</th></tr></thead><tbody>${tornadoRows}</tbody></table><div style="margin-top:20px;">${disclaimerHtml}</div>`;
+                pages[3].innerHTML = `${header(4,'MATRIZES DE DECISÃO')}<div class="pdf-section-title">8. Venda × dieta e venda × compra</div><p style="font-size:11px;color:#64748b;">Lucro econômico por animal alojado; o dia ótimo é recalculado em cada célula.</p><div>${document.getElementById('heatmapContainer').innerHTML}</div><div style="margin-top:18px;">${disclaimerHtml}</div>`;
+                const scenarioPdf=(app.state.scenarios||[]).map(x=>`<tr><td>${x.name}</td><td>${x.result.days}</td><td>${x.result.windowStart}–${x.result.windowEnd}</td><td>${fm(x.result.profit)}</td><td>${fm(x.result.lotProfit)}</td><td>${f(x.result.roi*100,1)}%</td></tr>`).join('');
+                pages[4].innerHTML=`${header(5,'CENÁRIOS E EVOLUÇÃO')}<div class="pdf-section-title">9. Cenários integrados</div><table class="pdf-table"><thead><tr><th>Cenário</th><th>Ótimo</th><th>Janela</th><th>Lucro/cab</th><th>Lucro lote</th><th>ROI</th></tr></thead><tbody>${scenarioPdf}</tbody></table><div class="pdf-section-title">10. Evolução resumida</div><table class="pdf-table"><thead><tr><th>Dia</th><th>Peso</th><th>RMg</th><th>CMg</th><th>Lucro econômico</th></tr></thead><tbody>${tableHtml}</tbody></table><div style="margin-top:18px;">${disclaimerHtml}</div>`;
+                const mc=app.state.monteCarloData,ms=mc?.summary;
+                pages[5].innerHTML=mc?`${header(6,'ANÁLISE DE RISCO — MONTE CARLO')}<div class="pdf-section-title">11. Distribuição do lucro e do dia ótimo</div><p style="font-size:10px;color:#64748b;line-height:1.5;"><strong>Configuração:</strong> venda ±${f(mc.config.sale*100,1)}%; compra ±${f(mc.config.buy*100,1)}%; GPD ±${f(mc.config.gpd*100,1)}%; dieta ±${f(mc.config.diet*100,1)}%; RC ±${f(mc.config.rc*100,1)} p.p.; relação compra/venda ${f(mc.config.rho*100,0)}%; ${ms.iterations} cenários; código ${ms.seed}. Distribuições triangulares centradas no cenário-base.</p><div style="text-align:center;"><img src="${mcImg}" width="700" height="340"></div>${list([['Lucro médio',fm(ms.mean)],['P10',fm(ms.p10)],['Mediana (P50)',fm(ms.p50)],['P90',fm(ms.p90)],['Probabilidade de prejuízo',f(ms.lossProbability*100,1)+' %'],['Dia ótimo P10/P50/P90',`${Math.round(ms.dayP10)} / ${Math.round(ms.dayP50)} / ${Math.round(ms.dayP90)}`],['Correlação preço de venda × lucro',`r = ${f(ms.priceProfitCorr,2)}`]])}<div style="margin-top:70px;">${disclaimerHtml}</div>`:`${header(6,'ANÁLISE DE RISCO — MONTE CARLO')}<div class="pdf-section-title">11. Análise não executada</div><p style="font-size:12px;color:#64748b;">Execute a análise de Monte Carlo na aba “Monte Carlo” antes de gerar o PDF para incluir percentis, probabilidade de prejuízo e distribuição do dia ótimo.</p><div style="margin-top:700px;">${disclaimerHtml}</div>`;
+                const allImgs = pages.flatMap(p => [...p.querySelectorAll('img')]);
                 Promise.all(allImgs.map(img => img.decode ? img.decode().catch(() => {}) : Promise.resolve()))
-                .then(() => Promise.all([
-                    html2canvas(c1, { scale: 2 }),
-                    html2canvas(c2, { scale: 2 }),
-                    html2canvas(c3, { scale: 2 })
-                ])).then(([cv1, cv2, cv3]) => {
-                    const wmm = 210;
-                    const h1mm = (cv1.height * wmm) / cv1.width;
-                    const h2mm = (cv2.height * wmm) / cv2.width;
-                    const h3mm = (cv3.height * wmm) / cv3.width;
-                    // A página do Tornado é mais curta que larga (conteúdo enxuto). Sem
-                    // avisar explicitamente a orientação, o jsPDF assume retrato por padrão
-                    // e "corrige" sozinho um formato mais largo que alto invertendo largura x
-                    // altura — a página nascia estreita e alta, cortando o gráfico à direita
-                    // e sobrando um vão em branco embaixo. Escolher 'p'/'l' pela proporção
-                    // real do conteúdo evita essa troca indevida.
-                    const orient = (h) => h >= wmm ? 'p' : 'l';
-                    const pdf = new jspdf.jsPDF(orient(h1mm), 'mm', [wmm, h1mm]);
-                    pdf.addImage(cv1.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, wmm, h1mm);
-                    pdf.addPage([wmm, h2mm], orient(h2mm));
-                    pdf.addImage(cv2.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, wmm, h2mm);
-                    pdf.addPage([wmm, h3mm], orient(h3mm));
-                    pdf.addImage(cv3.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, wmm, h3mm);
+                .then(() => Promise.all(pages.map(p => html2canvas(p, { scale: 2 })))).then(canvases => {
+                    const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+                    canvases.forEach((cv, i) => { if(i>0) pdf.addPage('a4','p'); pdf.addImage(cv.toDataURL('image/jpeg',0.88),'JPEG',0,0,210,297); });
                     pdf.save(`Relatorio_${inp.fazenda || 'Confinamento'}.pdf`);
-                    document.body.removeChild(c1); document.body.removeChild(c2); document.body.removeChild(c3);
+                    pages.forEach(p => p.remove());
                     btn.innerHTML = org; btn.disabled = false;
                 }).catch(err => {
                     console.error(err);
                     alert('Não foi possível gerar o PDF.');
-                    if(c1.parentNode) document.body.removeChild(c1);
-                    if(c2.parentNode) document.body.removeChild(c2);
-                    if(c3.parentNode) document.body.removeChild(c3);
+                    pages.forEach(p => p.remove());
                     btn.innerHTML = org; btn.disabled = false;
                 });
             },
@@ -926,11 +1094,11 @@
                         data: { labels: view.map(d => d.day), datasets: [
                             { label: 'RMg', data: view.map(d => d.rmg), borderColor: '#10b981', backgroundColor: '#10b981', borderWidth: 3, tension: 0.4, yAxisID: 'y', pointRadius: 0 },
                             { label: 'CMg', data: view.map(d => d.cmg), borderColor: '#ef4444', backgroundColor: '#ef4444', borderWidth: 3, tension: 0.4, yAxisID: 'y', pointRadius: 0 },
-                            { label: 'Lucro Acum.', data: view.map(d => d.accumulatedProfit), borderColor: '#064e65', backgroundColor: 'rgba(6,78,101,0.12)', borderWidth: 3, fill: true, yAxisID: 'y1', pointRadius: 0 }
+                            { label: 'Lucro Econômico', data: view.map(d => d.economicProfit), borderColor: '#064e65', backgroundColor: 'rgba(6,78,101,0.12)', borderWidth: 3, fill: true, yAxisID: 'y1', pointRadius: 0 }
                         ] },
                         options: {
                             responsive: false, animation: false,
-                            plugins: { legend: { labels: { color: cTx, font: { size: 20 }, usePointStyle: false, boxWidth: 24, boxHeight: 14 } }, annotation: { annotations: { line1: { type: 'line', xMin: data.results.days - 1, xMax: data.results.days - 1, borderColor: '#1e293b', borderWidth: 3, borderDash: [6, 6], label: { content: 'Ponto Ótimo: dia ' + data.results.days, display: true, position: 'start', backgroundColor: '#1e293b', color: 'white', font: { size: 16 } } } } } },
+                            plugins: { legend: { labels: { color: cTx, font: { size: 20 }, usePointStyle: false, boxWidth: 24, boxHeight: 14 } }, annotation: { annotations: { window:{type:'box',xMin:data.results.windowStart,xMax:data.results.windowEnd,backgroundColor:'rgba(59,130,246,0.08)',borderWidth:0}, line1: { type: 'line', xMin: data.results.days, xMax: data.results.days, borderColor: '#1e293b', borderWidth: 3, borderDash: [6, 6], label: { content: 'Ponto Ótimo: dia ' + data.results.days, display: true, position: 'start', backgroundColor: '#1e293b', color: 'white', font: { size: 16 } } } } } },
                             scales: {
                                 x: { grid: { color: cGr }, ticks: { color: cTx, font: { size: 16 } } },
                                 y: { type: 'linear', position: 'left', grid: { color: cGr }, ticks: { color: cTx, font: { size: 16 } } },
@@ -939,8 +1107,8 @@
                         }
                     });
                 } else if(type === 'tornado') {
-                    const vars = [ { key: 'precoArroba', label: 'Preço @' }, { key: 'custoDieta', label: 'Custo Dieta' }, { key: 'pvi', label: 'Peso Inicial' }, { key: 'gpdInicial', label: 'GPD Inicial' }, { key: 'custoOperacional', label: 'Custo Op.' } ];
                     const baseInputs = data.inputs;
+                    const vars = app.sensitivityVariables(baseInputs);
                     const dataPoints = [];
                     vars.forEach(v => {
                         let inLow = {...baseInputs}; inLow[v.key] = baseInputs[v.key] * 0.9;
@@ -950,11 +1118,16 @@
                         dataPoints.push({ label: v.label, min: Math.min(resLow, resHigh), max: Math.max(resLow, resHigh), impact: Math.abs(resHigh - resLow) });
                     });
                     dataPoints.sort((a, b) => b.impact - a.impact);
+                    if(dataPoints.length>10) dataPoints.length=10;
                     chart = new Chart(ctx, {
                         type: 'bar',
                         data: { labels: dataPoints.map(d => d.label), datasets: [{ data: dataPoints.map(d => [d.min, d.max]), backgroundColor: (c) => { const v = c.raw; if(v && v[0] >= 0 && v[1] >= 0) return '#4ade80'; if(v && v[0] < 0 && v[1] < 0) return '#f87171'; return '#60a5fa'; }, barPercentage: 0.6 }] },
                         options: { indexAxis: 'y', responsive: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: cGr }, ticks: { color: cTx, font: { size: 15 }, callback: v => app.utils.formatMoney(v) } }, y: { grid: { display: false }, ticks: { color: cTx, font: { size: 18, weight: 'bold' } } } } }
                     });
+                } else if(type === 'montecarlo') {
+                    const profits=app.state.monteCarloData.simulations.map(x=>x.profit).sort((a,b)=>a-b),bins=20,min=profits[0],max=profits[profits.length-1],step=(max-min)/bins||1,counts=Array(bins).fill(0);
+                    profits.forEach(v=>counts[Math.min(bins-1,Math.floor((v-min)/step))]++);
+                    chart=new Chart(ctx,{type:'bar',data:{labels:counts.map((_,i)=>app.utils.formatMoney(min+(i+.5)*step)),datasets:[{data:counts,backgroundColor:'#0d6b83'}]},options:{responsive:false,animation:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:cTx,font:{size:14},maxTicksLimit:8}},y:{ticks:{color:cTx,font:{size:14}},title:{display:true,text:'Frequência'}}}}});
                 }
                 return { canvas, chart };
             },
@@ -968,7 +1141,7 @@
 
                 if(type === 'resumo') {
                     const margemPct = r.revenue > 0 ? (r.profit / r.revenue) * 100 : 0;
-                    opts = { title: 'Ponto Ótimo de Venda', subtitle: (inp.fazenda ? inp.fazenda + ' — ' : '') + 'Simulação de confinamento', kpi: fm(r.profit), kpiCaption: `resultado da engorda, vendendo no dia ${r.days} de cocho` };
+                    opts = { title: 'Ponto Ótimo de Venda', subtitle: (inp.fazenda ? inp.fazenda + ' — ' : '') + 'Simulação de confinamento', kpi: fm(r.profit), kpiCaption: `lucro econômico, vendendo no dia ${r.days} de cocho` };
                     bodyHtml = `
                         <div style="flex:1; display:flex; flex-direction:column; justify-content:space-evenly; gap:24px;">
                             <div class="social-kpi-grid" style="grid-template-columns:1fr; margin-top:0;">
@@ -981,7 +1154,7 @@
                             </div>
                             <div class="social-kpi-grid" style="margin-top:0; grid-template-columns:1fr 1fr;">
                                 <div class="box"><div class="lbl">Receita Total</div><div class="val">${fm(r.revenue)}</div></div>
-                                <div class="box"><div class="lbl">Margem Operacional</div><div class="val">${f(margemPct,1)} %</div></div>
+                                <div class="box"><div class="lbl">Margem Econômica</div><div class="val">${f(margemPct,1)} %</div></div>
                             </div>
                         </div>`;
                     holder.innerHTML = app.buildSocialFrame(bodyHtml, opts);
