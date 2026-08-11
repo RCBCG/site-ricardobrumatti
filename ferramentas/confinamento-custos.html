@@ -827,7 +827,7 @@
                         <div class="secondary-indicator-card">
                             <div class="mr-4 text-green-500"><i class="fas fa-percentage fa-2x"></i></div>
                             <div>
-                                <div class="label text-sm text-gray-500">XIRR anual</div>
+                                <div class="label text-sm text-gray-500">TIR (% ao mês)</div>
                                 <div id="indicador6-value" class="value text-xl font-bold">0%</div>
                             </div>
                         </div>
@@ -1839,13 +1839,13 @@
     setMetric('indicador3-value', `${formatNumber(r.arrobasTotais, 2)} @`);
     setMetric('indicador4-value', formatPercent(i.rendimento));
     setMetric('indicador5-value', formatPercent(r.margemOperacional), r.margemOperacional >= 0);
-    setMetric('indicador6-value', Number.isFinite(r.xirrAnnual) ? `${formatPercent(r.xirrAnnual)} a.a.` : 'N/A', Number.isFinite(r.xirrAnnual) ? r.xirrAnnual >= 0 : undefined);
+    setMetric('indicador6-value', Number.isFinite(r.xirrMonthly) ? `${formatPercent(r.xirrMonthly)} a.m.` : 'N/A', Number.isFinite(r.xirrMonthly) ? r.xirrMonthly >= 0 : undefined);
     setMetric('indicador7-value', formatBRL(r.custoTotalPorArroba));
     setMetric('indicador8-value', formatBRL(r.custoArrobaProduzida));
     document.querySelector('#results-section .indicator-card .label').textContent = 'Resultado Operacional';
     const labels = document.querySelectorAll('#results-section .secondary-indicator-card .label');
     if (labels[0]) labels[0].textContent = 'Margem Operacional';
-    if (labels[1]) labels[1].textContent = 'XIRR anual';
+    if (labels[1]) labels[1].textContent = 'TIR (% ao mês)';
     const body = $('results-body');
     body.replaceChildren(
       row('Animais alojados', formatNumber(r.placed, 0)), row('Animais vendidos (esperados)', formatNumber(r.survivors, 2)),
@@ -1857,7 +1857,7 @@
       row('Despesas de venda', formatBRL(r.custoDespesasVenda)), row('Custo total do lote', formatBRL(r.custoTotal), true),
       row('Resultado operacional do lote', formatBRL(r.resultadoOperacional), true), row('Resultado por cabeça alojada', formatBRL(r.resultadoPorCabecaAlojada), true),
       row('Resultado por cabeça vendida', formatBRL(r.resultadoPorCabecaVendida)), row('ROI sobre o custo', formatPercent(r.roi)),
-      row('VPL à taxa informada', formatBRL(r.vpl)), row('XIRR anual', formatPercent(r.xirrAnnual)), row('Equivalente mensal da XIRR', formatPercent(r.xirrMonthly)),
+      row('VPL à taxa informada', formatBRL(r.vpl)), row('TIR (% ao mês)', formatPercent(r.xirrMonthly), true), row('XIRR anual (equivalente)', formatPercent(r.xirrAnnual)),
       row('Preço de equilíbrio operacional', `${formatBRL(r.precoEquilibrio)}/@`), row('Preço de equilíbrio econômico', `${formatBRL(r.economicPriceBreakEven)}/@`),
       row('GMD de equilíbrio', `${formatNumber(r.gmdEquilibrio, 3)} kg/dia`)
     );
@@ -2402,7 +2402,7 @@
   function resultRows(r) {
     return [
       ['Animais alojados', r.placed, 'cabeças'], ['Animais vendidos esperados', r.survivors, 'cabeças'], ['Peso final', r.pesoFinal, 'kg/cabeça'], ['Peso final de venda', r.pesoFinalVenda, 'kg/cabeça'], ['Arrobas totais', r.arrobasTotais, '@'], ['Arrobas produzidas', r.arrobasProduzidas, '@'],
-      ['Receita bruta', r.receitaBruta, 'R$'], ['Custo total', r.custoTotal, 'R$'], ['Resultado operacional', r.resultadoOperacional, 'R$'], ['Resultado/cabeça alojada', r.resultadoPorCabecaAlojada, 'R$'], ['Resultado/cabeça vendida', r.resultadoPorCabecaVendida, 'R$'], ['Margem operacional', r.margemOperacional, '%'], ['ROI', r.roi, '%'], ['Custo total/@', r.custoTotalPorArroba, 'R$/@'], ['Custo @ produzida', r.custoArrobaProduzida, 'R$/@'], ['VPL', r.vpl, 'R$'], ['XIRR anual', r.xirrAnnual, '% a.a.'], ['XIRR equivalente mensal', r.xirrMonthly, '% a.m.'], ['Preço de equilíbrio', r.precoEquilibrio, 'R$/@'], ['Preço de equilíbrio econômico', r.economicPriceBreakEven, 'R$/@'], ['GMD de equilíbrio', r.gmdEquilibrio, 'kg/dia']
+      ['Receita bruta', r.receitaBruta, 'R$'], ['Custo total', r.custoTotal, 'R$'], ['Resultado operacional', r.resultadoOperacional, 'R$'], ['Resultado/cabeça alojada', r.resultadoPorCabecaAlojada, 'R$'], ['Resultado/cabeça vendida', r.resultadoPorCabecaVendida, 'R$'], ['Margem operacional', r.margemOperacional, '%'], ['ROI', r.roi, '%'], ['Custo total/@', r.custoTotalPorArroba, 'R$/@'], ['Custo @ produzida', r.custoArrobaProduzida, 'R$/@'], ['VPL', r.vpl, 'R$'], ['TIR (% ao mês)', r.xirrMonthly, '% a.m.'], ['XIRR anual (equivalente)', r.xirrAnnual, '% a.a.'], ['Preço de equilíbrio', r.precoEquilibrio, 'R$/@'], ['Preço de equilíbrio econômico', r.economicPriceBreakEven, 'R$/@'], ['GMD de equilíbrio', r.gmdEquilibrio, 'kg/dia']
     ];
   }
 
@@ -2553,7 +2553,7 @@
       kpiCard('Margem Operacional', formatPercent(r.margemOperacional), r.margemOperacional >= 0),
       kpiCard('Preço de Equilíbrio', `${formatBRL(r.precoEquilibrio)}/@`, null),
       kpiCard('VPL', formatBRL(r.vpl), Number.isFinite(r.vpl) ? r.vpl >= 0 : null),
-      kpiCard('XIRR Anual', Number.isFinite(r.xirrAnnual) ? `${formatPercent(r.xirrAnnual)} a.a.` : 'N/A', Number.isFinite(r.xirrAnnual) ? r.xirrAnnual >= 0 : null),
+      kpiCard('TIR (% ao mês)', Number.isFinite(r.xirrMonthly) ? `${formatPercent(r.xirrMonthly)} a.m.` : 'N/A', Number.isFinite(r.xirrMonthly) ? r.xirrMonthly >= 0 : null),
       kpiCard('ROI', formatPercent(r.roi), Number.isFinite(r.roi) ? r.roi >= 0 : null),
       kpiCard('Risco de Prejuízo', mc ? formatPercent(mc.summary.probabilityLoss) : 'Não executado', mc ? mc.summary.probabilityLoss < 50 : null)
     ].join('');
@@ -2704,7 +2704,7 @@
         ['ROI operacional', formatPercent(r.roi)],
         ['Margem operacional', formatPercent(r.margemOperacional)],
         ['VPL do lote', formatBRL(r.vpl)],
-        ['XIRR anual', Number.isFinite(r.xirrAnnual) ? formatPercent(r.xirrAnnual) : 'Não aplicável'],
+        ['TIR (% ao mês)', Number.isFinite(r.xirrMonthly) ? `${formatPercent(r.xirrMonthly)} a.m.` : 'Não aplicável'],
         ['Preço de equilíbrio', `${formatBRL(r.precoEquilibrio)}/@`],
         ['GMD de equilíbrio', `${formatNumber(r.gmdEquilibrio, 3)} kg/dia`]
       ]);
