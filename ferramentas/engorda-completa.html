@@ -502,6 +502,91 @@
                     </div>
                 </div>
 
+                <!-- Análise de Risco — Monte Carlo -->
+                <section id="monte-carlo-section" class="bg-white shadow-xl rounded-2xl p-6 sm:p-8 fade-in border border-slate-200">
+                    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold text-slate-700"><i class="fas fa-dice mr-2"></i>Análise de Risco — Monte Carlo</h2>
+                            <p class="text-sm text-slate-500 mt-1">Distribuições triangulares sobre as premissas, com semente reprodutível.</p>
+                        </div>
+                        <button type="button" id="runMonteCarloBtn" class="btn-hover shrink-0 inline-flex items-center justify-center rounded-lg bg-purple-700 px-5 py-3 font-bold text-white shadow-md hover:bg-purple-800 no-print">
+                            <i class="fas fa-dice mr-2"></i>Executar Monte Carlo
+                        </button>
+                    </div>
+
+                    <details id="monte-carlo-config" class="no-print border border-purple-200 bg-purple-50 rounded-xl mb-6">
+                        <summary class="p-4 font-semibold text-purple-900 cursor-pointer">Intervalos e configuração</summary>
+                        <div class="px-4 pb-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                    <label for="mcIterations" class="block text-sm font-medium text-slate-600">Iterações</label>
+                                    <input type="number" id="mcIterations" value="10000" step="1000" min="1000" max="50000" class="mt-1 block w-full rounded-md bg-white border-slate-300 shadow-sm py-2 px-3 text-sm">
+                                </div>
+                                <div>
+                                    <label for="mcSeed" class="block text-sm font-medium text-slate-600">Semente</label>
+                                    <input type="number" id="mcSeed" value="12345" step="1" class="mt-1 block w-full rounded-md bg-white border-slate-300 shadow-sm py-2 px-3 text-sm" title="A mesma semente reproduz exatamente a mesma análise.">
+                                </div>
+                                <div>
+                                    <label for="mcPriceCorrelation" class="block text-sm font-medium text-slate-600">Correlação compra × venda (ρ)</label>
+                                    <input type="number" id="mcPriceCorrelation" value="0.50" step="0.05" min="0" max="0.9" class="mt-1 block w-full rounded-md bg-white border-slate-300 shadow-sm py-2 px-3 text-sm" title="O ciclo passa de um ano e as duas pontas de preço se movem juntas no mercado. Zero trata compra e venda como independentes e infla a dispersão.">
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-sm" id="mcRangesTable">
+                                    <thead class="bg-white">
+                                        <tr>
+                                            <th class="px-3 py-2 text-left font-semibold text-slate-600">Variável</th>
+                                            <th class="px-3 py-2 text-left font-semibold text-slate-600">Mínimo</th>
+                                            <th class="px-3 py-2 text-left font-semibold text-slate-600">Mais provável</th>
+                                            <th class="px-3 py-2 text-left font-semibold text-slate-600">Máximo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mcRangesBody"></tbody>
+                                </table>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-3">Deixe em branco para usar o intervalo padrão sugerido a partir do cenário-base. O rendimento de carcaça de entrada é fixo em 50% e não entra no sorteio.</p>
+                        </div>
+                    </details>
+
+                    <div id="mc-empty-state" class="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-6 text-center text-slate-600">
+                        Análise de risco não executada. Revise os intervalos e clique em “Executar Monte Carlo”.
+                    </div>
+
+                    <div id="mc-results" class="hidden space-y-8">
+                        <div id="mcCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                        <p id="mcMeta" class="text-xs text-slate-500"></p>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-white p-4 rounded-lg shadow-md border border-slate-200">
+                                <h3 class="text-md font-semibold text-slate-600 mb-2">Distribuição do resultado</h3>
+                                <div class="relative h-80"><canvas id="mcHistogramChart"></canvas></div>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-md border border-slate-200">
+                                <h3 class="text-md font-semibold text-slate-600 mb-1">Curva de excedência</h3>
+                                <p class="text-xs text-slate-500 mb-2">Não é evolução no tempo: cada ponto é a chance de obter resultado igual ou maior que o valor do eixo.</p>
+                                <div class="relative h-80"><canvas id="mcCdfChart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-md border border-slate-200">
+                            <h3 class="text-md font-semibold text-slate-600 mb-1">Tornado — influência isolada de cada premissa</h3>
+                            <p class="text-xs text-slate-500 mb-2">Cada barra leva uma variável ao mínimo e ao máximo do intervalo, mantendo as demais no valor mais provável.</p>
+                            <div class="relative h-96"><canvas id="mcTornadoChart"></canvas></div>
+                        </div>
+                        <div>
+                            <h3 class="text-md font-semibold text-slate-600 mb-1">Correlação de posto com o resultado</h3>
+                            <p id="mcCorrelationNote" class="text-xs text-slate-500 mb-2"></p>
+                            <div class="overflow-x-auto rounded-lg shadow ring-1 ring-black ring-opacity-5">
+                                <table class="min-w-full divide-y divide-slate-200">
+                                    <thead class="bg-slate-50"><tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Variável</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Spearman</th>
+                                    </tr></thead>
+                                    <tbody id="mcCorrelationBody" class="bg-white divide-y divide-slate-200"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Gráficos -->
                 <div id="charts-section" class="bg-white shadow-2xl rounded-xl p-6 sm:p-8 fade-in border border-slate-300">
                     <h2 class="text-xl font-semibold text-slate-700 mb-6">Gráficos da Simulação</h2>
@@ -917,9 +1002,11 @@
       : NaN;
 
     const parts = { custoAquisicao, custoSanitario, custoFreteEntrada, custoFreteSaida, custoDespesasVenda, receitaBruta };
+    // financial:false pula o fluxo inteiro (sensibilidade); xirr:false monta o fluxo e
+    // calcula o VPL mas dispensa a XIRR, que é a parte cara — é o modo do Monte Carlo.
     const cashFlow = opts.financial === false ? [] : buildCashFlow(inputs, parts);
     const vpl = cashFlow.length ? npv(cashFlow, inputs.taxaDescontoAnual) : NaN;
-    const xirrAnnual = cashFlow.length ? xirr(cashFlow) : NaN;
+    const xirrAnnual = cashFlow.length && opts.xirr !== false ? xirr(cashFlow) : NaN;
     const xirrMonthly = Number.isFinite(xirrAnnual) && xirrAnnual > -100
       ? (Math.pow(1 + xirrAnnual / 100, 1 / 12) - 1) * 100
       : NaN;
@@ -963,11 +1050,279 @@
     };
   }
 
+  /* ------------------------------------------------------------- aleatório */
+
+  // Gerador com semente: a mesma semente reproduz exatamente a mesma análise.
+  function mulberry32(seed) {
+    let a = (Number(seed) || 0) >>> 0;
+    return function random() {
+      a |= 0;
+      a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  // Inversa da acumulada triangular — separada do sorteio para permitir que o
+  // valor venha de uma uniforme correlacionada (cópula), não só de random().
+  function triangularInv(u, min, mode, max) {
+    const a = Number(min);
+    const b = Number(mode);
+    const c = Number(max);
+    if (!(c > a)) return a;
+    const f = (b - a) / (c - a);
+    return u < f ? a + Math.sqrt(u * (c - a) * (b - a)) : c - Math.sqrt((1 - u) * (c - a) * (c - b));
+  }
+
+  const triangular = (random, min, mode, max) => triangularInv(random(), min, mode, max);
+
+  function standardNormal(random) {
+    let u = 0;
+    let v = 0;
+    while (u === 0) u = random();
+    while (v === 0) v = random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  // Acumulada normal padrão (Zelen & Severo 26.2.17), erro < 7,5e-8.
+  function normalCdf(z) {
+    const t = 1 / (1 + 0.2316419 * Math.abs(z));
+    const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+    const p = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    return z > 0 ? 1 - p : p;
+  }
+
+  function percentile(sorted, p) {
+    if (!sorted.length) return NaN;
+    const index = (sorted.length - 1) * p;
+    const lo = Math.floor(index);
+    const hi = Math.ceil(index);
+    return lo === hi ? sorted[lo] : sorted[lo] + (sorted[hi] - sorted[lo]) * (index - lo);
+  }
+
+  function ranks(values) {
+    const indexed = values.map((value, index) => ({ value, index })).sort((a, b) => a.value - b.value);
+    const out = new Array(values.length);
+    for (let i = 0; i < indexed.length;) {
+      let j = i + 1;
+      while (j < indexed.length && indexed[j].value === indexed[i].value) j += 1;
+      const rank = (i + j - 1) / 2 + 1;
+      for (let k = i; k < j; k += 1) out[indexed[k].index] = rank;
+      i = j;
+    }
+    return out;
+  }
+
+  function pearson(a, b) {
+    if (!a.length || a.length !== b.length) return NaN;
+    const meanA = a.reduce((s, v) => s + v, 0) / a.length;
+    const meanB = b.reduce((s, v) => s + v, 0) / b.length;
+    let num = 0;
+    let da = 0;
+    let db = 0;
+    for (let i = 0; i < a.length; i += 1) {
+      const x = a[i] - meanA;
+      const y = b[i] - meanB;
+      num += x * y;
+      da += x * x;
+      db += y * y;
+    }
+    return da && db ? num / Math.sqrt(da * db) : 0;
+  }
+
+  const spearman = (a, b) => pearson(ranks(a), ranks(b));
+
+  /* --------------------------------------------------------- Monte Carlo */
+
+  const MC_LABELS = {
+    arrobaPriceGordo: 'Preço da arroba (venda)',
+    pricePerKg: 'Preço de compra (R$/kg)',
+    gmdRecria1: 'GMD Fase 1',
+    gmdRecria2: 'GMD Fase 2',
+    gmdConfinamento: 'GMD confinamento',
+    dailyCostRecria1: 'Custo diário Fase 1',
+    monthlyCostRecria2: 'Custo mensal Fase 2',
+    dailyCostConfinamento: 'Diária do confinamento',
+    rendimentoCarcaca: 'Rendimento de carcaça',
+    mortalityRate: 'Mortalidade'
+  };
+  const MC_KEYS = Object.keys(MC_LABELS);
+  // O par comprado/vendido é sorteado junto por uma cópula gaussiana; os demais
+  // são independentes entre si.
+  const CORRELATED_PAIR = ['arrobaPriceGordo', 'pricePerKg'];
+
+  function defaultRanges(raw) {
+    const i = normalizeInputs(raw);
+    const pct = (value, down, up) => ({ min: value * (1 - down), mode: value, max: value * (1 + up) });
+    const gmd = (value) => ({ min: Math.max(-1.99, value * 0.85), mode: value, max: value * 1.15 });
+    return {
+      arrobaPriceGordo: pct(i.arrobaPriceGordo, 0.1, 0.1),
+      pricePerKg: pct(i.pricePerKg, 0.1, 0.1),
+      gmdRecria1: gmd(i.gmdRecria1),
+      gmdRecria2: gmd(i.gmdRecria2),
+      gmdConfinamento: gmd(i.gmdConfinamento),
+      dailyCostRecria1: pct(i.dailyCostRecria1, 0.1, 0.1),
+      monthlyCostRecria2: pct(i.monthlyCostRecria2, 0.1, 0.1),
+      dailyCostConfinamento: pct(i.dailyCostConfinamento, 0.1, 0.1),
+      rendimentoCarcaca: { min: clamp(i.rendimentoCarcaca - 2, 1, 100), mode: i.rendimentoCarcaca, max: clamp(i.rendimentoCarcaca + 2, 1, 100) },
+      mortalityRate: { min: Math.max(0, i.mortalityRate - 1), mode: i.mortalityRate, max: clamp(i.mortalityRate + 2, 0, 99.9) }
+    };
+  }
+
+  function validateRanges(ranges) {
+    const errors = [];
+    for (const [key, r] of Object.entries(ranges || {})) {
+      const label = MC_LABELS[key] || key;
+      if (![r.min, r.mode, r.max].every(finite) || Number(r.min) > Number(r.mode) || Number(r.mode) > Number(r.max)) {
+        errors.push(`${label}: use mínimo ≤ mais provável ≤ máximo.`);
+        continue;
+      }
+      const rule = RULES[key];
+      if (rule && (Number(r.min) < rule[0] || Number(r.max) > rule[1])) {
+        errors.push(`${label}: os limites devem ficar entre ${rule[0]} e ${rule[1]}.`);
+      }
+    }
+    return errors;
+  }
+
+  function describe(values) {
+    const sorted = [...values].sort((a, b) => a - b);
+    const mean = values.reduce((s, v) => s + v, 0) / values.length;
+    const variance = values.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / Math.max(1, values.length - 1);
+    const p5 = percentile(sorted, 0.05);
+    const tail = sorted.filter((v) => v <= p5);
+    return {
+      mean,
+      stdDev: Math.sqrt(variance),
+      probabilityLoss: values.filter((v) => v < 0).length / values.length * 100,
+      p5,
+      p10: percentile(sorted, 0.1),
+      p50: percentile(sorted, 0.5),
+      median: percentile(sorted, 0.5),
+      p90: percentile(sorted, 0.9),
+      p95: percentile(sorted, 0.95),
+      expectedShortfall5: tail.reduce((s, v) => s + v, 0) / Math.max(1, tail.length),
+      min: sorted[0],
+      max: sorted[sorted.length - 1],
+      sorted
+    };
+  }
+
+  function histogram(sorted, binsCount) {
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+    const width = max === min ? 1 : (max - min) / binsCount;
+    const bins = Array.from({ length: binsCount }, (_, i) => ({ start: min + i * width, end: min + (i + 1) * width, count: 0 }));
+    for (const value of sorted) {
+      const idx = max === min ? 0 : Math.min(binsCount - 1, Math.floor((value - min) / width));
+      bins[idx].count += 1;
+    }
+    return bins;
+  }
+
+  function runMonteCarlo(rawInputs, config) {
+    const cfg = config || {};
+    const inputs = normalizeInputs(rawInputs);
+    const iterations = clamp(Math.round(num(cfg.iterations, 10000)), 1000, 50000);
+    const seed = Math.round(num(cfg.seed, 12345));
+    // Correlação do fator gaussiano que liga compra e venda. O ciclo dura mais de um
+    // ano e as duas pontas se movem juntas no mercado real: sortear de forma
+    // independente infla a dispersão. A correlação de posto efetivamente obtida é
+    // devolvida em realizedPriceCorrelation para conferência.
+    const rho = clamp(num(cfg.priceCorrelation, 0.5), 0, 0.9);
+    const ranges = { ...defaultRanges(inputs), ...(cfg.ranges || {}) };
+    const rangeErrors = validateRanges(ranges);
+    if (rangeErrors.length) throw new Error(rangeErrors.join(' '));
+
+    const random = mulberry32(seed);
+    const independentKeys = MC_KEYS.filter((key) => !CORRELATED_PAIR.includes(key));
+    const columns = Object.fromEntries(MC_KEYS.map((key) => [key, new Array(iterations)]));
+    const perHead = new Array(iterations);
+    const vplValues = new Array(iterations);
+    const samples = new Array(iterations);
+
+    for (let index = 0; index < iterations; index += 1) {
+      const sampled = {};
+      const z1 = standardNormal(random);
+      const z2 = rho * z1 + Math.sqrt(1 - rho * rho) * standardNormal(random);
+      sampled.arrobaPriceGordo = triangularInv(normalCdf(z1), ranges.arrobaPriceGordo.min, ranges.arrobaPriceGordo.mode, ranges.arrobaPriceGordo.max);
+      sampled.pricePerKg = triangularInv(normalCdf(z2), ranges.pricePerKg.min, ranges.pricePerKg.mode, ranges.pricePerKg.max);
+      for (const key of independentKeys) {
+        const r = ranges[key];
+        sampled[key] = triangular(random, r.min, r.mode, r.max);
+      }
+      for (const key of MC_KEYS) columns[key][index] = sampled[key];
+
+      const economics = calculateEconomics({ ...inputs, ...sampled }, { xirr: false });
+      perHead[index] = economics.resultadoPorCabecaAlojada;
+      vplValues[index] = economics.vpl;
+      samples[index] = {
+        iteracao: index + 1,
+        ...sampled,
+        resultadoPorCabeca: economics.resultadoPorCabecaAlojada,
+        resultadoLote: economics.resultadoOperacional,
+        vpl: economics.vpl
+      };
+    }
+
+    const summary = describe(perHead);
+    const vplSummary = describe(vplValues);
+    const correlations = MC_KEYS.map((key) => ({
+      variable: key,
+      label: MC_LABELS[key],
+      value: spearman(columns[key], perHead)
+    })).sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+
+    const cdf = Array.from({ length: 21 }, (_, i) => ({ probability: i / 20, value: percentile(summary.sorted, i / 20) }));
+    const exceedance = cdf.map((point) => ({ value: point.value, probability: (1 - point.probability) * 100 }));
+
+    return {
+      version: VERSION,
+      generatedAt: new Date().toISOString(),
+      iterations,
+      seed,
+      priceCorrelation: rho,
+      realizedPriceCorrelation: spearman(columns.arrobaPriceGordo, columns.pricePerKg),
+      ranges,
+      labels: MC_LABELS,
+      summary: { ...summary, sorted: undefined },
+      vplSummary: { ...vplSummary, sorted: undefined },
+      correlations,
+      bins: histogram(summary.sorted, 30),
+      cdf,
+      exceedance,
+      samples
+    };
+  }
+
+  // Tornado determinístico: efeito isolado de levar cada variável ao mínimo e ao
+  // máximo do intervalo, mantendo as demais no valor mais provável.
+  function sensitivity(rawInputs, ranges) {
+    const inputs = normalizeInputs(rawInputs);
+    const active = { ...defaultRanges(inputs), ...(ranges || {}) };
+    const base = calculateEconomics(inputs, { financial: false }).resultadoPorCabecaAlojada;
+    return MC_KEYS.map((key) => {
+      const low = calculateEconomics({ ...inputs, [key]: active[key].min }, { financial: false }).resultadoPorCabecaAlojada;
+      const high = calculateEconomics({ ...inputs, [key]: active[key].max }, { financial: false }).resultadoPorCabecaAlojada;
+      return {
+        key,
+        label: MC_LABELS[key],
+        base,
+        low: Math.min(low, high),
+        high: Math.max(low, high),
+        impact: Math.abs(high - low)
+      };
+    }).sort((a, b) => b.impact - a.impact);
+  }
+
   root.RecriaEngordaEngine = Object.freeze({
-    VERSION, ARROBA_KG, RENDIMENTO_INICIAL_FIXO, RULES,
+    VERSION, ARROBA_KG, RENDIMENTO_INICIAL_FIXO, RULES, MC_LABELS, MC_KEYS,
     normalizeInputs, validateInputs, calculateEconomics,
     phaseDays, monthSegments, headDays, avgHeads,
-    buildCashFlow, npv, xirr, addDays, daysBetween
+    buildCashFlow, npv, xirr, addDays, daysBetween,
+    mulberry32, triangular, triangularInv, normalCdf, percentile, spearman,
+    defaultRanges, validateRanges, runMonteCarlo, sensitivity
   });
 })(typeof window !== 'undefined' ? window : globalThis);
     </script>
@@ -1051,6 +1406,7 @@
             setDefaultDates();
             updateAutomaticDates();
             updateRecria2Hint();
+            syncRangePlaceholders();
         };
 
         // Datas padrão calculadas a partir do dia de acesso, para o cenário de exemplo
@@ -1080,6 +1436,7 @@
             dom.clearFormButton.addEventListener('click', () => showConfirmation('Limpar Formulário', 'Você tem certeza que deseja apagar todos os dados do formulário?', performClear));
             dom.printButton.addEventListener('click', generatePrintReport);
             dom.exportExcelBtn.addEventListener('click', exportToExcel);
+            document.getElementById('runMonteCarloBtn').addEventListener('click', runMonteCarlo);
 
             // Atualizadores de data automáticos
             ['recria1ExitDate', 'recria2ExitDate'].forEach(id => {
@@ -1144,8 +1501,12 @@
             const results = Engine.calculateEconomics(inputs);
 
             if (updateUI) {
-                state.currentSimulation = { schemaVersion: SCHEMA_VERSION, inputs, results, timestamp: new Date().getTime() };
+                // Recalcular muda o cenário-base: a análise de risco anterior deixa de
+                // valer e é descartada em vez de ficar na tela ao lado de outros números.
+                state.currentSimulation = { schemaVersion: SCHEMA_VERSION, inputs, results, monteCarlo: null, timestamp: new Date().getTime() };
                 updateResultsUI(results);
+                resetMonteCarlo();
+                syncRangePlaceholders();
             }
             return results;
         };
@@ -1437,6 +1798,206 @@
             });
         };
         
+        // --- ANÁLISE DE RISCO (MONTE CARLO) ---
+
+        // Casas decimais por variável: GMD e correlação pedem 3, dinheiro pede 2.
+        const MC_DECIMALS = { gmdRecria1: 3, gmdRecria2: 3, gmdConfinamento: 3 };
+
+        const buildRangesTable = () => {
+            const body = document.getElementById('mcRangesBody');
+            if (!body || body.dataset.built === '1') return;
+            body.innerHTML = Engine.MC_KEYS.map(key => `
+                <tr data-key="${key}">
+                    <td class="px-3 py-2 text-slate-700">${escapeHtml(Engine.MC_LABELS[key])}</td>
+                    ${['min', 'mode', 'max'].map(bound => `
+                        <td class="px-3 py-2">
+                            <input type="number" step="0.001" data-bound="${bound}"
+                                   class="w-28 rounded-md bg-white border-slate-300 shadow-sm py-1 px-2 text-sm">
+                        </td>`).join('')}
+                </tr>`).join('');
+            body.dataset.built = '1';
+        };
+
+        // Mostra o intervalo padrão como placeholder — o campo em branco significa
+        // "use o padrão", então o usuário só digita o que quer mudar.
+        const syncRangePlaceholders = () => {
+            buildRangesTable();
+            const check = Engine.validateInputs(getFormInputs());
+            if (!check.valid) return;
+            const defaults = Engine.defaultRanges(check.inputs);
+            document.querySelectorAll('#mcRangesBody tr').forEach(tr => {
+                const key = tr.dataset.key;
+                tr.querySelectorAll('input[data-bound]').forEach(input => {
+                    const value = defaults[key][input.dataset.bound];
+                    input.placeholder = formatNumber(value, MC_DECIMALS[key] || 2);
+                });
+            });
+        };
+
+        const readRanges = (inputs) => {
+            const defaults = Engine.defaultRanges(inputs);
+            const ranges = {};
+            document.querySelectorAll('#mcRangesBody tr').forEach(tr => {
+                const key = tr.dataset.key;
+                const range = { ...defaults[key] };
+                tr.querySelectorAll('input[data-bound]').forEach(input => {
+                    const raw = input.value.trim();
+                    if (raw !== '') {
+                        const parsed = parseFloat(raw.replace(',', '.'));
+                        if (Number.isFinite(parsed)) range[input.dataset.bound] = parsed;
+                    }
+                });
+                ranges[key] = range;
+            });
+            return ranges;
+        };
+
+        const runMonteCarlo = () => {
+            if (!state.currentSimulation) {
+                showAlert('Atenção', 'Calcule a simulação antes de executar a análise de risco.', 'warning');
+                return;
+            }
+            const inputs = state.currentSimulation.inputs;
+            const button = document.getElementById('runMonteCarloBtn');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Calculando…';
+
+            // Cede um quadro ao navegador para o botão repintar antes do laço travar a thread.
+            setTimeout(() => {
+                try {
+                    const mc = Engine.runMonteCarlo(inputs, {
+                        iterations: numValue('mcIterations') || 10000,
+                        seed: numValue('mcSeed') || 12345,
+                        priceCorrelation: numValue('mcPriceCorrelation'),
+                        ranges: readRanges(inputs)
+                    });
+                    mc.tornado = Engine.sensitivity(inputs, mc.ranges);
+                    state.currentSimulation.monteCarlo = mc;
+                    renderMonteCarlo(mc);
+                } catch (error) {
+                    showAlert('Erro na análise de risco', escapeHtml(error.message), 'error');
+                } finally {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-dice mr-2"></i>Executar Monte Carlo';
+                }
+            }, 50);
+        };
+
+        const renderMonteCarlo = (mc) => {
+            document.getElementById('mc-empty-state').classList.add('hidden');
+            document.getElementById('mc-results').classList.remove('hidden');
+
+            const s = mc.summary;
+            const cards = [
+                { label: 'Probabilidade de Prejuízo', value: formatPercent(s.probabilityLoss), tone: s.probabilityLoss < 50 ? 'positive' : 'negative' },
+                { label: 'Resultado Médio/Cabeça', value: formatCurrency(s.mean), tone: signTone(s.mean) },
+                { label: 'Desvio-Padrão', value: formatCurrency(s.stdDev), tone: 'neutral' },
+                { label: 'Cenário Pessimista (P10)', value: formatCurrency(s.p10), tone: signTone(s.p10) },
+                { label: 'Cenário Mediano (P50)', value: formatCurrency(s.p50), tone: signTone(s.p50) },
+                { label: 'Cenário Otimista (P90)', value: formatCurrency(s.p90), tone: signTone(s.p90) },
+                { label: 'Cauda Inferior 5%', value: formatCurrency(s.expectedShortfall5), tone: signTone(s.expectedShortfall5), hint: 'Média dos 5% piores cenários' },
+                { label: 'VPL Médio', value: orNA(mc.vplSummary.mean, formatCurrency), tone: signTone(mc.vplSummary.mean) },
+                { label: 'Chance de VPL Negativo', value: formatPercent(mc.vplSummary.probabilityLoss), tone: mc.vplSummary.probabilityLoss < 50 ? 'positive' : 'negative' }
+            ];
+            const toneClass = { positive: 'text-green-600', negative: 'text-red-600', neutral: 'text-slate-800' };
+            document.getElementById('mcCards').innerHTML = cards.map(c => `
+                <div class="bg-slate-50 p-5 rounded-xl shadow border border-slate-200 text-center">
+                    <p class="text-sm text-slate-600 font-semibold">${c.label}</p>
+                    <p class="text-2xl font-bold mt-1 ${toneClass[c.tone]}">${c.value}</p>
+                    ${c.hint ? `<p class="text-xs text-slate-400 mt-1">${c.hint}</p>` : ''}
+                </div>`).join('');
+
+            document.getElementById('mcMeta').textContent =
+                `${formatNumber(mc.iterations, 0)} iterações • semente ${mc.seed} • correlação compra × venda pedida ${formatNumber(mc.priceCorrelation, 2)} `
+                + `(obtida ${formatNumber(mc.realizedPriceCorrelation, 2)}) • resultado por cabeça alojada.`;
+
+            // Histograma
+            createOrUpdateChart('mcHistogramChart', 'bar', {
+                labels: mc.bins.map(b => formatCurrency((b.start + b.end) / 2)),
+                datasets: [{
+                    label: 'Cenários',
+                    data: mc.bins.map(b => b.count),
+                    backgroundColor: mc.bins.map(b => (b.end <= 0 ? 'rgba(220, 38, 38, 0.75)' : 'rgba(109, 40, 217, 0.75)')),
+                    borderRadius: 3
+                }]
+            }, {
+                plugins: { title: { display: true, text: 'Distribuição do Resultado por Cabeça Alojada' }, legend: { display: false } },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 8 }, title: { display: true, text: 'Resultado (R$/cabeça)' } },
+                    y: { title: { display: true, text: 'Nº de cenários' } }
+                }
+            });
+
+            // Curva de excedência
+            createOrUpdateChart('mcCdfChart', 'line', {
+                labels: mc.exceedance.map(p => formatCurrency(p.value)),
+                datasets: [{
+                    label: 'Chance de atingir ou superar',
+                    data: mc.exceedance.map(p => p.probability),
+                    borderColor: '#6d28d9',
+                    backgroundColor: 'rgba(109, 40, 217, 0.15)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 3
+                }]
+            }, {
+                plugins: { title: { display: true, text: 'Curva de Excedência' }, legend: { display: false } },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 8 }, title: { display: true, text: 'Meta de resultado (R$/cabeça)' } },
+                    y: { min: 0, max: 100, ticks: { callback: (v) => `${v}%` }, title: { display: true, text: 'Chance de atingir ou superar' } }
+                }
+            });
+
+            // Tornado — barras flutuantes do menor ao maior resultado
+            const tornado = (mc.tornado || []).slice().reverse();
+            createOrUpdateChart('mcTornadoChart', 'bar', {
+                labels: tornado.map(t => t.label),
+                datasets: [{
+                    label: 'Faixa de resultado',
+                    data: tornado.map(t => [t.low, t.high]),
+                    backgroundColor: 'rgba(13, 107, 131, 0.75)',
+                    borderColor: '#064e65',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            }, {
+                indexAxis: 'y',
+                plugins: {
+                    title: { display: true, text: 'Tornado — Amplitude do Resultado por Premissa' },
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (ctx) => {
+                        const t = tornado[ctx.dataIndex];
+                        return `${formatCurrency(t.low)} a ${formatCurrency(t.high)} (amplitude ${formatCurrency(t.impact)})`;
+                    } } }
+                },
+                scales: {
+                    x: { ticks: { callback: formatCurrency }, title: { display: true, text: 'Resultado por cabeça alojada (R$)' } },
+                    y: { grid: { display: false } }
+                }
+            });
+
+            // Correlações — com a ressalva do fator comum quando há correlação de preços
+            const nota = mc.priceCorrelation > 0
+                ? 'Mede associação, não causalidade. Como compra e venda foram sorteadas com correlação '
+                  + `${formatNumber(mc.priceCorrelation, 2)}, o preço de compra herda parte da influência do preço de venda e `
+                  + 'pode aparecer com sinal invertido em relação ao seu efeito real — use o tornado acima para ler o efeito isolado de cada premissa.'
+                : 'Mede associação, não causalidade. As premissas foram sorteadas de forma independente.';
+            document.getElementById('mcCorrelationNote').textContent = nota;
+            document.getElementById('mcCorrelationBody').innerHTML = mc.correlations.map(c => `
+                <tr>
+                    <td class="px-4 py-2 text-sm text-slate-700">${escapeHtml(c.label)}</td>
+                    <td class="px-4 py-2 text-sm font-semibold ${c.value >= 0 ? 'text-green-700' : 'text-red-700'}">${formatNumber(c.value, 3)}</td>
+                </tr>`).join('');
+        };
+
+        const resetMonteCarlo = () => {
+            if (state.currentSimulation) state.currentSimulation.monteCarlo = null;
+            const results = document.getElementById('mc-results');
+            const empty = document.getElementById('mc-empty-state');
+            if (results) results.classList.add('hidden');
+            if (empty) empty.classList.remove('hidden');
+        };
+
         const createOrUpdateChart = (canvasId, type, data, options) => {
             const ctx = document.getElementById(canvasId).getContext('2d');
             if (state.chartInstances[canvasId]) {
@@ -1664,14 +2225,49 @@
             el.classList.remove('hidden');
         };
         
+        // As amostras do Monte Carlo são 10 mil linhas: úteis para exportar, inviáveis
+        // para guardar no localStorage. O resumo, os gráficos e a semente ficam — com a
+        // semente, a análise inteira é reproduzível.
+        const withoutSamples = (sim) => ({
+            ...sim,
+            monteCarlo: sim.monteCarlo ? { ...sim.monteCarlo, samples: undefined } : null
+        });
+
         const persistAndReload = () => {
             try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state.savedSimulations));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state.savedSimulations.map(withoutSamples)));
             } catch (e) {
                 showAlert('Não foi possível salvar', 'O armazenamento local do navegador está cheio ou indisponível. Exclua simulações antigas na aba Histórico e tente novamente.', 'warning');
             }
             loadSavedSimulations();
             updateComparison();
+        };
+
+        const monteCarloCsvRows = (mc, dec) => {
+            if (!mc) return [['Monte Carlo', 'Não executado']];
+            const s = mc.summary;
+            const rows = [
+                ['Monte Carlo', 'Valor'],
+                ['Iterações', mc.iterations], ['Semente', mc.seed],
+                ['Correlação compra x venda (pedida)', dec(mc.priceCorrelation)],
+                ['Correlação compra x venda (obtida)', dec(mc.realizedPriceCorrelation)],
+                ['Probabilidade de prejuízo (%)', dec(s.probabilityLoss)],
+                ['Resultado médio por cabeça (R$)', dec(s.mean)], ['Desvio-padrão (R$)', dec(s.stdDev)],
+                ['P5 (R$)', dec(s.p5)], ['P10 (R$)', dec(s.p10)], ['P50 (R$)', dec(s.p50)], ['P90 (R$)', dec(s.p90)], ['P95 (R$)', dec(s.p95)],
+                ['Cauda inferior 5% (R$)', dec(s.expectedShortfall5)],
+                ['VPL médio (R$)', dec(mc.vplSummary.mean)], ['Chance de VPL negativo (%)', dec(mc.vplSummary.probabilityLoss)],
+                [],
+                ['Tornado', 'Menor resultado (R$)', 'Maior resultado (R$)', 'Amplitude (R$)'],
+                ...(mc.tornado || []).map((t) => [t.label, dec(t.low), dec(t.high), dec(t.impact)]),
+                [],
+                ['Correlação de Spearman', 'Valor'],
+                ...mc.correlations.map((c) => [c.label, dec(c.value, 3)])
+            ];
+            if (mc.samples && mc.samples.length) {
+                rows.push([], ['Amostras do Monte Carlo', 'Iteração', ...Engine.MC_KEYS.map((k) => Engine.MC_LABELS[k]), 'Resultado/cabeça (R$)', 'Resultado do lote (R$)', 'VPL (R$)']);
+                mc.samples.forEach((x) => rows.push(['', x.iteracao, ...Engine.MC_KEYS.map((k) => dec(x[k], 4)), dec(x.resultadoPorCabeca), dec(x.resultadoLote), dec(x.vpl)]));
+            }
+            return rows;
         };
 
         const exportToExcel = () => {
@@ -1728,7 +2324,9 @@
                 ['Margem de Segurança (%)', dec(results.margemSegurancaPercentual)],
                 [],
                 ['Fluxo de Caixa', 'Data', 'Valor (R$)', 'Saldo Acumulado (R$)'],
-                ...(() => { let acc = 0; return (results.cashFlow || []).map((row) => { acc += row.amount; return [row.label, brDate(row.date), dec(row.amount), dec(acc)]; }); })()
+                ...(() => { let acc = 0; return (results.cashFlow || []).map((row) => { acc += row.amount; return [row.label, brDate(row.date), dec(row.amount), dec(acc)]; }); })(),
+                [],
+                ...monteCarloCsvRows(state.currentSimulation.monteCarlo, dec)
             ];
             // CSV para Excel pt-BR: separador ';', campos aspeados (nome de simulação
             // com vírgula ou ';' deixa de quebrar a estrutura) e BOM UTF-8, sem o qual
@@ -1752,11 +2350,49 @@
         const generatePrintReport = () => {
             if (!state.currentSimulation) { showAlert('Atenção', 'Nenhuma simulação para gerar relatório.', 'warning'); return; }
             const { inputs, results } = state.currentSimulation;
+            const mc = state.currentSimulation.monteCarlo;
             const chartImages = {
                 metrics: state.chartInstances.metricsChart?.toBase64Image(),
                 cashFlow: state.chartInstances.cashFlowChart?.toBase64Image(),
-                sensitivity: state.chartInstances.sensitivityChart?.toBase64Image()
+                sensitivity: state.chartInstances.sensitivityChart?.toBase64Image(),
+                mcHistogram: state.chartInstances.mcHistogramChart?.toBase64Image(),
+                mcCdf: state.chartInstances.mcCdfChart?.toBase64Image(),
+                mcTornado: state.chartInstances.mcTornadoChart?.toBase64Image()
             };
+
+            const monteCarloSectionHTML = mc ? `
+                <div class="page-break print-card">
+                    <h2 class="text-base font-bold text-[--primary] mb-2">Análise de Risco — Monte Carlo</h2>
+                    <p class="text-xs text-slate-600 mb-3">${formatNumber(mc.iterations, 0)} iterações • semente ${mc.seed} •
+                        correlação compra × venda ${formatNumber(mc.priceCorrelation, 2)} (obtida ${formatNumber(mc.realizedPriceCorrelation, 2)}) •
+                        métrica: resultado por cabeça alojada.</p>
+                    <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                        <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Prob. de Prejuízo</p><p class="text-lg font-bold ${mc.summary.probabilityLoss < 50 ? 'text-green-600' : 'text-red-600'}">${formatPercent(mc.summary.probabilityLoss)}</p></div>
+                        <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Mediana (P50)</p><p class="text-lg font-bold">${formatCurrency(mc.summary.p50)}</p></div>
+                        <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Cauda Inferior 5%</p><p class="text-lg font-bold">${formatCurrency(mc.summary.expectedShortfall5)}</p></div>
+                    </div>
+                    <table class="w-full text-xs mb-3"><tbody>
+                        <tr><td class="font-semibold py-1">P5</td><td>${formatCurrency(mc.summary.p5)}</td><td class="font-semibold py-1">P10</td><td>${formatCurrency(mc.summary.p10)}</td></tr>
+                        <tr><td class="font-semibold py-1">P90</td><td>${formatCurrency(mc.summary.p90)}</td><td class="font-semibold py-1">P95</td><td>${formatCurrency(mc.summary.p95)}</td></tr>
+                        <tr><td class="font-semibold py-1">Média</td><td>${formatCurrency(mc.summary.mean)}</td><td class="font-semibold py-1">Desvio-padrão</td><td>${formatCurrency(mc.summary.stdDev)}</td></tr>
+                        <tr><td class="font-semibold py-1">VPL médio</td><td>${orNA(mc.vplSummary.mean, formatCurrency)}</td><td class="font-semibold py-1">Chance de VPL negativo</td><td>${formatPercent(mc.vplSummary.probabilityLoss)}</td></tr>
+                    </tbody></table>
+                    ${chartImages.mcHistogram ? `<img src="${chartImages.mcHistogram}" class="w-full h-auto border rounded mb-2">` : ''}
+                    ${chartImages.mcCdf ? `<img src="${chartImages.mcCdf}" class="w-full h-auto border rounded">` : ''}
+                </div>
+                <div class="page-break print-card">
+                    <h2 class="text-base font-bold text-[--primary] mb-2">Influência das Premissas</h2>
+                    ${chartImages.mcTornado ? `<img src="${chartImages.mcTornado}" class="w-full h-auto border rounded mb-3">` : ''}
+                    <p class="text-xs text-slate-600">A correlação de posto mede associação, não causalidade.
+                    ${mc.priceCorrelation > 0 ? 'Como compra e venda foram sorteadas de forma correlacionada, o preço de compra herda parte da influência do preço de venda; use o tornado para ler o efeito isolado de cada premissa.' : ''}</p>
+                    <table class="w-full text-xs mt-2"><tbody>
+                        ${mc.correlations.map(c => `<tr><td class="py-1">${escapeHtml(c.label)}</td><td class="py-1 text-right">${formatNumber(c.value, 3)}</td></tr>`).join('')}
+                    </tbody></table>
+                </div>` : `
+                <div class="page-break print-card">
+                    <h2 class="text-base font-bold text-[--primary] mb-2">Análise de Risco — Monte Carlo</h2>
+                    <p class="text-xs text-slate-600">Análise de risco não executada para este cenário.</p>
+                </div>`;
 
             const allData = [
                 { label: 'Nome da Simulação', value: escapeHtml(inputs.simulationName) }, { label: 'Fazenda', value: escapeHtml(inputs.farmName || 'N/A') },
@@ -1921,6 +2557,7 @@
                             </div>
                          </div>
                     </div>
+                    ${monteCarloSectionHTML}
                     <div class="page-break print-card">
                         <h2 class="text-base font-bold text-[--primary] mb-2">Fluxo de Caixa</h2>
                         ${cashFlowTableHTML}
@@ -1965,7 +2602,9 @@
             { title: "Passo 1: Simulação", content: "Aqui você insere todos os dados para a sua simulação. Campos com * são obrigatórios. Use o botão 'Carregar Exemplo' para ver como funciona." },
             { title: "Passo 2: Calcular e Salvar", content: "Depois de preencher, clique em 'Calcular Simulação'. Para guardar o cenário, clique em 'Salvar Simulação'." },
             { title: "Passo 3: Histórico", content: "Na aba 'Histórico', você pode ver, carregar ou excluir simulações salvas anteriormente." },
-            { title: "Passo 4: Comparação", content: "Use a aba 'Comparação' para analisar dois cenários salvos lado a lado, facilitando a tomada de decisão." },
+            { title: "Passo 4: Análise de Risco", content: "Depois de calcular, execute o Monte Carlo. Informe mínimo, mais provável e máximo de cada premissa e a ferramenta sorteia milhares de cenários, mostrando a chance de prejuízo, os percentis e quais premissas mais pesam no resultado. A semente deixa a análise reprodutível." },
+            { title: "Passo 5: Comparação", content: "Use a aba 'Comparação' para analisar dois cenários salvos lado a lado, facilitando a tomada de decisão." },
+            { title: "Passo 6: Relatórios", content: "Imprima o relatório em PDF ou exporte a planilha: ambos trazem premissas, resultados, fluxo de caixa, a análise de risco e a metodologia." },
             { title: "Fim do Tour", content: "Agora você está pronto para explorar a ferramenta! Bons negócios!" },
         ];
         const startTour = () => { state.tourStep = 0; updateTourContent(); document.getElementById('tourModal').classList.remove('hidden'); };
