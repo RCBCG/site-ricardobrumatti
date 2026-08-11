@@ -539,10 +539,23 @@
     <script>
     // Módulo principal da aplicação
     const App = (() => {
+        const STORAGE_KEY = 'savedSimulations_recriaV2';
+
+        // Um item corrompido no localStorage não pode derrubar a ferramenta inteira
+        // na carga — sem o try/catch, o JSON.parse lança antes de qualquer tela existir.
+        const readSavedSimulations = () => {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        };
+
         // Estado da Aplicação
         let state = {
             currentSimulation: null,
-            savedSimulations: JSON.parse(localStorage.getItem('savedSimulations_recriaV2')) || [],
+            savedSimulations: readSavedSimulations(),
             chartInstances: {},
             tourStep: 0,
         };
@@ -612,6 +625,14 @@
             document.getElementById('compare-sim2').addEventListener('change', updateComparison);
         };
         
+        const roundToTwo = (num) => Math.round(num * 100) / 100;
+
+        // Nome da simulação, fazenda e técnico são texto livre e vão parar em innerHTML
+        // (histórico, comparação, alertas) — escapa antes de interpolar.
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => (
+            { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+        ));
+
         // --- LÓGICA DE CÁLCULO (CORRIGIDA E ALINHADA AO ORIGINAL) ---
         const calculateSimulation = (inputs, updateUI = true) => {
             const errorMessage = document.getElementById('errorMessage');
@@ -627,8 +648,6 @@
                 if (updateUI) showAlert('Erro de Validação', 'O número de dias de confinamento não pode ser negativo.', 'error'); return null;
             }
             
-            const roundToTwo = (num) => Math.round(num * 100) / 100;
-
             const purchaseValue = roundToTwo(inputs.pricePerKg * inputs.initialWeight);
             const totalInitialCost = roundToTwo(purchaseValue + inputs.sanitaryCost);
             const daysRecria1 = Math.max(0, Math.round((inputs.recria1ExitDate - inputs.recria1EntryDate) / (1000 * 60 * 60 * 24)));
@@ -675,8 +694,11 @@
             const costPerProducedArroba = producedArrobas > 0 ? roundToTwo(costOfGain / producedArrobas) : 0;
 
             const cashFlowMap = new Map();
+            // Chave no formato AAAA-MM com mês 1-based. getUTCMonth() é 0-based: sem o +1,
+            // agosto virava "07" e o rótulo do gráfico exibia julho; janeiro gerava "00",
+            // que o construtor Date rejeita e imprimia "Invalid Date".
             const addToFlow = (date, amount) => {
-                const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth()).padStart(2, '0')}`;
+                const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
                 cashFlowMap.set(key, (cashFlowMap.get(key) || 0) + amount);
             };
             addToFlow(inputs.recria1EntryDate, -totalInitialCost);
@@ -693,8 +715,11 @@
             const sortedKeys = Array.from(cashFlowMap.keys()).sort();
             const cashFlow = sortedKeys.map(key => roundToTwo(cashFlowMap.get(key)));
             const tir = calculateTIR(cashFlow) * 100;
+            // Série serializável: um Map vira "{}" no JSON.stringify, então todo histórico
+            // salvo perdia o fluxo de caixa silenciosamente.
+            const cashFlowSeries = sortedKeys.map((key, i) => ({ key, amount: cashFlow[i] }));
 
-            const results = { purchaseValue, totalInitialCost, totalDaysCycle: totalDaysRecria + inputs.diasConfinamento, daysRecria1, weightGainRecria1, costRecria1, weightAfterRecria1, daysRecria2, weightGainRecria2, costRecria2, weightAfterRecria2, totalCostRecria, daysConfinamento: inputs.diasConfinamento, weightGainConfinamento, finalWeightCycle, costConfinamento, totalProductionCost, mortalityCost, finalTotalCost, finalCarcassWeight, finalArrobas, finalRevenue, grossProfit, grossMargin, costPerArroba, costPerProducedArroba, tir, cashFlowMap, sortedKeys };
+            const results = { purchaseValue, totalInitialCost, totalDaysCycle: totalDaysRecria + inputs.diasConfinamento, daysRecria1, weightGainRecria1, costRecria1, weightAfterRecria1, daysRecria2, weightGainRecria2, costRecria2, weightAfterRecria2, totalCostRecria, daysConfinamento: inputs.diasConfinamento, weightGainConfinamento, finalWeightCycle, costConfinamento, totalProductionCost, mortalityCost, finalTotalCost, finalCarcassWeight, finalArrobas, finalRevenue, grossProfit, grossMargin, costPerArroba, costPerProducedArroba, tir, cashFlowSeries };
             
             if (updateUI) {
                 state.currentSimulation = { inputs, results, timestamp: new Date().getTime() };
@@ -772,18 +797,21 @@
         };
         
         const updateKeyMetrics = (data) => {
+            // Custo não é resultado: indicadores de custo ficam em tom neutro em vez de
+            // vermelho permanente, que dava a impressão de erro mesmo em cenário saudável.
             const metrics = [
-                { label: 'Lucro Bruto', value: formatCurrency(data.grossProfit), isPositive: data.grossProfit >= 0 },
-                { label: 'Margem Bruta', value: formatPercent(data.grossMargin), isPositive: data.grossMargin >= 0 },
-                { label: 'TIR Mensal', value: isFinite(data.tir) ? formatPercent(data.tir) : 'N/A', isPositive: data.tir >= 0 || !isFinite(data.tir) },
-                { label: 'Custo Total/@', value: formatCurrency(data.costPerArroba), isPositive: false },
-                { label: 'Custo @ Produzida', value: formatCurrency(data.costPerProducedArroba), isPositive: false }
+                { label: 'Lucro Bruto', value: formatCurrency(data.grossProfit), tone: data.grossProfit >= 0 ? 'positive' : 'negative' },
+                { label: 'Margem Bruta', value: formatPercent(data.grossMargin), tone: data.grossMargin >= 0 ? 'positive' : 'negative' },
+                { label: 'TIR Mensal', value: isFinite(data.tir) ? formatPercent(data.tir) : 'N/A', tone: !isFinite(data.tir) ? 'neutral' : (data.tir >= 0 ? 'positive' : 'negative') },
+                { label: 'Custo Total/@', value: formatCurrency(data.costPerArroba), tone: 'neutral' },
+                { label: 'Custo @ Produzida', value: formatCurrency(data.costPerProducedArroba), tone: 'neutral' }
             ];
+            const toneClass = { positive: 'text-green-600', negative: 'text-red-600', neutral: 'text-slate-800' };
             const container = document.getElementById('keyMetricsCards');
             container.innerHTML = metrics.map(m => `
                 <div class="bg-slate-50 p-5 rounded-xl shadow-lg text-center border border-slate-200">
                     <p class="text-base text-slate-600 font-semibold">${m.label}</p>
-                    <p class="text-2xl font-bold mt-1 ${m.isPositive ? 'text-green-600' : 'text-red-600'}">${m.value}</p>
+                    <p class="text-2xl font-bold mt-1 ${toneClass[m.tone]}">${m.value}</p>
                 </div>
             `).join('');
         };
@@ -803,7 +831,8 @@
         };
         
         const updateCharts = (data) => {
-            const { finalRevenue, finalTotalCost, grossProfit, cashFlowMap, sortedKeys } = data;
+            const { finalRevenue, finalTotalCost, grossProfit } = data;
+            const cashFlowSeries = data.cashFlowSeries || [];
             
             // Gráfico de Métricas
             const metricsData = {
@@ -837,9 +866,14 @@
             });
 
             // Gráfico de Fluxo de Caixa
-            const cashFlow = sortedKeys.map(key => cashFlowMap.get(key));
+            const cashFlow = cashFlowSeries.map(row => row.amount);
             const cumulativeCashFlow = cashFlow.reduce((acc, val) => [...acc, (acc.length > 0 ? acc[acc.length-1] : 0) + val], []);
-            const cashFlowLabels = sortedKeys.map(key => new Date(key + '-02').toLocaleString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC'}));
+            // Monta a data pelos componentes da chave (AAAA-MM), sem depender do parser
+            // de string do Date — que é o que produzia "Invalid Date".
+            const cashFlowLabels = cashFlowSeries.map(row => {
+                const [year, month] = row.key.split('-').map(Number);
+                return new Date(Date.UTC(year, month - 1, 1)).toLocaleString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+            });
             const cashFlowData = {
                 labels: cashFlowLabels,
                 datasets: [
@@ -899,7 +933,10 @@
              const variations = [-0.15, -0.075, 0, 0.075, 0.15];
              const results = { price: [], gmd: [], revenue: [] };
              variations.forEach(v => {
-                 let inputsPrice = { ...baseInputs, pricePerKg: baseInputs.pricePerKg * (1 - v) };
+                 // As três séries variam no mesmo sentido do eixo. Antes o preço de
+                 // aquisição usava (1 - v), então em "-15%" o custo tinha subido 15% —
+                 // o mesmo eixo carregava dois significados opostos.
+                 let inputsPrice = { ...baseInputs, pricePerKg: baseInputs.pricePerKg * (1 + v) };
                  results.price.push(calculateSimulation(inputsPrice, false)?.grossProfit ?? 0);
                  let inputsGMD = { ...baseInputs, gmdConfinamento: baseInputs.gmdConfinamento * (1 + v) };
                  results.gmd.push(calculateSimulation(inputsGMD, false)?.grossProfit ?? 0);
@@ -909,9 +946,9 @@
              const sensitivityData = {
                  labels: variations.map(v => `${(v * 100).toFixed(1)}%`),
                  datasets: [
-                     { label: 'Lucro x Preço de Aquisição (-)', data: results.price, backgroundColor: 'rgba(239, 68, 68, 0.7)', borderColor: '#dc2626', borderWidth: 1, borderRadius: 5 },
-                     { label: 'Lucro x GMD Confinamento (+)', data: results.gmd, backgroundColor: 'rgba(245, 158, 11, 0.7)', borderColor: '#d97706', borderWidth: 1, borderRadius: 5 },
-                     { label: 'Lucro x Preço da Arroba (+)', data: results.revenue, backgroundColor: 'rgba(22, 163, 74, 0.7)', borderColor: '#15803d', borderWidth: 1, borderRadius: 5 }
+                     { label: 'Lucro x Preço de Aquisição', data: results.price, backgroundColor: 'rgba(239, 68, 68, 0.7)', borderColor: '#dc2626', borderWidth: 1, borderRadius: 5 },
+                     { label: 'Lucro x GMD Confinamento', data: results.gmd, backgroundColor: 'rgba(245, 158, 11, 0.7)', borderColor: '#d97706', borderWidth: 1, borderRadius: 5 },
+                     { label: 'Lucro x Preço da Arroba', data: results.revenue, backgroundColor: 'rgba(22, 163, 74, 0.7)', borderColor: '#15803d', borderWidth: 1, borderRadius: 5 }
                  ]
              };
              createOrUpdateChart('sensitivityChart', 'bar', sensitivityData, { 
@@ -923,9 +960,9 @@
                         title: { display: true, text: 'Lucro (R$)' }, 
                         ticks: { callback: formatCurrency } 
                     }, 
-                    x: { 
-                        title: { display: true, text: 'Variação do Parâmetro' } 
-                    } 
+                    x: {
+                        title: { display: true, text: 'Variação aplicada ao parâmetro' }
+                    }
                 } 
             });
         };
@@ -1013,7 +1050,7 @@
                 const row = `
                     <tr class="border-b hover:bg-slate-50">
                         <td class="p-3">${date}</td>
-                        <td class="p-3 font-medium">${name}</td>
+                        <td class="p-3 font-medium">${escapeHtml(name)}</td>
                         <td class="p-3 ${sim.results.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}">${profit}</td>
                         <td class="p-3 space-x-2">
                             <button class="view-sim-btn text-blue-600 hover:text-blue-800" data-index="${index}" title="Carregar"><i class="fas fa-eye"></i></button>
@@ -1022,7 +1059,7 @@
                     </tr>`;
                 historyBody.innerHTML += row;
 
-                const option = `<option value="${index}">${name} (${date})</option>`;
+                const option = `<option value="${index}">${escapeHtml(name)} (${date})</option>`;
                 compareSelect1.innerHTML += option;
                 compareSelect2.innerHTML += option;
             });
@@ -1035,15 +1072,22 @@
             }));
         };
         
+        // getFormInputs() guarda estes campos já divididos por 100. Ao repovoar o
+        // formulário é preciso desfazer a escala, senão 56,5% de rendimento volta como
+        // 0,565% e a simulação recarregada mostra prejuízo onde havia lucro.
+        const PERCENT_INPUT_KEYS = ['mortalityRate', 'rendimentoCarcaca'];
+
         const loadSimulation = (index) => {
             const sim = state.savedSimulations[index];
             if (!sim) return;
-            
+
             Object.keys(sim.inputs).forEach(key => {
                 const el = document.getElementById(key);
                 if(el) {
                     if (el.type === 'date' && sim.inputs[key]) {
                         el.value = new Date(sim.inputs[key]).toISOString().split('T')[0];
+                    } else if (PERCENT_INPUT_KEYS.includes(key)) {
+                        el.value = roundToTwo(Number(sim.inputs[key]) * 100);
                     } else {
                         el.value = sim.inputs[key];
                     }
@@ -1052,7 +1096,7 @@
             updateAutomaticDates();
             handleFormSubmit(new Event('submit'));
             document.querySelector('.tab-btn[data-tab="simulation"]').click();
-            showAlert('Sucesso', `Simulação "${sim.inputs.simulationName}" carregada.`, 'success');
+            showAlert('Sucesso', `Simulação "${escapeHtml(sim.inputs.simulationName)}" carregada.`, 'success');
         };
 
         const deleteSimulation = (index) => {
@@ -1152,7 +1196,7 @@
         const showSimDetails = (index, el) => {
             const sim = state.savedSimulations[index];
             el.innerHTML = `
-                <p><strong>Fazenda:</strong> ${sim.inputs.farmName || 'N/A'}</p>
+                <p><strong>Fazenda:</strong> ${escapeHtml(sim.inputs.farmName || 'N/A')}</p>
                 <p><strong>Lucro:</strong> ${formatCurrency(sim.results.grossProfit)}</p>
                 <p><strong>Custo @:</strong> ${formatCurrency(sim.results.costPerProducedArroba)}</p>
             `;
@@ -1160,7 +1204,11 @@
         };
         
         const persistAndReload = () => {
-            localStorage.setItem('savedSimulations_recriaV2', JSON.stringify(state.savedSimulations));
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state.savedSimulations));
+            } catch (e) {
+                showAlert('Não foi possível salvar', 'O armazenamento local do navegador está cheio ou indisponível. Exclua simulações antigas na aba Histórico e tente novamente.', 'warning');
+            }
             loadSavedSimulations();
             updateComparison();
         };
@@ -1186,13 +1234,23 @@
                 ['Lucro Bruto (R$)', results.grossProfit.toFixed(2)],['Margem Bruta (%)', results.grossMargin.toFixed(2)],['TIR Mensal (%)', isFinite(results.tir) ? results.tir.toFixed(2) : 'N/A'],['Custo Total/@ (R$)', results.costPerArroba.toFixed(2)],['Custo @ Produzida (R$)', results.costPerProducedArroba.toFixed(2)],
                 ['Receita Bruta Total (R$)', results.finalRevenue.toFixed(2)],['Custo Total Final (R$)', results.finalTotalCost.toFixed(2)],['Peso Final de Venda (kg)', results.finalWeightCycle.toFixed(2)],['Arrobas para Venda (@)', results.finalArrobas.toFixed(2)],
             ];
-            const csvContent = "data:text/csv;charset=utf-8," + data.map(e => e.join(",")).join("\n");
+            // CSV para Excel pt-BR: separador ';', campos aspeados (nome de simulação
+            // com vírgula ou ';' deixa de quebrar a estrutura) e BOM UTF-8, sem o qual
+            // o Excel abre os acentos como mojibake.
+            const escapeCell = (cell) => {
+                const text = String(cell ?? '');
+                return /[";\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+            };
+            const csvBody = data.map(row => row.map(escapeCell).join(';')).join('\r\n');
+            const blob = new Blob(['﻿' + csvBody], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            link.setAttribute("href", encodeURI(csvContent));
-            link.setAttribute("download", `simulacao_${inputs.simulationName.replace(/\s/g, '_')}.csv`);
+            link.href = url;
+            link.download = `simulacao_${safeFilename(inputs.simulationName)}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         };
         
         const generatePrintReport = () => {
@@ -1205,10 +1263,10 @@
             };
 
             const allData = [
-                { label: 'Nome da Simulação', value: inputs.simulationName }, { label: 'Fazenda', value: inputs.farmName || 'N/A' },
-                { label: 'Técnico', value: inputs.techName || 'N/A' }, { label: 'Localidade', value: inputs.location || 'N/A' },
-                { label: 'Raça', value: inputs.breed || 'N/A' }, { label: 'Sexo', value: inputs.sex || 'N/A' },
-                { label: 'Categoria', value: inputs.animalCategory || 'N/A' }, {},
+                { label: 'Nome da Simulação', value: escapeHtml(inputs.simulationName) }, { label: 'Fazenda', value: escapeHtml(inputs.farmName || 'N/A') },
+                { label: 'Técnico', value: escapeHtml(inputs.techName || 'N/A') }, { label: 'Localidade', value: escapeHtml(inputs.location || 'N/A') },
+                { label: 'Raça', value: escapeHtml(inputs.breed || 'N/A') }, { label: 'Sexo', value: escapeHtml(inputs.sex || 'N/A') },
+                { label: 'Categoria', value: escapeHtml(inputs.animalCategory || 'N/A') }, {},
                 { separator: 'Premissas de Aquisição e Venda' },
                 { label: 'Valor Aquisição', value: `${formatCurrency(inputs.pricePerKg)}/kg` }, { label: 'Preço Arroba', value: formatCurrency(inputs.arrobaPriceGordo) },
                 { label: 'Peso Compra', value: `${formatNumber(inputs.initialWeight, 0)} kg` }, { label: 'Rend. Carcaça', value: formatPercent(inputs.rendimentoCarcaca * 100) },
@@ -1249,7 +1307,7 @@
             detailedTableHTML += '</tbody></table>';
 
             const printContent = `
-                <html><head><title>Relatório - ${inputs.simulationName}</title><script src="https://cdn.tailwindcss.com"><\/script><style>:root { --primary: #1e3a8a; } @media print { body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; } @page { size: A4 portrait; margin: 1.2cm; } .page-break { page-break-before: always; } .print-card { page-break-inside: avoid; } }</style></head>
+                <html><head><title>Relatório - ${escapeHtml(inputs.simulationName)}</title><script src="https://cdn.tailwindcss.com"><\/script><style>:root { --primary: #1e3a8a; } @media print { body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; } @page { size: A4 portrait; margin: 1.2cm; } .page-break { page-break-before: always; } .print-card { page-break-inside: avoid; } }</style>
     <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
     <style id="theme-override-styles">
         :root {
@@ -1314,7 +1372,7 @@
                     <div class="print-card">
                         <header class="text-center mb-4 border-b pb-2">
                             <h1 class="text-xl font-bold text-[--primary]">Relatório de Simulação Econômica</h1>
-                            <p class="text-sm font-semibold">${inputs.simulationName}</p>
+                            <p class="text-sm font-semibold">${escapeHtml(inputs.simulationName)}</p>
                         </header>
                         <section class="mb-4">
                             <h2 class="text-base font-bold text-[--primary] mb-2">Indicadores Chave</h2>
@@ -1347,16 +1405,34 @@
                          </div>
                     </div>
                 
-    <!-- Rodapé Acadêmico/Profissional -->
-    <footer class="no-print mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
-        <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | <a href="../index.html" style="color: #0d9488; text-decoration: none;">ricardobrumatti.pro.br</a> | &copy; 2026</p>
+    <!-- Rodapé Acadêmico/Profissional — sem 'no-print': a assinatura precisa sair no relatório -->
+    <footer class="mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-500 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
+        <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | ricardobrumatti.pro.br | &copy; 2026</p>
     </footer>
 </body></html>`;
 
             const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                showAlert('Janela bloqueada', 'O navegador bloqueou a janela do relatório. Libere os pop-ups para este site e tente novamente.', 'warning');
+                return;
+            }
+            printWindow.document.open();
             printWindow.document.write(printContent);
             printWindow.document.close();
-            setTimeout(() => { printWindow.print(); printWindow.close(); }, 800);
+
+            // Espera o carregamento real da janela (Tailwind vem de CDN) em vez de apostar
+            // num timeout fixo, que gerava relatório sem estilo ou em branco. A janela não é
+            // fechada à força: fechar durante o print cancela a impressão em alguns navegadores.
+            const triggerPrint = () => {
+                printWindow.focus();
+                printWindow.print();
+            };
+            printWindow.onafterprint = () => printWindow.close();
+            if (printWindow.document.readyState === 'complete') {
+                setTimeout(triggerPrint, 350);
+            } else {
+                printWindow.addEventListener('load', () => setTimeout(triggerPrint, 350));
+            }
         };
         
         // --- TOUR GUIADO ---
@@ -1432,14 +1508,20 @@
             document.getElementById('sanitaryCost').value = "45.00";
             document.getElementById('mortalityRate').value = "0.50";
 
-            // Etapa 1: Recria
-            document.getElementById('recria1EntryDate').value = "2025-08-15";
-            document.getElementById('recria1ExitDate').value = "2025-11-15";
+            // Etapa 1: Recria — datas relativas ao dia de acesso, para o cenário de
+            // exemplo não envelhecer. Mantém a duração original: 92 e 212 dias.
+            const addDays = (base, n) => { const d = new Date(base); d.setUTCDate(d.getUTCDate() + n); return d; };
+            const iso = (d) => d.toISOString().split('T')[0];
+            const hoje = new Date();
+            const entrada = new Date(Date.UTC(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()));
+
+            document.getElementById('recria1EntryDate').value = iso(entrada);
+            document.getElementById('recria1ExitDate').value = iso(addDays(entrada, 92));
             document.getElementById('gmdRecria1').value = "0.550";
             document.getElementById('dailyCostRecria1').value = "5.50";
 
             // Etapa 2: Recria
-            document.getElementById('recria2ExitDate').value = "2026-06-15";
+            document.getElementById('recria2ExitDate').value = iso(addDays(entrada, 304));
             document.getElementById('gmdRecria2').value = "0.600";
             document.getElementById('monthlyCostRecria2').value = "80.00";
 
@@ -1477,6 +1559,13 @@
                  document.getElementById('confinementEntryDateDisplay').textContent = 'Automática';
             }
         };
+
+        // Nome de arquivo seguro em Windows/macOS: sem acento, espaço ou caractere reservado.
+        const safeFilename = (value) => String(value || 'simulacao')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .slice(0, 60) || 'simulacao';
 
         const formatCurrency = (num) => `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         const formatNumber = (num, digits = 2) => num.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
