@@ -253,6 +253,90 @@
             background-color: #b91c1c !important;
         }
     </style>
+
+    <style id="theme-modes">
+        /* ---- Tema escuro ----
+           A página é construída com utilitários do Tailwind, então o modo escuro
+           reescreve as classes efetivamente usadas aqui em vez de variáveis. */
+        body.dark-mode { background-color: #0f172a !important; color: #e2e8f0 !important; }
+        /* :not(...) exclui os campos: eles têm classes de fundo do Tailwind e, com dois
+           seletores de classe, venceriam a regra de campo lá embaixo — o resultado era
+           texto escuro sobre fundo escuro na hora de digitar. */
+        .dark-mode .bg-white:not(input):not(select):not(textarea),
+        .dark-mode .bg-slate-50:not(input):not(select):not(textarea),
+        .dark-mode .bg-slate-100:not(input):not(select):not(textarea),
+        .dark-mode .bg-gray-100:not(input):not(select):not(textarea),
+        .dark-mode .bg-blue-50:not(input):not(select):not(textarea),
+        .dark-mode .bg-green-50:not(input):not(select):not(textarea) { background-color: #1e293b !important; }
+        .dark-mode .bg-purple-50 { background-color: #262646 !important; }
+        .dark-mode .bg-slate-800 { background-color: #020617 !important; }
+        .dark-mode .text-slate-800, .dark-mode .text-slate-700,
+        .dark-mode .text-gray-800, .dark-mode .text-gray-700 { color: #f1f5f9 !important; }
+        .dark-mode .text-slate-600, .dark-mode .text-slate-500,
+        .dark-mode .text-gray-600, .dark-mode .text-gray-500 { color: #cbd5e1 !important; }
+        .dark-mode .text-slate-400, .dark-mode .text-gray-400 { color: #94a3b8 !important; }
+        .dark-mode .text-purple-900 { color: #ddd6fe !important; }
+        .dark-mode .border-slate-200, .dark-mode .border-slate-300,
+        .dark-mode .border-purple-200, .dark-mode fieldset { border-color: #334155 !important; }
+        .dark-mode .divide-slate-200 > *, .dark-mode .divide-y > * { border-color: #334155 !important; }
+        .dark-mode table thead, .dark-mode table thead tr { background-color: #0f172a !important; }
+        .dark-mode .modal-content { background-color: #1e293b !important; color: #e2e8f0 !important; }
+        .dark-mode .share-dropdown { background: #1e293b !important; border-color: #334155 !important; }
+        .dark-mode .back-btn-container { background: #1e293b !important; border-color: #334155 !important; }
+        .dark-mode .text-green-600 { color: #4ade80 !important; }
+        .dark-mode .text-red-600, .dark-mode .text-red-700 { color: #f87171 !important; }
+        .dark-mode .text-green-700 { color: #86efac !important; }
+        /* Campos permanecem claros de propósito: digitar número é mais confortável
+           com texto escuro sobre fundo branco, mesmo no tema escuro. */
+        .dark-mode input, .dark-mode select, .dark-mode textarea {
+            background-color: #ffffff !important; color: #111827 !important;
+            -webkit-text-fill-color: #111827 !important; border-color: #64748b !important;
+        }
+
+        /* ---- Alto contraste ---- */
+        body.high-contrast { background-color: #000 !important; color: #fff !important; }
+        .high-contrast .bg-white:not(input):not(select):not(textarea),
+        .high-contrast .bg-slate-50:not(input):not(select):not(textarea),
+        .high-contrast .bg-slate-100:not(input):not(select):not(textarea),
+        .high-contrast .bg-gray-100:not(input):not(select):not(textarea),
+        .high-contrast .bg-purple-50:not(input):not(select):not(textarea),
+        .high-contrast .bg-blue-50:not(input):not(select):not(textarea),
+        .high-contrast .bg-green-50:not(input):not(select):not(textarea),
+        .high-contrast .modal-content, .high-contrast .share-dropdown {
+            background-color: #000 !important; border: 1px solid #fff !important;
+        }
+        .high-contrast h1, .high-contrast h2, .high-contrast h3, .high-contrast h4,
+        .high-contrast p, .high-contrast td, .high-contrast th, .high-contrast label,
+        .high-contrast legend, .high-contrast summary, .high-contrast li,
+        .high-contrast .text-slate-800, .high-contrast .text-slate-700, .high-contrast .text-slate-600,
+        .high-contrast .text-slate-500, .high-contrast .text-slate-400,
+        .high-contrast .text-gray-800, .high-contrast .text-gray-700,
+        .high-contrast .text-gray-600, .high-contrast .text-gray-500 { color: #fff !important; }
+        .high-contrast .text-green-600, .high-contrast .text-green-700 { color: #4ade80 !important; }
+        .high-contrast .text-red-600, .high-contrast .text-red-700 { color: #ff8a8a !important; }
+        .high-contrast input, .high-contrast select, .high-contrast textarea {
+            background-color: #fff !important; color: #000 !important;
+            -webkit-text-fill-color: #000 !important; border: 1px solid #fff !important;
+        }
+        .high-contrast table thead, .high-contrast table thead tr { background-color: #000 !important; }
+
+        /* Impressão sempre sai no tema claro. */
+        @media print {
+            body.dark-mode, body.high-contrast { background: #fff !important; color: #0f172a !important; }
+            #themeToggle, #contrastToggle { display: none !important; }
+        }
+
+        /* Alvo de toque confortável no celular, no mesmo critério que o mobile.css
+           aplica às abas (mínimo de 44px). */
+        @media (max-width: 768px) {
+            #themeToggle, #contrastToggle {
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                padding: 0 0.75rem;
+            }
+        }
+    </style>
     <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -273,6 +357,14 @@
     <header class="bg-slate-800 shadow-lg no-print">
         <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
             <h1 class="text-2xl sm:text-3xl font-bold text-white text-center tracking-wide">Simulação Econômica da Recria a Pasto + Engorda em Confinamento</h1>
+            <div class="flex justify-center gap-4 mt-3">
+                <button type="button" id="themeToggle" class="text-slate-300 hover:text-white text-sm font-medium" aria-pressed="false">
+                    <i class="fas fa-adjust mr-1"></i>Tema escuro
+                </button>
+                <button type="button" id="contrastToggle" class="text-slate-300 hover:text-white text-sm font-medium" aria-pressed="false">
+                    <i class="fas fa-eye mr-1"></i>Alto contraste
+                </button>
+            </div>
         </div>
     </header>
 
@@ -1474,12 +1566,18 @@
             }
         };
 
+        const readFlag = (key, fallback) => {
+            try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch (e) { return fallback; }
+        };
+
         // Estado da Aplicação
         let state = {
             currentSimulation: null,
             savedSimulations: readSavedSimulations(),
             chartInstances: {},
             tourStep: 0,
+            theme: readFlag('engordaTheme', 'light'),
+            highContrast: readFlag('engordaHighContrast', 'false') === 'true',
         };
 
         // Elementos do DOM
@@ -1498,6 +1596,7 @@
 
         // --- INICIALIZAÇÃO E EVENTOS ---
         const init = () => {
+            applyTheme();
             setupEventListeners();
             loadSavedSimulations();
             setDefaultDates();
@@ -1531,14 +1630,16 @@
             dom.tourBtn.addEventListener('click', startTour);
             dom.exampleBtn.addEventListener('click', loadExample);
             dom.clearFormButton.addEventListener('click', () => showConfirmation('Limpar Formulário', 'Você tem certeza que deseja apagar todos os dados do formulário?', performClear));
-            dom.printButton.addEventListener('click', generatePrintReport);
-            dom.exportExcelBtn.addEventListener('click', exportToExcel);
-            document.getElementById('exportPdfBtn').addEventListener('click', exportToPDF);
+            dom.printButton.addEventListener('click', () => withLightCharts(generatePrintReport));
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            document.getElementById('contrastToggle').addEventListener('click', toggleContrast);
+            dom.exportExcelBtn.addEventListener('click', () => withLightCharts(exportToExcel));
+            document.getElementById('exportPdfBtn').addEventListener('click', () => withLightCharts(exportToPDF));
             document.getElementById('runMonteCarloBtn').addEventListener('click', runMonteCarlo);
             document.getElementById('btnShare').addEventListener('click', toggleShareMenu);
-            document.getElementById('generateShareImageBtn').addEventListener('click', generateSocialImage);
+            document.getElementById('generateShareImageBtn').addEventListener('click', () => withLightCharts(generateSocialImage));
             document.querySelectorAll('.download-chart-btn').forEach(button => {
-                button.addEventListener('click', () => downloadChart(button.dataset.chart));
+                button.addEventListener('click', () => withLightCharts(() => downloadChart(button.dataset.chart)));
             });
             document.querySelector('#modalShareImage .close-button-alt').addEventListener('click', () => {
                 document.getElementById('modalShareImage').classList.add('hidden');
@@ -1570,6 +1671,13 @@
         };
         
         const roundToTwo = (num) => Math.round(num * 100) / 100;
+
+        // O relatório abre num documento novo e precisa do mesmo CSS de tema. Em vez de
+        // manter uma segunda cópia literal do bloco, lê o que já está na página.
+        const themeOverrideCss = () => {
+            const node = document.getElementById('theme-override-styles');
+            return node ? node.textContent : '';
+        };
 
         const LEGAL_DISCLAIMER = 'Ferramenta educacional gratuita, sem fins comerciais. Os resultados são projeções condicionadas às premissas informadas pelo usuário e não substituem orçamento, contrato ou orientação técnica individualizada.';
 
@@ -2100,6 +2208,49 @@
                 </tr>`).join('');
         };
 
+        // --- TEMA E ACESSIBILIDADE ---
+
+        // Cores do Chart.js: o texto é desenhado dentro do canvas, então CSS não alcança.
+        const chartPalette = () => (state.theme === 'dark' || state.highContrast)
+            ? { tick: '#cbd5e1', grid: '#334155', title: '#f1f5f9' }
+            : { tick: '#475569', grid: '#e2e8f0', title: '#1e293b' };
+
+        const applyTheme = () => {
+            document.body.classList.toggle('dark-mode', state.theme === 'dark');
+            document.body.classList.toggle('high-contrast', state.highContrast);
+            const themeBtn = document.getElementById('themeToggle');
+            const contrastBtn = document.getElementById('contrastToggle');
+            themeBtn.innerHTML = state.theme === 'dark'
+                ? '<i class="fas fa-sun mr-1"></i>Tema claro'
+                : '<i class="fas fa-adjust mr-1"></i>Tema escuro';
+            themeBtn.setAttribute('aria-pressed', String(state.theme === 'dark'));
+            contrastBtn.setAttribute('aria-pressed', String(state.highContrast));
+        };
+
+        // Redesenha os gráficos já existentes com a paleta do tema atual.
+        const refreshCharts = () => {
+            if (!state.currentSimulation) return;
+            const { inputs, results, monteCarlo } = state.currentSimulation;
+            updateCharts(results);
+            performSensitivityAnalysis(inputs, results);
+            if (monteCarlo) renderMonteCarlo(monteCarlo);
+            updateComparison();
+        };
+
+        const toggleTheme = () => {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            try { localStorage.setItem('engordaTheme', state.theme); } catch (e) { /* modo privado */ }
+            applyTheme();
+            refreshCharts();
+        };
+
+        const toggleContrast = () => {
+            state.highContrast = !state.highContrast;
+            try { localStorage.setItem('engordaHighContrast', String(state.highContrast)); } catch (e) { /* modo privado */ }
+            applyTheme();
+            refreshCharts();
+        };
+
         const resetMonteCarlo = () => {
             if (state.currentSimulation) state.currentSimulation.monteCarlo = null;
             const results = document.getElementById('mc-results');
@@ -2114,6 +2265,7 @@
                 state.chartInstances[canvasId].destroy();
             }
 
+            const palette = chartPalette();
             const professionalOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -2121,7 +2273,7 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { usePointStyle: true, padding: 20, font: { size: 12 } }
+                        labels: { usePointStyle: true, padding: 20, font: { size: 12 }, color: palette.tick }
                     },
                     tooltip: {
                         enabled: true,
@@ -2139,30 +2291,53 @@
                     title: {
                         display: true,
                         font: { size: 16, weight: 'bold' },
-                        color: '#1e293b',
+                        color: palette.title,
                         padding: { top: 10, bottom: 25 }
                     }
                 },
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { color: '#475569' }
+                        ticks: { color: palette.tick },
+                        title: { color: palette.tick }
                     },
                     y: {
                         border: { display: false },
-                        grid: { color: '#e2e8f0' },
-                        ticks: { color: '#475569' }
+                        grid: { color: palette.grid },
+                        ticks: { color: palette.tick },
+                        title: { color: palette.tick }
                     }
                 }
             };
             
-            // Simples merge de opções
+            // Merge por eixo: um merge raso fazia a config de escala de cada gráfico
+            // substituir a base inteira, descartando cor de tick, de título e do grid —
+            // o que deixava os gráficos com o cinza padrão do Chart.js no tema escuro.
+            const mergeScale = (base, extra) => {
+                const merged = { ...(base || {}), ...(extra || {}) };
+                merged.ticks = { ...((base || {}).ticks), ...((extra || {}).ticks) };
+                merged.title = { ...((base || {}).title), ...((extra || {}).title) };
+                merged.grid = { ...((base || {}).grid), ...((extra || {}).grid) };
+                return merged;
+            };
+
             const finalOptions = { ...professionalOptions, ...options };
             finalOptions.plugins = { ...professionalOptions.plugins, ...options.plugins };
-            finalOptions.scales = { ...professionalOptions.scales, ...options.scales };
-            if(options.plugins && options.plugins.title) {
-                finalOptions.plugins.title = {...professionalOptions.plugins.title, ...options.plugins.title};
+            if (options.plugins && options.plugins.title) {
+                finalOptions.plugins.title = { ...professionalOptions.plugins.title, ...options.plugins.title };
             }
+            if (options.plugins && options.plugins.legend) {
+                finalOptions.plugins.legend = { ...professionalOptions.plugins.legend, ...options.plugins.legend };
+            }
+
+            const eixos = new Set([...Object.keys(professionalOptions.scales), ...Object.keys((options.scales) || {})]);
+            finalOptions.scales = {};
+            eixos.forEach(nome => {
+                // y1 e demais eixos extras herdam a base do eixo y.
+                const base = professionalOptions.scales[nome]
+                    || (nome.charAt(0) === 'y' ? professionalOptions.scales.y : professionalOptions.scales.x);
+                finalOptions.scales[nome] = mergeScale(base, (options.scales || {})[nome]);
+            });
 
 
             state.chartInstances[canvasId] = new Chart(ctx, { type, data, options: finalOptions });
@@ -2357,6 +2532,54 @@
 
         const brDate = (iso) => new Date(`${iso}T12:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
         const numOrNull = (v) => (Number.isFinite(v) ? v : null);
+
+        // PDF, Excel e imagem têm fundo claro. Gráficos desenhados no tema escuro saem com
+        // texto claro e viram borrões nesses arquivos, então a exportação sempre acontece
+        // com a paleta clara: troca o tema, redesenha sem animação (para o canvas já estar
+        // pronto), gera o arquivo e devolve o tema do usuário.
+        const withLightCharts = (fn) => {
+            const precisaTrocar = state.theme === 'dark' || state.highContrast;
+            if (!precisaTrocar) return fn();
+
+            const temaSalvo = state.theme;
+            const contrasteSalvo = state.highContrast;
+            const animacaoSalva = Chart.defaults.animation;
+            state.theme = 'light';
+            state.highContrast = false;
+            Chart.defaults.animation = false;
+            refreshCharts();
+
+            const restaurar = () => {
+                state.theme = temaSalvo;
+                state.highContrast = contrasteSalvo;
+                Chart.defaults.animation = animacaoSalva;
+                refreshCharts();
+            };
+            try {
+                const retorno = fn();
+                if (retorno && typeof retorno.finally === 'function') return retorno.finally(restaurar);
+                restaurar();
+                return retorno;
+            } catch (erro) {
+                restaurar();
+                throw erro;
+            }
+        };
+
+        // O canvas do Chart.js é transparente: sobre papel branco isso passa despercebido,
+        // mas num PNG salvo o fundo some. Compõe sobre branco antes de exportar.
+        const chartImageDataUrl = (id, quality) => {
+            const canvas = document.getElementById(id);
+            if (!canvas || !canvas.width) return null;
+            const flat = document.createElement('canvas');
+            flat.width = canvas.width;
+            flat.height = canvas.height;
+            const ctx = flat.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, flat.width, flat.height);
+            ctx.drawImage(canvas, 0, 0);
+            return flat.toDataURL('image/png', quality || 0.92);
+        };
 
         const downloadBlob = (blob, filename) => {
             const url = URL.createObjectURL(blob);
@@ -2572,7 +2795,7 @@
             doc.setFontSize(9); doc.text(title, x, y - 3);
             try {
                 const ratio = canvas.width && canvas.height ? canvas.width / canvas.height : 1.8;
-                doc.addImage(canvas.toDataURL('image/png', 0.92), 'PNG', x, y, w, Math.min(h, w / ratio), undefined, 'FAST');
+                doc.addImage(chartImageDataUrl(id), 'PNG', x, y, w, Math.min(h, w / ratio), undefined, 'FAST');
             } catch (e) { /* gráfico é opcional no relatório */ }
         };
 
@@ -2751,7 +2974,7 @@
             definitions.forEach((definition) => {
                 const canvas = document.getElementById(definition.id);
                 if (!canvas || !state.chartInstances[definition.id] || !canvas.width || !canvas.height) return;
-                const imageId = workbook.addImage({ base64: canvas.toDataURL('image/png', 0.92), extension: 'png' });
+                const imageId = workbook.addImage({ base64: chartImageDataUrl(definition.id), extension: 'png' });
                 sheet.mergeCells(row, 1, row, 12);
                 const heading = sheet.getCell(row, 1);
                 heading.value = definition.title;
@@ -2857,7 +3080,7 @@
                 const source = document.getElementById(type.chart);
                 if (!source || !source.width) { showAlert('Gráfico indisponível', 'Recalcule a simulação antes de gerar a imagem.', 'warning'); return; }
                 const img = document.createElement('img');
-                img.src = source.toDataURL('image/png', 1);
+                img.src = chartImageDataUrl(type.chart, 1);
                 img.alt = type.title;
                 img.style.width = '100%';
                 img.style.height = '100%';
@@ -2940,12 +3163,12 @@
             const { inputs, results } = state.currentSimulation;
             const mc = state.currentSimulation.monteCarlo;
             const chartImages = {
-                metrics: state.chartInstances.metricsChart?.toBase64Image(),
-                cashFlow: state.chartInstances.cashFlowChart?.toBase64Image(),
-                sensitivity: state.chartInstances.sensitivityChart?.toBase64Image(),
-                mcHistogram: state.chartInstances.mcHistogramChart?.toBase64Image(),
-                mcCdf: state.chartInstances.mcCdfChart?.toBase64Image(),
-                mcTornado: state.chartInstances.mcTornadoChart?.toBase64Image()
+                metrics: chartImageDataUrl('metricsChart'),
+                cashFlow: chartImageDataUrl('cashFlowChart'),
+                sensitivity: chartImageDataUrl('sensitivityChart'),
+                mcHistogram: chartImageDataUrl('mcHistogramChart'),
+                mcCdf: chartImageDataUrl('mcCdfChart'),
+                mcTornado: chartImageDataUrl('mcTornadoChart')
             };
 
             const monteCarloSectionHTML = mc ? `
@@ -3049,64 +3272,8 @@
 
             const printContent = `
                 <html><head><title>Relatório - ${escapeHtml(inputs.simulationName)}</title><script src="https://cdn.tailwindcss.com"><\/script><style>:root { --primary: #1e3a8a; } @media print { body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; } @page { size: A4 portrait; margin: 1.2cm; } .page-break { page-break-before: always; } .print-card { page-break-inside: avoid; } }</style>
-    <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
-    <style id="theme-override-styles">
-        :root {
-            --primary: #064e65 !important;
-            --secondary: #0d6b83 !important;
-            --success: #10b981 !important;
-            --danger: #cf1818 !important;
-            --bg-page: #f8fafc !important;
-            --bg-card: #ffffff !important;
-            --text-main: #0f172a !important;
-            --text-muted: #64748b !important;
-            --green: #064e65 !important;
-            --green-mid: #0d6b83 !important;
-            --green-lt: #e6f4f7 !important;
-        }
-        h1, h2, h3, h4, h5, h6, 
-        .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"], 
-        .metric-value, .metric-number, .chart-title, 
-        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold, 
-        div.font-bold, div.font-semibold, th {
-            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
-        }
-        /* Custom background color overrides (e.g. headers and buttons) */
-        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 {
-            background-color: #064e65 !important;
-        }
-        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 {
-            background-color: #064e65 !important;
-        }
-        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover {
-            background-color: #0d6b83 !important;
-        }
-        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 {
-            color: #064e65 !important;
-        }
-        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 {
-            border-color: #064e65 !important;
-        }
-        .btn-primary {
-            background-color: #064e65 !important;
-            color: #ffffff !important;
-        }
-        .btn-primary:hover {
-            background-color: #0d6b83 !important;
-        }
-        .btn-outline:hover {
-            border-color: #0d6b83 !important;
-            color: #0d6b83 !important;
-        }
-        /* Standardizing clean red reset buttons to match the Image 2 style */
-        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] {
-            background-color: #cf1818 !important;
-            color: #ffffff !important;
-        }
-        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover {
-            background-color: #b91c1c !important;
-        }
-    </style>
+    <!-- Mesmo CSS de tema da pagina, lido do documento vivo para nao existir uma segunda copia -->
+    <style id="theme-override-styles">${themeOverrideCss()}</style>
     
 </head>
                 <body class="text-slate-800">
