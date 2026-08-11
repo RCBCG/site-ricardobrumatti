@@ -119,6 +119,13 @@
         }
         .close-button { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
 
+        /* Campo recusado pela validação do motor */
+        .field-invalid {
+            border-color: #dc2626 !important;
+            background-color: #fef2f2 !important;
+            box-shadow: 0 0 0 1px #dc2626 !important;
+        }
+
         /* Tooltip */
         .tooltip { position: relative; display: inline-block; cursor: help; }
         .tooltip .tooltiptext {
@@ -311,7 +318,15 @@
                             </div>
                              <div>
                                 <label for="mortalityRate" class="block text-sm font-medium text-slate-600">Mortalidade no Ciclo (%)</label>
-                                <input type="number" id="mortalityRate" value="0.50" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                                <input type="number" id="mortalityRate" value="0.50" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm" title="Distribuída ao longo do ciclo: os animais que morrem custaram até o momento da perda e não geram receita.">
+                            </div>
+                            <div>
+                                <label for="quantidade" class="block text-sm font-medium text-slate-600">Quantidade de Animais (cab)</label>
+                                <input type="number" id="quantidade" value="1" step="1" min="1" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm" title="Use 1 para raciocinar por cabeça; informe o lote para ver receita, custo e resultado totais.">
+                            </div>
+                            <div>
+                                <label for="freteEntrada" class="block text-sm font-medium text-slate-600">Frete de Entrada (R$/cab)</label>
+                                <input type="number" id="freteEntrada" value="0.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
                             </div>
                          </div>
                      </fieldset>
@@ -357,7 +372,15 @@
                                 <label for="monthlyCostRecria2" class="block text-sm font-medium text-slate-600">Custo Mensal - Fase 2 (R$)</label>
                                 <input type="number" id="monthlyCostRecria2" value="80.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm" title="Ex: Aluguel de pasto + suplementação.">
                             </div>
+                            <div>
+                                <label for="recria2CostMode" class="block text-sm font-medium text-slate-600">Forma de Cobrança - Fase 2</label>
+                                <select id="recria2CostMode" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm" title="Mês cheio: todo mês tocado pela fase custa a mensalidade integral (contrato de pasto). Pró-rata: cobra proporcional aos dias.">
+                                    <option value="mesCheio">Mês cheio (contrato)</option>
+                                    <option value="proRata">Pró-rata por dias</option>
+                                </select>
+                            </div>
                         </div>
+                        <p id="recria2CostHint" class="text-xs text-slate-500 mt-3"></p>
                     </fieldset>
 
                     <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
@@ -384,7 +407,7 @@
 
                     <fieldset class="border border-slate-200 rounded-lg p-5 pt-3">
                         <legend class="text-lg font-semibold text-slate-700 px-2 flex items-center"><i class="fas fa-dollar-sign mr-2"></i>Premissas de Venda</legend>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-x-6 gap-y-5 mt-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5 mt-4">
                             <div>
                                 <label for="rendimentoCarcaca" class="block text-sm font-medium text-slate-600">Rendimento de Carcaça (%)</label>
                                 <input type="number" id="rendimentoCarcaca" value="56.50" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
@@ -393,9 +416,25 @@
                                 <label for="arrobaPriceGordo" class="block text-sm font-medium text-slate-600">Arroba do Boi Gordo (R$/@)</label>
                                 <input type="number" id="arrobaPriceGordo" value="320.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
                             </div>
+                            <div>
+                                <label for="quebraPeso" class="block text-sm font-medium text-slate-600">Quebra de Peso (%)</label>
+                                <input type="number" id="quebraPeso" value="0.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm" title="Perda por jejum e transporte até o abate, aplicada sobre o peso vivo final.">
+                            </div>
+                            <div>
+                                <label for="despesasVenda" class="block text-sm font-medium text-slate-600">Despesas de Venda (% receita)</label>
+                                <input type="number" id="despesasVenda" value="0.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm" title="Funrural, comissão e demais deduções proporcionais à receita.">
+                            </div>
+                            <div>
+                                <label for="freteSaida" class="block text-sm font-medium text-slate-600">Frete de Saída (R$/cab)</label>
+                                <input type="number" id="freteSaida" value="0.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm">
+                            </div>
+                            <div>
+                                <label for="taxaDescontoAnual" class="block text-sm font-medium text-slate-600">Taxa de Desconto (% a.a.)</label>
+                                <input type="number" id="taxaDescontoAnual" value="0.00" step="0.01" class="mt-1 block w-full rounded-md bg-slate-50 border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 text-sm" title="Custo de oportunidade do capital. Usada no VPL — relevante num ciclo que passa de um ano.">
+                            </div>
                         </div>
                     </fieldset>
-                    
+
                     <div id="errorMessage" class="text-sm text-red-600 mt-4 font-medium"></div>
 
                     <!-- Botões de Ação -->
@@ -486,7 +525,7 @@
                             <tr class="bg-gray-100">
                                 <th class="p-3 text-left">Data</th>
                                 <th class="p-3 text-left">Nome da Simulação</th>
-                                <th class="p-3 text-left">Lucro Bruto</th>
+                                <th class="p-3 text-left">Resultado Operacional</th>
                                 <th class="p-3 text-left">Ações</th>
                             </tr>
                         </thead>
@@ -536,17 +575,448 @@
     <div id="tourModal" class="modal hidden no-print"><div class="modal-content"><span class="close-button">&times;</span><h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fas fa-route mr-2"></i>Tour Guiado</h2><div id="tour-content" class="text-gray-700 text-base leading-relaxed"></div><div class="flex justify-between mt-6"><button id="prev-step" class="px-4 py-2 bg-gray-300 rounded-lg"><i class="fa fa-arrow-left mr-2"></i>Anterior</button><button id="next-step" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Próximo<i class="fas fa-arrow-right ml-2"></i></button></div></div></div>
     <div id="alertModal" class="modal hidden no-print"><div class="modal-content text-center"><span class="close-button">&times;</span><div id="alertIcon" class="text-5xl mb-4"></div><h3 id="alertTitle" class="text-lg font-bold text-slate-800 mb-2"></h3><p id="alertMessage" class="text-sm text-slate-600"></p><button id="alertOkBtn" class="mt-6 px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">OK</button></div></div>
     
+    <script id="recria-engorda-engine">
+/*
+ * Motor econômico — Recria a Pasto + Engorda em Confinamento
+ * Prof. Ricardo C. Brumatti — FAMEZ/UFMS
+ *
+ * Isolado da interface de propósito: recebe premissas, devolve números, não toca
+ * no DOM. Exposto em window.RecriaEngordaEngine para permitir conferência e teste.
+ *
+ * Convenções do modelo:
+ *  - A mortalidade é distribuída linearmente ao longo do ciclo inteiro. Os custos
+ *    de diária e mensalidade incidem sobre cabeças-dia (animais que morreram no
+ *    meio do caminho custaram até morrer); a receita incide só sobre sobreviventes.
+ *  - O rendimento de carcaça de ENTRADA é fixo em 50% por decisão de projeto —
+ *    mantém o "Custo da @ Produzida" comparável a todo o histórico de relatórios.
+ *    Não é campo de formulário e não varia na análise de risco.
+ *  - VPL e XIRR usam datas reais do calendário, não índices de período.
+ */
+(function (root) {
+  'use strict';
+
+  const VERSION = '2.0.0';
+  const ARROBA_KG = 15;
+  const RENDIMENTO_INICIAL_FIXO = 50;
+  const DAY_MS = 86400000;
+
+  const num = (v, d = 0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
+  const finite = (v) => Number.isFinite(Number(v));
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const safeDiv = (a, b) => (finite(a) && finite(b) && b !== 0 ? a / b : NaN);
+
+  const toDate = (iso) => new Date(`${iso}T12:00:00Z`);
+  const toISO = (date) => date.toISOString().slice(0, 10);
+  const addDays = (iso, n) => { const d = toDate(iso); d.setUTCDate(d.getUTCDate() + n); return toISO(d); };
+  const daysBetween = (a, b) => Math.round((toDate(b) - toDate(a)) / DAY_MS);
+  const isISO = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) && !Number.isNaN(toDate(v).getTime());
+
+  /* ---------------------------------------------------------------- entradas */
+
+  function normalizeInputs(raw) {
+    const r = raw || {};
+    return {
+      simulationName: String(r.simulationName || ''),
+      farmName: String(r.farmName || ''),
+      techName: String(r.techName || ''),
+      location: String(r.location || ''),
+      breed: String(r.breed || ''),
+      sex: String(r.sex || ''),
+      animalCategory: String(r.animalCategory || ''),
+
+      quantidade: num(r.quantidade, 1),
+      pricePerKg: num(r.pricePerKg, 12.5),
+      initialWeight: num(r.initialWeight, 210),
+      sanitaryCost: num(r.sanitaryCost, 45),
+      freteEntrada: num(r.freteEntrada, 0),
+      mortalityRate: num(r.mortalityRate, 0),
+
+      recria1EntryDate: String(r.recria1EntryDate || ''),
+      recria1ExitDate: String(r.recria1ExitDate || ''),
+      gmdRecria1: num(r.gmdRecria1, 0.55),
+      dailyCostRecria1: num(r.dailyCostRecria1, 5.5),
+
+      recria2ExitDate: String(r.recria2ExitDate || ''),
+      gmdRecria2: num(r.gmdRecria2, 0.6),
+      monthlyCostRecria2: num(r.monthlyCostRecria2, 80),
+      recria2CostMode: r.recria2CostMode === 'proRata' ? 'proRata' : 'mesCheio',
+
+      diasConfinamento: Math.round(num(r.diasConfinamento, 100)),
+      gmdConfinamento: num(r.gmdConfinamento, 1.8),
+      dailyCostConfinamento: num(r.dailyCostConfinamento, 16.5),
+
+      rendimentoCarcaca: num(r.rendimentoCarcaca, 56.5),
+      arrobaPriceGordo: num(r.arrobaPriceGordo, 320),
+      quebraPeso: num(r.quebraPeso, 0),
+      despesasVenda: num(r.despesasVenda, 0),
+      freteSaida: num(r.freteSaida, 0),
+
+      taxaDescontoAnual: num(r.taxaDescontoAnual, 0)
+    };
+  }
+
+  const RULES = {
+    quantidade: [1, 1000000, 'Quantidade de animais'],
+    pricePerKg: [0, 1000, 'Valor de aquisição por kg'],
+    initialWeight: [1, 1500, 'Peso de compra'],
+    sanitaryCost: [0, 100000, 'Custo sanitário de entrada'],
+    freteEntrada: [0, 100000, 'Frete de entrada'],
+    mortalityRate: [0, 100, 'Mortalidade no ciclo'],
+    gmdRecria1: [-2, 5, 'GMD da Fase 1'],
+    dailyCostRecria1: [0, 1000, 'Custo diário da Fase 1'],
+    gmdRecria2: [-2, 5, 'GMD da Fase 2'],
+    monthlyCostRecria2: [0, 100000, 'Custo mensal da Fase 2'],
+    diasConfinamento: [0, 730, 'Dias de confinamento'],
+    gmdConfinamento: [-2, 5, 'GMD no confinamento'],
+    dailyCostConfinamento: [0, 1000, 'Custo da diária de confinamento'],
+    rendimentoCarcaca: [1, 100, 'Rendimento de carcaça'],
+    arrobaPriceGordo: [0.01, 10000, 'Arroba do boi gordo'],
+    quebraPeso: [0, 100, 'Quebra de peso'],
+    despesasVenda: [0, 99.99, 'Despesas de venda'],
+    freteSaida: [0, 100000, 'Frete de saída'],
+    taxaDescontoAnual: [-99, 10000, 'Taxa de desconto anual']
+  };
+
+  function validateInputs(raw) {
+    const inputs = normalizeInputs(raw);
+    const errors = [];
+
+    for (const key of ['recria1EntryDate', 'recria1ExitDate', 'recria2ExitDate']) {
+      if (!isISO(inputs[key])) errors.push({ field: key, message: 'Informe uma data válida.' });
+    }
+    if (!errors.length) {
+      if (daysBetween(inputs.recria1EntryDate, inputs.recria1ExitDate) < 0) {
+        errors.push({ field: 'recria1ExitDate', message: 'A saída da Fase 1 não pode ser anterior à entrada.' });
+      }
+      if (daysBetween(inputs.recria1ExitDate, inputs.recria2ExitDate) < 0) {
+        errors.push({ field: 'recria2ExitDate', message: 'A saída da Fase 2 não pode ser anterior à saída da Fase 1.' });
+      }
+    }
+
+    for (const [field, [min, max, label]] of Object.entries(RULES)) {
+      const value = inputs[field];
+      if (!finite(value) || value < min || value > max) {
+        errors.push({ field, message: `${label} deve estar entre ${min} e ${max}.` });
+      }
+    }
+    if (!Number.isInteger(inputs.quantidade)) {
+      errors.push({ field: 'quantidade', message: 'A quantidade de animais deve ser um número inteiro.' });
+    }
+    if (inputs.mortalityRate >= 100) {
+      errors.push({ field: 'mortalityRate', message: 'Mortalidade de 100% elimina a receita; use valor inferior a 100%.' });
+    }
+
+    if (!errors.length) {
+      const d = phaseDays(inputs);
+      const pesoFinal = inputs.initialWeight + d.recria1 * inputs.gmdRecria1
+        + d.recria2 * inputs.gmdRecria2 + d.confinamento * inputs.gmdConfinamento;
+      if (pesoFinal <= 0) errors.push({ field: 'gmdConfinamento', message: 'O peso final calculado deve ser positivo.' });
+      if (d.total <= 0) errors.push({ field: 'recria2ExitDate', message: 'O ciclo precisa ter ao menos um dia de duração.' });
+    }
+
+    return { valid: errors.length === 0, errors, inputs };
+  }
+
+  /* ------------------------------------------------------- tempo e cabeças */
+
+  function phaseDays(inputs) {
+    const recria1 = Math.max(0, daysBetween(inputs.recria1EntryDate, inputs.recria1ExitDate));
+    const recria2 = Math.max(0, daysBetween(inputs.recria1ExitDate, inputs.recria2ExitDate));
+    const confinamento = Math.max(0, inputs.diasConfinamento);
+    return { recria1, recria2, confinamento, total: recria1 + recria2 + confinamento };
+  }
+
+  // Cabeças-dia entre os dias t0 e t1 do ciclo, com a mortalidade caindo de forma
+  // linear de "alojados" até "sobreviventes" ao longo dos T dias.
+  function headDays(placed, t0, t1, total, mortality) {
+    if (t1 <= t0) return 0;
+    const m = mortality / 100;
+    const T = Math.max(total, 1);
+    return placed * (t1 - t0) * (1 - m * (t0 + t1) / (2 * T));
+  }
+
+  function avgHeads(placed, t0, t1, total, mortality) {
+    if (t1 <= t0) {
+      const m = mortality / 100;
+      return placed * (1 - m * (t0 / Math.max(total, 1)));
+    }
+    return headDays(placed, t0, t1, total, mortality) / (t1 - t0);
+  }
+
+  // Divide um intervalo de datas nos meses-calendário que ele toca.
+  function monthSegments(startISO, endISO, dayOffset) {
+    const segments = [];
+    if (!isISO(startISO) || !isISO(endISO) || daysBetween(startISO, endISO) <= 0) return segments;
+    let cursor = startISO;
+    let dayFrom = dayOffset;
+    while (daysBetween(cursor, endISO) > 0) {
+      const d = toDate(cursor);
+      const year = d.getUTCFullYear();
+      const month = d.getUTCMonth();
+      const diasNoMes = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+      const proximoMes = toISO(new Date(Date.UTC(year, month + 1, 1)));
+      const fim = daysBetween(proximoMes, endISO) > 0 ? proximoMes : endISO;
+      const dias = daysBetween(cursor, fim);
+      segments.push({
+        ym: `${year}-${String(month + 1).padStart(2, '0')}`,
+        inicio: cursor, fim, dias, diasNoMes, dayFrom, dayTo: dayFrom + dias
+      });
+      dayFrom += dias;
+      cursor = fim;
+    }
+    return segments;
+  }
+
+  /* ------------------------------------------------------------- financeiro */
+
+  function npv(cashFlow, annualRatePct) {
+    if (!Array.isArray(cashFlow) || !cashFlow.length) return NaN;
+    const rate = Number(annualRatePct) / 100;
+    if (!Number.isFinite(rate) || rate <= -1) return NaN;
+    const t0 = toDate(cashFlow[0].date).getTime();
+    return cashFlow.reduce((sum, row) => {
+      const t = (toDate(row.date).getTime() - t0) / DAY_MS / 365;
+      return sum + row.amount / Math.pow(1 + rate, t);
+    }, 0);
+  }
+
+  // XIRR por bisseção com varredura de intervalos: se o fluxo tiver mais de uma
+  // raiz, devolve NaN em vez de escolher arbitrariamente uma delas.
+  function xirr(cashFlow) {
+    if (!Array.isArray(cashFlow) || cashFlow.length < 2) return NaN;
+    const amounts = cashFlow.map((r) => r.amount);
+    if (!amounts.some((v) => v < 0) || !amounts.some((v) => v > 0)) return NaN;
+    const brackets = [-0.9999, -0.99, -0.95, -0.9, -0.75, -0.5, -0.25, 0, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
+    const roots = [];
+    for (let i = 0; i < brackets.length - 1; i += 1) {
+      let lo = brackets[i];
+      let hi = brackets[i + 1];
+      let fLo = npv(cashFlow, lo * 100);
+      let fHi = npv(cashFlow, hi * 100);
+      if (!Number.isFinite(fLo) || !Number.isFinite(fHi)) continue;
+      if (Math.abs(fLo) < 1e-8) roots.push(lo);
+      if (fLo * fHi > 0) continue;
+      for (let j = 0; j < 160; j += 1) {
+        const mid = (lo + hi) / 2;
+        const fMid = npv(cashFlow, mid * 100);
+        if (Math.abs(fMid) < 1e-8 || Math.abs(hi - lo) < 1e-12) { lo = hi = mid; break; }
+        if (fLo * fMid <= 0) { hi = mid; fHi = fMid; } else { lo = mid; fLo = fMid; }
+      }
+      const root = (lo + hi) / 2;
+      if (!roots.some((r) => Math.abs(r - root) < 1e-7)) roots.push(root);
+    }
+    return roots.length === 1 ? roots[0] * 100 : NaN;
+  }
+
+  function buildCashFlow(inputs, parts) {
+    const d = phaseDays(inputs);
+    const rows = [{
+      date: inputs.recria1EntryDate,
+      label: 'Aquisição, sanidade e frete de entrada',
+      amount: -(parts.custoAquisicao + parts.custoSanitario + parts.custoFreteEntrada)
+    }];
+
+    monthSegments(inputs.recria1EntryDate, inputs.recria1ExitDate, 0).forEach((seg) => {
+      const heads = headDays(inputs.quantidade, seg.dayFrom, seg.dayTo, d.total, inputs.mortalityRate);
+      rows.push({ date: seg.fim, label: `Recria Fase 1 — ${seg.dias} dia(s)`, amount: -(heads * inputs.dailyCostRecria1) });
+    });
+
+    monthSegments(inputs.recria1ExitDate, inputs.recria2ExitDate, d.recria1).forEach((seg) => {
+      const fracao = inputs.recria2CostMode === 'proRata' ? seg.dias / seg.diasNoMes : 1;
+      const heads = avgHeads(inputs.quantidade, seg.dayFrom, seg.dayTo, d.total, inputs.mortalityRate);
+      rows.push({ date: seg.fim, label: `Recria Fase 2 — ${seg.ym}`, amount: -(inputs.monthlyCostRecria2 * fracao * heads) });
+    });
+
+    const saleDate = addDays(inputs.recria2ExitDate, d.confinamento);
+    monthSegments(inputs.recria2ExitDate, saleDate, d.recria1 + d.recria2).forEach((seg) => {
+      const heads = headDays(inputs.quantidade, seg.dayFrom, seg.dayTo, d.total, inputs.mortalityRate);
+      rows.push({ date: seg.fim, label: `Confinamento — ${seg.dias} dia(s)`, amount: -(heads * inputs.dailyCostConfinamento) });
+    });
+
+    const vendaLiquida = parts.receitaBruta - parts.custoFreteSaida - parts.custoDespesasVenda;
+    const last = rows[rows.length - 1];
+    if (last && last.date === saleDate) {
+      last.label += ' + venda líquida';
+      last.amount += vendaLiquida;
+    } else {
+      rows.push({ date: saleDate, label: 'Venda líquida', amount: vendaLiquida });
+    }
+    return rows;
+  }
+
+  /* --------------------------------------------------------------- economia */
+
+  function calculateEconomics(raw, options) {
+    const opts = options || {};
+    const inputs = normalizeInputs(raw);
+    const d = phaseDays(inputs);
+    const placed = inputs.quantidade;
+    const m = inputs.mortalityRate / 100;
+    const survivors = placed * (1 - m);
+
+    // Peso por cabeça ao longo das fases
+    const pesoAposRecria1 = inputs.initialWeight + d.recria1 * inputs.gmdRecria1;
+    const pesoAposRecria2 = pesoAposRecria1 + d.recria2 * inputs.gmdRecria2;
+    const pesoFinalBruto = pesoAposRecria2 + d.confinamento * inputs.gmdConfinamento;
+    const pesoFinalVenda = pesoFinalBruto * (1 - inputs.quebraPeso / 100);
+    const pesoCarcaca = pesoFinalVenda * (inputs.rendimentoCarcaca / 100);
+
+    const arrobasPorVendido = pesoCarcaca / ARROBA_KG;
+    const arrobasTotais = arrobasPorVendido * survivors;
+    const arrobasIniciais = (inputs.initialWeight * (RENDIMENTO_INICIAL_FIXO / 100) / ARROBA_KG) * survivors;
+    const arrobasProduzidas = arrobasTotais - arrobasIniciais;
+
+    // Cabeças-dia por fase (mortalidade distribuída no ciclo inteiro)
+    const headDaysRecria1 = headDays(placed, 0, d.recria1, d.total, inputs.mortalityRate);
+    const headDaysConfinamento = headDays(placed, d.recria1 + d.recria2, d.total, d.total, inputs.mortalityRate);
+
+    const custoAquisicao = placed * inputs.pricePerKg * inputs.initialWeight;
+    const custoSanitario = placed * inputs.sanitaryCost;
+    const custoFreteEntrada = placed * inputs.freteEntrada;
+    const custoRecria1 = headDaysRecria1 * inputs.dailyCostRecria1;
+
+    const segmentosRecria2 = monthSegments(inputs.recria1ExitDate, inputs.recria2ExitDate, d.recria1);
+    const mesesRecria2 = segmentosRecria2.reduce(
+      (sum, seg) => sum + (inputs.recria2CostMode === 'proRata' ? seg.dias / seg.diasNoMes : 1), 0
+    );
+    const custoRecria2 = segmentosRecria2.reduce((sum, seg) => {
+      const fracao = inputs.recria2CostMode === 'proRata' ? seg.dias / seg.diasNoMes : 1;
+      return sum + inputs.monthlyCostRecria2 * fracao * avgHeads(placed, seg.dayFrom, seg.dayTo, d.total, inputs.mortalityRate);
+    }, 0);
+
+    const custoRecriaTotal = custoRecria1 + custoRecria2;
+    const custoConfinamento = headDaysConfinamento * inputs.dailyCostConfinamento;
+    const custoFreteSaida = survivors * inputs.freteSaida;
+
+    const receitaBruta = arrobasTotais * inputs.arrobaPriceGordo;
+    const custoDespesasVenda = receitaBruta * (inputs.despesasVenda / 100);
+
+    const custoTotal = custoAquisicao + custoSanitario + custoFreteEntrada
+      + custoRecriaTotal + custoConfinamento + custoFreteSaida + custoDespesasVenda;
+
+    const resultadoOperacional = receitaBruta - custoTotal;
+    const margemOperacional = safeDiv(resultadoOperacional, receitaBruta) * 100;
+    const roi = safeDiv(resultadoOperacional, custoTotal) * 100;
+    const resultadoPorCabecaAlojada = safeDiv(resultadoOperacional, placed);
+    const resultadoPorCabecaVendida = safeDiv(resultadoOperacional, survivors);
+    const custoTotalPorArroba = safeDiv(custoTotal, arrobasTotais);
+    // Mesma definição histórica: tudo que não é a compra do animal, sobre as @ ganhas.
+    const custoDoGanho = custoTotal - custoAquisicao;
+    const custoArrobaProduzida = arrobasProduzidas > 0 ? custoDoGanho / arrobasProduzidas : NaN;
+
+    // Equilíbrio
+    const custosSemVenda = custoTotal - custoDespesasVenda;
+    const fatorLiquido = 1 - inputs.despesasVenda / 100;
+    const precoEquilibrio = arrobasTotais > 0 && fatorLiquido > 0 ? custosSemVenda / (arrobasTotais * fatorLiquido) : NaN;
+    const arrobasEquilibrio = inputs.arrobaPriceGordo > 0 && fatorLiquido > 0 ? custosSemVenda / (inputs.arrobaPriceGordo * fatorLiquido) : NaN;
+    const margemSegurancaArrobas = arrobasTotais - arrobasEquilibrio;
+    const margemSegurancaPercentual = arrobasTotais > 0 ? margemSegurancaArrobas / arrobasTotais * 100 : NaN;
+    const receitaPorKgFinal = survivors * (1 - inputs.quebraPeso / 100) * (inputs.rendimentoCarcaca / 100) / ARROBA_KG * inputs.arrobaPriceGordo * fatorLiquido;
+    const gmdEquilibrio = receitaPorKgFinal > 0 && d.confinamento > 0
+      ? (custosSemVenda / receitaPorKgFinal - pesoAposRecria2) / d.confinamento
+      : NaN;
+
+    const parts = { custoAquisicao, custoSanitario, custoFreteEntrada, custoFreteSaida, custoDespesasVenda, receitaBruta };
+    const cashFlow = opts.financial === false ? [] : buildCashFlow(inputs, parts);
+    const vpl = cashFlow.length ? npv(cashFlow, inputs.taxaDescontoAnual) : NaN;
+    const xirrAnnual = cashFlow.length ? xirr(cashFlow) : NaN;
+    const xirrMonthly = Number.isFinite(xirrAnnual) && xirrAnnual > -100
+      ? (Math.pow(1 + xirrAnnual / 100, 1 / 12) - 1) * 100
+      : NaN;
+
+    return {
+      version: VERSION,
+      rendimentoInicialFixo: RENDIMENTO_INICIAL_FIXO,
+
+      placed, survivors, mortalityLosses: placed - survivors,
+      daysRecria1: d.recria1, daysRecria2: d.recria2, daysConfinamento: d.confinamento, totalDaysCycle: d.total,
+      mesesRecria2, saleDate: addDays(inputs.recria2ExitDate, d.confinamento),
+
+      weightGainRecria1: d.recria1 * inputs.gmdRecria1,
+      weightGainRecria2: d.recria2 * inputs.gmdRecria2,
+      weightGainConfinamento: d.confinamento * inputs.gmdConfinamento,
+      weightAfterRecria1: pesoAposRecria1,
+      weightAfterRecria2: pesoAposRecria2,
+      pesoFinalBruto, pesoFinalVenda, pesoCarcaca,
+      finalWeightCycle: pesoFinalBruto,
+      finalCarcassWeight: pesoCarcaca * survivors,
+
+      arrobasPorVendido, arrobasTotais, arrobasIniciais, arrobasProduzidas,
+      finalArrobas: arrobasTotais,
+
+      custoAquisicao, custoSanitario, custoFreteEntrada, custoRecria1, custoRecria2,
+      custoRecriaTotal, custoConfinamento, custoFreteSaida, custoDespesasVenda, custoTotal,
+      purchaseValue: custoAquisicao,
+      totalCostRecria: custoRecriaTotal,
+      finalTotalCost: custoTotal,
+
+      receitaBruta, finalRevenue: receitaBruta,
+      resultadoOperacional, grossProfit: resultadoOperacional,
+      margemOperacional, grossMargin: margemOperacional,
+      roi, resultadoPorCabecaAlojada, resultadoPorCabecaVendida,
+      custoTotalPorArroba, costPerArroba: custoTotalPorArroba,
+      custoArrobaProduzida, costPerProducedArroba: custoArrobaProduzida,
+
+      precoEquilibrio, arrobasEquilibrio, margemSegurancaArrobas, margemSegurancaPercentual, gmdEquilibrio,
+
+      cashFlow, vpl, xirrAnnual, xirrMonthly, tir: xirrMonthly
+    };
+  }
+
+  root.RecriaEngordaEngine = Object.freeze({
+    VERSION, ARROBA_KG, RENDIMENTO_INICIAL_FIXO, RULES,
+    normalizeInputs, validateInputs, calculateEconomics,
+    phaseDays, monthSegments, headDays, avgHeads,
+    buildCashFlow, npv, xirr, addDays, daysBetween
+  });
+})(typeof window !== 'undefined' ? window : globalThis);
+    </script>
+
     <script>
     // Módulo principal da aplicação
     const App = (() => {
         const STORAGE_KEY = 'savedSimulations_recriaV2';
+        // v1 = modelo por cabeça, percentuais gravados como fração, mortalidade como
+        // sobrecusto. v2 = motor com lote, percentuais em base 100 e datas ISO.
+        const SCHEMA_VERSION = 2;
 
         // Um item corrompido no localStorage não pode derrubar a ferramenta inteira
         // na carga — sem o try/catch, o JSON.parse lança antes de qualquer tela existir.
+        // Simulações gravadas pela v1 guardavam datas como timestamp ISO completo,
+        // percentuais como fração e não conheciam lote, fretes nem taxa de desconto.
+        // A migração reescreve as premissas no formato do motor e recalcula o resultado,
+        // para o histórico não misturar números de dois modelos diferentes.
+        const migrateSimulation = (sim) => {
+            if (!sim || !sim.inputs) return null;
+            if (sim.schemaVersion === SCHEMA_VERSION) return sim;
+
+            const onlyDate = (value) => String(value || '').slice(0, 10);
+            const inputs = {
+                ...sim.inputs,
+                recria1EntryDate: onlyDate(sim.inputs.recria1EntryDate),
+                recria1ExitDate: onlyDate(sim.inputs.recria1ExitDate),
+                recria2ExitDate: onlyDate(sim.inputs.recria2ExitDate),
+                // O arredondamento evita que 0,565 * 100 volte ao campo como 56,49999999999999
+                mortalityRate: Math.round((Number(sim.inputs.mortalityRate) || 0) * 10000) / 100,
+                rendimentoCarcaca: Math.round((Number(sim.inputs.rendimentoCarcaca) || 0) * 10000) / 100,
+                quantidade: 1,
+                recria2CostMode: 'mesCheio',
+                freteEntrada: 0, freteSaida: 0, quebraPeso: 0, despesasVenda: 0, taxaDescontoAnual: 0
+            };
+            return {
+                schemaVersion: SCHEMA_VERSION,
+                timestamp: sim.timestamp || Date.now(),
+                inputs,
+                results: window.RecriaEngordaEngine.calculateEconomics(inputs),
+                migratedFrom: 1
+            };
+        };
+
         const readSavedSimulations = () => {
             try {
                 const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
-                return Array.isArray(parsed) ? parsed : [];
+                if (!Array.isArray(parsed)) return [];
+                return parsed.map(migrateSimulation).filter(Boolean);
             } catch (e) {
                 return [];
             }
@@ -580,6 +1050,7 @@
             loadSavedSimulations();
             setDefaultDates();
             updateAutomaticDates();
+            updateRecria2Hint();
         };
 
         // Datas padrão calculadas a partir do dia de acesso, para o cenário de exemplo
@@ -614,6 +1085,12 @@
             ['recria1ExitDate', 'recria2ExitDate'].forEach(id => {
                 document.getElementById(id).addEventListener('change', updateAutomaticDates);
             });
+
+            // A escolha entre mês cheio e pró-rata muda o custo da Fase 2 sem mexer em
+            // nenhum número visível do formulário — a dica mostra o efeito na hora.
+            ['recria1ExitDate', 'recria2ExitDate', 'recria2CostMode', 'monthlyCostRecria2'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateRecria2Hint);
+            });
             
             // Fechar modais
             document.querySelectorAll('.modal .close-button, #cancelBtn, #alertOkBtn').forEach(el => {
@@ -627,123 +1104,59 @@
         
         const roundToTwo = (num) => Math.round(num * 100) / 100;
 
+        const LEGAL_DISCLAIMER = 'Ferramenta educacional gratuita, sem fins comerciais. Os resultados são projeções condicionadas às premissas informadas pelo usuário e não substituem orçamento, contrato ou orientação técnica individualizada.';
+
+        const METHODOLOGY_TEXT = 'Modelo econômico por cabeça alojada e por lote. A mortalidade é distribuída linearmente ao longo do ciclo: '
+            + 'diárias e mensalidades incidem sobre cabeças-dia (o animal que morre custou até a perda) e a receita incide apenas sobre os sobreviventes. '
+            + 'O rendimento de carcaça de entrada é fixado em 50% para estimar as arrobas de compra e, por consequência, o custo da arroba produzida — '
+            + 'trata-se de uma convenção da ferramenta, mantida constante para preservar a comparabilidade entre simulações. '
+            + 'O custo mensal da Fase 2 pode ser cobrado por mês cheio (todo mês tocado pela fase custa a mensalidade integral, como em contrato de pasto) '
+            + 'ou pró-rata pelos dias efetivos. VPL e XIRR usam as datas reais do calendário; a XIRR só é reportada quando o fluxo tem raiz única. '
+            + 'A ferramenta não estima parâmetros a partir de séries históricas e, portanto, não é um modelo econométrico.';
+
         // Nome da simulação, fazenda e técnico são texto livre e vão parar em innerHTML
         // (histórico, comparação, alertas) — escapa antes de interpolar.
         const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => (
             { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
         ));
 
-        // --- LÓGICA DE CÁLCULO (CORRIGIDA E ALINHADA AO ORIGINAL) ---
+        // --- LÓGICA DE CÁLCULO ---
+        // A conta em si vive em RecriaEngordaEngine (bloco acima, sem DOM). Aqui fica
+        // só a ponte com a tela: valida, chama o motor e reporta o erro ao usuário.
+        const Engine = window.RecriaEngordaEngine;
+
         const calculateSimulation = (inputs, updateUI = true) => {
             const errorMessage = document.getElementById('errorMessage');
             if (updateUI) errorMessage.textContent = '';
 
-            if ([inputs.recria1EntryDate, inputs.recria1ExitDate, inputs.recria2ExitDate].some(d => isNaN(d.getTime()))) {
-                if (updateUI) showAlert('Erro de Validação', 'Por favor, preencha todas as datas corretamente.', 'error'); return null;
+            const check = Engine.validateInputs(inputs);
+            if (!check.valid) {
+                if (updateUI) {
+                    const lista = check.errors.slice(0, 6).map(e => `<li>${escapeHtml(e.message)}</li>`).join('');
+                    errorMessage.innerHTML = `<ul class="list-disc list-inside space-y-1">${lista}</ul>`;
+                    highlightInvalidFields(check.errors);
+                    showAlert('Revise as premissas', `<ul class="text-left list-disc list-inside space-y-1">${lista}</ul>`, 'error');
+                }
+                return null;
             }
-            if (inputs.recria1ExitDate < inputs.recria1EntryDate || inputs.recria2ExitDate < inputs.recria1ExitDate) {
-                if (updateUI) showAlert('Erro de Validação', 'As datas das fases de recria não estão em ordem cronológica.', 'error'); return null;
-            }
-            if (inputs.diasConfinamento < 0) {
-                if (updateUI) showAlert('Erro de Validação', 'O número de dias de confinamento não pode ser negativo.', 'error'); return null;
-            }
-            
-            const purchaseValue = roundToTwo(inputs.pricePerKg * inputs.initialWeight);
-            const totalInitialCost = roundToTwo(purchaseValue + inputs.sanitaryCost);
-            const daysRecria1 = Math.max(0, Math.round((inputs.recria1ExitDate - inputs.recria1EntryDate) / (1000 * 60 * 60 * 24)));
-            const costRecria1 = roundToTwo(daysRecria1 * inputs.dailyCostRecria1);
-            const weightGainRecria1 = roundToTwo(daysRecria1 * inputs.gmdRecria1);
-            const weightAfterRecria1 = roundToTwo(inputs.initialWeight + weightGainRecria1);
-            
-            const daysRecria2 = Math.max(0, Math.round((inputs.recria2ExitDate - inputs.recria1ExitDate) / (1000 * 60 * 60 * 24)));
-            let recria2MonthsTouched = 0;
-            if (daysRecria2 > 0) {
-                let start = new Date(inputs.recria1ExitDate);
-                start.setUTCDate(start.getUTCDate() + 1);
-                let end = inputs.recria2ExitDate;
-                recria2MonthsTouched = (end.getUTCFullYear() - start.getUTCFullYear()) * 12 + (end.getUTCMonth() - start.getUTCMonth()) + 1;
-            }
-            const costRecria2 = roundToTwo(inputs.monthlyCostRecria2 * recria2MonthsTouched);
-            const weightGainRecria2 = roundToTwo(daysRecria2 * inputs.gmdRecria2);
-            const weightAfterRecria2 = roundToTwo(weightAfterRecria1 + weightGainRecria2);
-            
-            const totalCostRecria = roundToTwo(costRecria1 + costRecria2);
-            const totalDaysRecria = daysRecria1 + daysRecria2;
-            
-            const weightGainConfinamento = roundToTwo(inputs.gmdConfinamento * inputs.diasConfinamento);
-            const finalWeightCycle = roundToTwo(weightAfterRecria2 + weightGainConfinamento);
-            const costConfinamento = roundToTwo(inputs.diasConfinamento * inputs.dailyCostConfinamento);
-            
-            const totalProductionCost = roundToTwo(totalInitialCost + totalCostRecria + costConfinamento);
-            const mortalityCost = roundToTwo(totalProductionCost * inputs.mortalityRate);
-            const finalTotalCost = roundToTwo(totalProductionCost + mortalityCost);
-            
-            const finalCarcassWeight = roundToTwo(finalWeightCycle * inputs.rendimentoCarcaca);
-            const finalArrobas = roundToTwo(finalCarcassWeight > 0 ? (finalCarcassWeight / 15) : 0);
-            const finalRevenue = roundToTwo(finalArrobas * inputs.arrobaPriceGordo);
-            
-            const grossProfit = roundToTwo(finalRevenue - finalTotalCost);
-            const grossMargin = finalRevenue !== 0 ? roundToTwo((grossProfit / finalRevenue) * 100) : 0;
-            const costPerArroba = finalArrobas > 0 ? roundToTwo(finalTotalCost / finalArrobas) : 0;
-            const costOfGain = roundToTwo(finalTotalCost - purchaseValue);
-            
-            // Cálculo do Custo @ Produzida conforme a fórmula especificada: (Custo Total - Custo Aquisição) / (@ Venda - @ Compra)
-            // Onde @ Compra é estimada com um rendimento de carcaça fixo de 50% (0.5) sobre o peso de compra.
-            const initialArrobasEstimated = roundToTwo((inputs.initialWeight * 0.5) / 15);
-            const producedArrobas = roundToTwo(finalArrobas - initialArrobasEstimated);
-            const costPerProducedArroba = producedArrobas > 0 ? roundToTwo(costOfGain / producedArrobas) : 0;
+            if (updateUI) highlightInvalidFields([]);
 
-            const cashFlowMap = new Map();
-            // Chave no formato AAAA-MM com mês 1-based. getUTCMonth() é 0-based: sem o +1,
-            // agosto virava "07" e o rótulo do gráfico exibia julho; janeiro gerava "00",
-            // que o construtor Date rejeita e imprimia "Invalid Date".
-            const addToFlow = (date, amount) => {
-                const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
-                cashFlowMap.set(key, (cashFlowMap.get(key) || 0) + amount);
-            };
-            addToFlow(inputs.recria1EntryDate, -totalInitialCost);
-            for(let i = 0; i < daysRecria1; i++) { let d = new Date(inputs.recria1EntryDate); d.setUTCDate(d.getUTCDate() + i); addToFlow(d, -inputs.dailyCostRecria1); }
-            if (daysRecria2 > 0) { let d = new Date(inputs.recria1ExitDate); d.setUTCDate(d.getUTCDate() + 1); d.setUTCDate(1); while (d <= inputs.recria2ExitDate) { addToFlow(d, -inputs.monthlyCostRecria2); d.setUTCMonth(d.getUTCMonth() + 1); } }
-            let confinementSaleDate = new Date(inputs.recria2ExitDate);
-            if (inputs.diasConfinamento > 0) {
-                for (let i = 0; i < inputs.diasConfinamento; i++) { let d = new Date(inputs.recria2ExitDate); d.setUTCDate(d.getUTCDate() + i + 1); addToFlow(d, -inputs.dailyCostConfinamento); }
-                confinementSaleDate.setUTCDate(confinementSaleDate.getUTCDate() + inputs.diasConfinamento);
-            }
-            addToFlow(confinementSaleDate, finalRevenue);
-            if (mortalityCost > 0) addToFlow(confinementSaleDate, -mortalityCost);
+            const results = Engine.calculateEconomics(inputs);
 
-            const sortedKeys = Array.from(cashFlowMap.keys()).sort();
-            const cashFlow = sortedKeys.map(key => roundToTwo(cashFlowMap.get(key)));
-            const tir = calculateTIR(cashFlow) * 100;
-            // Série serializável: um Map vira "{}" no JSON.stringify, então todo histórico
-            // salvo perdia o fluxo de caixa silenciosamente.
-            const cashFlowSeries = sortedKeys.map((key, i) => ({ key, amount: cashFlow[i] }));
-
-            const results = { purchaseValue, totalInitialCost, totalDaysCycle: totalDaysRecria + inputs.diasConfinamento, daysRecria1, weightGainRecria1, costRecria1, weightAfterRecria1, daysRecria2, weightGainRecria2, costRecria2, weightAfterRecria2, totalCostRecria, daysConfinamento: inputs.diasConfinamento, weightGainConfinamento, finalWeightCycle, costConfinamento, totalProductionCost, mortalityCost, finalTotalCost, finalCarcassWeight, finalArrobas, finalRevenue, grossProfit, grossMargin, costPerArroba, costPerProducedArroba, tir, cashFlowSeries };
-            
             if (updateUI) {
-                state.currentSimulation = { inputs, results, timestamp: new Date().getTime() };
+                state.currentSimulation = { schemaVersion: SCHEMA_VERSION, inputs, results, timestamp: new Date().getTime() };
                 updateResultsUI(results);
             }
             return results;
         };
 
-        const calculateTIR = (cashFlows) => {
-            if (!cashFlows || !cashFlows.some(v => v > 0) || !cashFlows.some(v => v < 0)) return NaN;
-            let rate = 0.1, maxIter = 1000, tolerance = 1e-7;
-            for (let i = 0; i < maxIter; i++) {
-                let npv = 0, deriv = 0;
-                for (let t = 0; t < cashFlows.length; t++) {
-                    npv += (cashFlows[t] || 0) / Math.pow(1 + rate, t);
-                    if (t > 0) deriv -= t * (cashFlows[t] || 0) / Math.pow(1 + rate, t + 1);
-                }
-                if (Math.abs(npv) < tolerance) return rate;
-                if (deriv === 0) return NaN;
-                let newRate = rate - npv / deriv;
-                if (Math.abs(newRate - rate) < tolerance) return newRate;
-                rate = newRate;
-            }
-            return NaN;
+        // Marca em vermelho os campos recusados pela validação do motor.
+        const highlightInvalidFields = (errors) => {
+            dom.form.querySelectorAll('.field-invalid').forEach(el => el.classList.remove('field-invalid'));
+            errors.forEach(({ field }) => {
+                const el = document.getElementById(field);
+                if (el) el.classList.add('field-invalid');
+            });
         };
 
         // --- MANIPULADORES DE EVENTOS ---
@@ -796,15 +1209,23 @@
             updateCharts(data);
         };
         
+        const signTone = (v) => (!isFinite(v) ? 'neutral' : (v >= 0 ? 'positive' : 'negative'));
+        const orNA = (v, fn) => (isFinite(v) ? fn(v) : 'N/A');
+
         const updateKeyMetrics = (data) => {
+            const lote = data.placed > 1;
             // Custo não é resultado: indicadores de custo ficam em tom neutro em vez de
             // vermelho permanente, que dava a impressão de erro mesmo em cenário saudável.
             const metrics = [
-                { label: 'Lucro Bruto', value: formatCurrency(data.grossProfit), tone: data.grossProfit >= 0 ? 'positive' : 'negative' },
-                { label: 'Margem Bruta', value: formatPercent(data.grossMargin), tone: data.grossMargin >= 0 ? 'positive' : 'negative' },
-                { label: 'TIR Mensal', value: isFinite(data.tir) ? formatPercent(data.tir) : 'N/A', tone: !isFinite(data.tir) ? 'neutral' : (data.tir >= 0 ? 'positive' : 'negative') },
-                { label: 'Custo Total/@', value: formatCurrency(data.costPerArroba), tone: 'neutral' },
-                { label: 'Custo @ Produzida', value: formatCurrency(data.costPerProducedArroba), tone: 'neutral' }
+                { label: lote ? 'Resultado do Lote' : 'Resultado Operacional', value: formatCurrency(data.resultadoOperacional), tone: signTone(data.resultadoOperacional) },
+                { label: 'Resultado/Cabeça Alojada', value: orNA(data.resultadoPorCabecaAlojada, formatCurrency), tone: signTone(data.resultadoPorCabecaAlojada) },
+                { label: 'Margem Operacional', value: orNA(data.margemOperacional, formatPercent), tone: signTone(data.margemOperacional) },
+                { label: 'ROI sobre o Custo', value: orNA(data.roi, formatPercent), tone: signTone(data.roi) },
+                { label: 'VPL à Taxa Informada', value: orNA(data.vpl, formatCurrency), tone: signTone(data.vpl) },
+                { label: 'TIR (% ao mês)', value: orNA(data.xirrMonthly, formatPercent), tone: signTone(data.xirrMonthly) },
+                { label: 'Custo Total/@', value: orNA(data.custoTotalPorArroba, formatCurrency), tone: 'neutral' },
+                { label: 'Custo @ Produzida', value: orNA(data.custoArrobaProduzida, formatCurrency), tone: 'neutral' },
+                { label: 'Preço de Equilíbrio', value: orNA(data.precoEquilibrio, (v) => `${formatCurrency(v)}/@`), tone: 'neutral' }
             ];
             const toneClass = { positive: 'text-green-600', negative: 'text-red-600', neutral: 'text-slate-800' };
             const container = document.getElementById('keyMetricsCards');
@@ -816,23 +1237,66 @@
             `).join('');
         };
 
+        const tableRows = (rows) => rows.map(([label, value, strong]) => `
+            <tr class="${strong ? 'font-bold bg-slate-50' : ''}">
+                <td class="px-4 py-3 text-sm">${label}</td>
+                <td class="px-4 py-3 text-sm">${value}</td>
+            </tr>`).join('');
+
         const updateTables = (data) => {
-            document.getElementById('acquisitionTable').innerHTML = `<tr><td class="px-4 py-3 text-sm">Custo Aquisição Animal</td><td class="px-4 py-3 text-sm">${formatCurrency(data.purchaseValue)}</td></tr><tr><td class="px-4 py-3 text-sm">Custo Sanitário</td><td class="px-4 py-3 text-sm">${formatCurrency(data.totalInitialCost - data.purchaseValue)}</td></tr><tr class="font-bold bg-slate-50"><td class="px-4 py-3 text-sm">Custo Total de Entrada</td><td class="px-4 py-3 text-sm">${formatCurrency(data.totalInitialCost)}</td></tr><tr><td class="px-4 py-3 text-sm">Duração Total do Ciclo</td><td class="px-4 py-3 text-sm">${formatNumber(data.totalDaysCycle, 0)} dias</td></tr>`;
-            document.getElementById('recriaTable').innerHTML = `<tr><td class="px-4 py-3 text-sm">Duração Fase 1</td><td class="px-4 py-3 text-sm">${formatNumber(data.daysRecria1, 0)} dias</td></tr><tr><td class="px-4 py-3 text-sm">Custo Fase 1</td><td class="px-4 py-3 text-sm">${formatCurrency(data.costRecria1)}</td></tr><tr><td class="px-4 py-3 text-sm">Duração Fase 2</td><td class="px-4 py-3 text-sm">${formatNumber(data.daysRecria2, 0)} dias</td></tr><tr><td class="px-4 py-3 text-sm">Custo Fase 2</td><td class="px-4 py-3 text-sm">${formatCurrency(data.costRecria2)}</td></tr><tr class="font-bold bg-slate-50"><td class="px-4 py-3 text-sm">Custo Total Recria</td><td class="px-4 py-3 text-sm">${formatCurrency(data.totalCostRecria)}</td></tr>`;
-            document.getElementById('confinamentoTable').innerHTML = `<tr><td class="px-4 py-3 text-sm">Duração Confinamento</td><td class="px-4 py-3 text-sm">${formatNumber(data.daysConfinamento, 0)} dias</td></tr><tr><td class="px-4 py-3 text-sm">Custo Total Confinamento</td><td class="px-4 py-3 text-sm">${formatCurrency(data.costConfinamento)}</td></tr><tr><td class="px-4 py-3 text-sm">Peso Final de Venda</td><td class="px-4 py-3 text-sm">${formatNumber(data.finalWeightCycle)} kg</td></tr>`;
-            document.getElementById('finalTable').innerHTML = `
-                <tr><td class="px-4 py-3 text-sm">Custo de Produção</td><td class="px-4 py-3 text-sm">${formatCurrency(data.totalProductionCost)}</td></tr>
-                <tr><td class="px-4 py-3 text-sm">Custo de Mortalidade</td><td class="px-4 py-3 text-sm">${formatCurrency(data.mortalityCost)}</td></tr>
-                <tr class="font-bold bg-slate-50"><td class="px-4 py-3 text-sm">Custo Total Final</td><td class="px-4 py-3 text-sm">${formatCurrency(data.finalTotalCost)}</td></tr>
-                <tr><td class="px-4 py-3 text-sm">Peso Carcaça</td><td class="px-4 py-3 text-sm">${formatNumber(data.finalCarcassWeight)} kg</td></tr>
-                <tr><td class="px-4 py-3 text-sm">Arrobas para Venda</td><td class="px-4 py-3 text-sm">${formatNumber(data.finalArrobas)} @</td></tr>
-                <tr><td class="px-4 py-3 text-sm font-bold">Receita Bruta Total</td><td class="px-4 py-3 text-sm font-bold text-green-600">${formatCurrency(data.finalRevenue)}</td></tr>
-            `;
+            const porCab = data.placed > 1 ? ' (lote)' : '';
+
+            document.getElementById('acquisitionTable').innerHTML = tableRows([
+                ['Animais alojados', `${formatNumber(data.placed, 0)} cab`],
+                ['Animais vendidos (esperado)', `${formatNumber(data.survivors, 2)} cab`],
+                [`Custo de aquisição${porCab}`, formatCurrency(data.custoAquisicao)],
+                [`Custo sanitário${porCab}`, formatCurrency(data.custoSanitario)],
+                [`Frete de entrada${porCab}`, formatCurrency(data.custoFreteEntrada)],
+                ['Duração total do ciclo', `${formatNumber(data.totalDaysCycle, 0)} dias`],
+                ['Data prevista de venda', new Date(`${data.saleDate}T12:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' })]
+            ]);
+
+            document.getElementById('recriaTable').innerHTML = tableRows([
+                ['Duração Fase 1', `${formatNumber(data.daysRecria1, 0)} dias`],
+                ['Custo Fase 1', formatCurrency(data.custoRecria1)],
+                ['Duração Fase 2', `${formatNumber(data.daysRecria2, 0)} dias`],
+                ['Mensalidades cobradas na Fase 2', formatNumber(data.mesesRecria2, 2)],
+                ['Custo Fase 2', formatCurrency(data.custoRecria2)],
+                ['Peso ao fim da recria', `${formatNumber(data.weightAfterRecria2)} kg/cab`],
+                ['Custo total da recria', formatCurrency(data.custoRecriaTotal), true]
+            ]);
+
+            document.getElementById('confinamentoTable').innerHTML = tableRows([
+                ['Duração do confinamento', `${formatNumber(data.daysConfinamento, 0)} dias`],
+                ['Custo do confinamento', formatCurrency(data.custoConfinamento)],
+                ['Peso vivo final', `${formatNumber(data.pesoFinalBruto)} kg/cab`],
+                ['Peso final de venda (pós-quebra)', `${formatNumber(data.pesoFinalVenda)} kg/cab`],
+                ['Peso de carcaça', `${formatNumber(data.pesoCarcaca)} kg/cab`],
+                ['Arrobas por cabeça vendida', `${formatNumber(data.arrobasPorVendido)} @`],
+                ['GMD de equilíbrio', orNA(data.gmdEquilibrio, (v) => `${formatNumber(v, 3)} kg/dia`)]
+            ]);
+
+            document.getElementById('finalTable').innerHTML = tableRows([
+                ['Arrobas totais', `${formatNumber(data.arrobasTotais)} @`],
+                ['Arrobas produzidas', `${formatNumber(data.arrobasProduzidas)} @`],
+                ['Receita bruta', formatCurrency(data.receitaBruta)],
+                ['Frete de saída', formatCurrency(data.custoFreteSaida)],
+                ['Despesas de venda', formatCurrency(data.custoDespesasVenda)],
+                ['Custo total', formatCurrency(data.custoTotal), true],
+                ['Resultado operacional', formatCurrency(data.resultadoOperacional), true],
+                ['Resultado/cabeça vendida', orNA(data.resultadoPorCabecaVendida, formatCurrency)],
+                ['VPL à taxa informada', orNA(data.vpl, formatCurrency)],
+                ['TIR (% ao mês)', orNA(data.xirrMonthly, formatPercent)],
+                ['XIRR anual (equivalente)', orNA(data.xirrAnnual, formatPercent)],
+                ['Margem de segurança', orNA(data.margemSegurancaPercentual, formatPercent)]
+            ]);
         };
         
         const updateCharts = (data) => {
-            const { finalRevenue, finalTotalCost, grossProfit } = data;
-            const cashFlowSeries = data.cashFlowSeries || [];
+            const finalRevenue = data.receitaBruta;
+            const finalTotalCost = data.custoTotal;
+            const grossProfit = data.resultadoOperacional;
+            const cashFlowSeries = data.cashFlow || [];
             
             // Gráfico de Métricas
             const metricsData = {
@@ -865,14 +1329,21 @@
                 } 
             });
 
-            // Gráfico de Fluxo de Caixa
-            const cashFlow = cashFlowSeries.map(row => row.amount);
+            // Gráfico de Fluxo de Caixa — o motor devolve lançamentos com data real, e um
+            // mesmo mês pode receber mais de um (fim de fase e fim de mês caem em datas
+            // diferentes). O eixo soma por mês para não repetir rótulo; o detalhe linha a
+            // linha continua na tabela do relatório.
+            const porMes = new Map();
+            cashFlowSeries.forEach(row => {
+                const chave = row.date.slice(0, 7);
+                porMes.set(chave, (porMes.get(chave) || 0) + row.amount);
+            });
+            const mesesOrdenados = [...porMes.keys()].sort();
+            const cashFlow = mesesOrdenados.map(chave => porMes.get(chave));
             const cumulativeCashFlow = cashFlow.reduce((acc, val) => [...acc, (acc.length > 0 ? acc[acc.length-1] : 0) + val], []);
-            // Monta a data pelos componentes da chave (AAAA-MM), sem depender do parser
-            // de string do Date — que é o que produzia "Invalid Date".
-            const cashFlowLabels = cashFlowSeries.map(row => {
-                const [year, month] = row.key.split('-').map(Number);
-                return new Date(Date.UTC(year, month - 1, 1)).toLocaleString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+            const cashFlowLabels = mesesOrdenados.map(chave => {
+                const [ano, mes] = chave.split('-').map(Number);
+                return new Date(Date.UTC(ano, mes - 1, 1)).toLocaleString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' });
             });
             const cashFlowData = {
                 labels: cashFlowLabels,
@@ -932,16 +1403,15 @@
         const performSensitivityAnalysis = (baseInputs, baseResults) => {
              const variations = [-0.15, -0.075, 0, 0.075, 0.15];
              const results = { price: [], gmd: [], revenue: [] };
+             // As três séries variam no mesmo sentido do eixo. Antes o preço de aquisição
+             // usava (1 - v), então em "-15%" o custo tinha subido 15% — o mesmo eixo
+             // carregava dois significados opostos.
+             // financial:false pula VPL/XIRR: são 15 recálculos só para desenhar a curva.
+             const resultAt = (overrides) => Engine.calculateEconomics({ ...baseInputs, ...overrides }, { financial: false }).resultadoOperacional;
              variations.forEach(v => {
-                 // As três séries variam no mesmo sentido do eixo. Antes o preço de
-                 // aquisição usava (1 - v), então em "-15%" o custo tinha subido 15% —
-                 // o mesmo eixo carregava dois significados opostos.
-                 let inputsPrice = { ...baseInputs, pricePerKg: baseInputs.pricePerKg * (1 + v) };
-                 results.price.push(calculateSimulation(inputsPrice, false)?.grossProfit ?? 0);
-                 let inputsGMD = { ...baseInputs, gmdConfinamento: baseInputs.gmdConfinamento * (1 + v) };
-                 results.gmd.push(calculateSimulation(inputsGMD, false)?.grossProfit ?? 0);
-                 let inputsRevenue = { ...baseInputs, arrobaPriceGordo: baseInputs.arrobaPriceGordo * (1 + v) };
-                 results.revenue.push(calculateSimulation(inputsRevenue, false)?.grossProfit ?? 0);
+                 results.price.push(resultAt({ pricePerKg: baseInputs.pricePerKg * (1 + v) }));
+                 results.gmd.push(resultAt({ gmdConfinamento: baseInputs.gmdConfinamento * (1 + v) }));
+                 results.revenue.push(resultAt({ arrobaPriceGordo: baseInputs.arrobaPriceGordo * (1 + v) }));
              });
              const sensitivityData = {
                  labels: variations.map(v => `${(v * 100).toFixed(1)}%`),
@@ -953,7 +1423,7 @@
              };
              createOrUpdateChart('sensitivityChart', 'bar', sensitivityData, { 
                 plugins: { 
-                    title: { display: true, text: 'Análise de Sensibilidade do Lucro Bruto' } 
+                    title: { display: true, text: 'Análise de Sensibilidade do Resultado Operacional' }
                 }, 
                 scales: { 
                     y: { 
@@ -1045,13 +1515,13 @@
             state.savedSimulations.forEach((sim, index) => {
                 const date = new Date(sim.timestamp).toLocaleDateString('pt-BR');
                 const name = sim.inputs.simulationName || 'Simulação sem nome';
-                const profit = formatCurrency(sim.results.grossProfit);
+                const profit = formatCurrency(sim.results.resultadoOperacional);
 
                 const row = `
                     <tr class="border-b hover:bg-slate-50">
                         <td class="p-3">${date}</td>
                         <td class="p-3 font-medium">${escapeHtml(name)}</td>
-                        <td class="p-3 ${sim.results.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}">${profit}</td>
+                        <td class="p-3 ${sim.results.resultadoOperacional >= 0 ? 'text-green-600' : 'text-red-600'}">${profit}</td>
                         <td class="p-3 space-x-2">
                             <button class="view-sim-btn text-blue-600 hover:text-blue-800" data-index="${index}" title="Carregar"><i class="fas fa-eye"></i></button>
                             <button class="delete-sim-btn text-red-600 hover:text-red-800" data-index="${index}" title="Excluir"><i class="fas fa-trash"></i></button>
@@ -1072,28 +1542,19 @@
             }));
         };
         
-        // getFormInputs() guarda estes campos já divididos por 100. Ao repovoar o
-        // formulário é preciso desfazer a escala, senão 56,5% de rendimento volta como
-        // 0,565% e a simulação recarregada mostra prejuízo onde havia lucro.
-        const PERCENT_INPUT_KEYS = ['mortalityRate', 'rendimentoCarcaca'];
-
+        // As premissas são gravadas exatamente no formato do formulário (percentuais em
+        // base 100, datas ISO), então repovoar é cópia direta — sem conversão de escala,
+        // que era a origem do erro de fator 100 na versão anterior.
         const loadSimulation = (index) => {
             const sim = state.savedSimulations[index];
             if (!sim) return;
 
             Object.keys(sim.inputs).forEach(key => {
                 const el = document.getElementById(key);
-                if(el) {
-                    if (el.type === 'date' && sim.inputs[key]) {
-                        el.value = new Date(sim.inputs[key]).toISOString().split('T')[0];
-                    } else if (PERCENT_INPUT_KEYS.includes(key)) {
-                        el.value = roundToTwo(Number(sim.inputs[key]) * 100);
-                    } else {
-                        el.value = sim.inputs[key];
-                    }
-                }
+                if (el) el.value = sim.inputs[key];
             });
             updateAutomaticDates();
+            updateRecria2Hint();
             handleFormSubmit(new Event('submit'));
             document.querySelector('.tab-btn[data-tab="simulation"]').click();
             showAlert('Sucesso', `Simulação "${escapeHtml(sim.inputs.simulationName)}" carregada.`, 'success');
@@ -1128,21 +1589,21 @@
                 const lucroData = {
                     labels: [sim1.inputs.simulationName, sim2.inputs.simulationName],
                     datasets: [{ 
-                        label: 'Lucro Bruto', 
-                        data: [sim1.results.grossProfit, sim2.results.grossProfit], 
+                        label: 'Resultado Operacional', 
+                        data: [sim1.results.resultadoOperacional, sim2.results.resultadoOperacional], 
                         backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)'],
                         borderColor: ['#1d4ed8', '#059669'],
                         borderWidth: 2,
                         borderRadius: 8,
                     }]
                 };
-                createOrUpdateChart('comparisonChartLucro', 'bar', lucroData, {plugins: {title: {display: true, text: 'Comparativo: Lucro Bruto (R$)'}, legend: {display: false}}, scales: {y: {ticks: {callback: formatCurrency}}}});
+                createOrUpdateChart('comparisonChartLucro', 'bar', lucroData, {plugins: {title: {display: true, text: 'Comparativo: Resultado Operacional (R$)'}, legend: {display: false}}, scales: {y: {ticks: {callback: formatCurrency}}}});
 
                 const custoData = {
                     labels: [sim1.inputs.simulationName, sim2.inputs.simulationName],
-                    datasets: [{ 
-                        label: 'Custo @ Produzida', 
-                        data: [sim1.results.costPerProducedArroba, sim2.results.costPerProducedArroba], 
+                    datasets: [{
+                        label: 'Custo @ Produzida',
+                        data: [sim1.results.custoArrobaProduzida, sim2.results.custoArrobaProduzida],
                         backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)'],
                         borderColor: ['#1d4ed8', '#059669'],
                         borderWidth: 2,
@@ -1155,7 +1616,7 @@
                     labels: [sim1.inputs.simulationName, sim2.inputs.simulationName],
                     datasets: [{
                         label: 'Margem Bruta (%)',
-                        data: [sim1.results.grossMargin, sim2.results.grossMargin],
+                        data: [sim1.results.margemOperacional, sim2.results.margemOperacional],
                         backgroundColor: ['rgba(139, 92, 246, 0.8)', 'rgba(20, 184, 166, 0.8)'],
                         borderColor: ['#7c3aed', '#0d9488'],
                         borderWidth: 2,
@@ -1164,7 +1625,7 @@
                 };
                 createOrUpdateChart('comparisonChartMargem', 'bar', margemData, {
                     plugins: {
-                        title: { display: true, text: 'Comparativo: Margem Bruta (%)' },
+                        title: { display: true, text: 'Comparativo: Margem Operacional (%)' },
                         legend: { display: false }
                     },
                     scales: { y: { ticks: { callback: (value) => `${formatNumber(value, 2)}%` } } }
@@ -1173,8 +1634,8 @@
                 const tirData = {
                     labels: [sim1.inputs.simulationName, sim2.inputs.simulationName],
                     datasets: [{
-                        label: 'TIR Mensal (%)',
-                        data: [ isFinite(sim1.results.tir) ? sim1.results.tir : 0, isFinite(sim2.results.tir) ? sim2.results.tir : 0 ],
+                        label: 'TIR (% ao mês)',
+                        data: [ isFinite(sim1.results.xirrMonthly) ? sim1.results.xirrMonthly : 0, isFinite(sim2.results.xirrMonthly) ? sim2.results.xirrMonthly : 0 ],
                         backgroundColor: ['rgba(139, 92, 246, 0.8)', 'rgba(20, 184, 166, 0.8)'],
                         borderColor: ['#7c3aed', '#0d9488'],
                         borderWidth: 2,
@@ -1183,7 +1644,7 @@
                 };
                 createOrUpdateChart('comparisonChartTIR', 'bar', tirData, {
                     plugins: {
-                        title: { display: true, text: 'Comparativo: TIR Mensal (%)' },
+                        title: { display: true, text: 'Comparativo: TIR (% ao mês)' },
                         legend: { display: false }
                     },
                     scales: { y: { ticks: { callback: (value) => `${formatNumber(value, 2)}%` } } }
@@ -1197,7 +1658,7 @@
             const sim = state.savedSimulations[index];
             el.innerHTML = `
                 <p><strong>Fazenda:</strong> ${escapeHtml(sim.inputs.farmName || 'N/A')}</p>
-                <p><strong>Lucro:</strong> ${formatCurrency(sim.results.grossProfit)}</p>
+                <p><strong>Resultado:</strong> ${formatCurrency(sim.results.resultadoOperacional)}</p>
                 <p><strong>Custo @:</strong> ${formatCurrency(sim.results.costPerProducedArroba)}</p>
             `;
             el.classList.remove('hidden');
@@ -1216,23 +1677,58 @@
         const exportToExcel = () => {
              if (!state.currentSimulation) { showAlert('Atenção', 'Nenhuma simulação para exportar.', 'warning'); return; }
             const { inputs, results } = state.currentSimulation;
+            const dec = (v, d = 2) => (isFinite(v) ? Number(v).toFixed(d) : 'N/A');
+            const brDate = (iso) => new Date(`${iso}T12:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
             const data = [
                 ['Parâmetro', 'Valor'],
-                ['Nome da Simulação', inputs.simulationName],['Fazenda', inputs.farmName],
+                ['Nome da Simulação', inputs.simulationName], ['Fazenda', inputs.farmName],
                 ['Técnico Responsável', inputs.techName],
                 ['Localidade', inputs.location],
                 ['Raça', inputs.breed],
                 ['Sexo', inputs.sex],
                 ['Categoria Animal', inputs.animalCategory],
-                ['Valor Aquisição (R$/kg)', inputs.pricePerKg],['Peso Compra (kg)', inputs.initialWeight],['Custo Sanitário Entrada (R$)', inputs.sanitaryCost],['Mortalidade no Ciclo (%)', inputs.mortalityRate*100],
-                ['Data Entrada - Fase 1', inputs.recria1EntryDate.toLocaleDateString('pt-BR')],['Data Saída - Fase 1', inputs.recria1ExitDate.toLocaleDateString('pt-BR')],['GMD - Fase 1 (kg/dia)', inputs.gmdRecria1],['Custo Diário - Fase 1 (R$)', inputs.dailyCostRecria1],
-                ['Data Saída - Fase 2', inputs.recria2ExitDate.toLocaleDateString('pt-BR')],['GMD - Fase 2 (kg/dia)', inputs.gmdRecria2],['Custo Mensal - Fase 2 (R$)', inputs.monthlyCostRecria2],
-                ['Dias de Confinamento', inputs.diasConfinamento],['GMD no Confinamento (kg/dia)', inputs.gmdConfinamento],['Custo da Diária (R$)', inputs.dailyCostConfinamento],
-                ['Rendimento de Carcaça (%)', inputs.rendimentoCarcaca*100],['Arroba do Boi Gordo (R$/@)', inputs.arrobaPriceGordo],
+                ['Motor econômico', `v${Engine.VERSION}`],
+                [],
+                ['Aquisição', 'Valor'],
+                ['Quantidade de Animais (cab)', inputs.quantidade],
+                ['Valor Aquisição (R$/kg)', inputs.pricePerKg], ['Peso Compra (kg)', inputs.initialWeight],
+                ['Custo Sanitário Entrada (R$/cab)', inputs.sanitaryCost], ['Frete de Entrada (R$/cab)', inputs.freteEntrada],
+                ['Mortalidade no Ciclo (%)', inputs.mortalityRate],
+                [],
+                ['Fases', 'Valor'],
+                ['Data Entrada - Fase 1', brDate(inputs.recria1EntryDate)], ['Data Saída - Fase 1', brDate(inputs.recria1ExitDate)],
+                ['GMD - Fase 1 (kg/dia)', inputs.gmdRecria1], ['Custo Diário - Fase 1 (R$)', inputs.dailyCostRecria1],
+                ['Data Saída - Fase 2', brDate(inputs.recria2ExitDate)], ['GMD - Fase 2 (kg/dia)', inputs.gmdRecria2],
+                ['Custo Mensal - Fase 2 (R$)', inputs.monthlyCostRecria2],
+                ['Forma de Cobrança - Fase 2', inputs.recria2CostMode === 'proRata' ? 'Pró-rata por dias' : 'Mês cheio (contrato)'],
+                ['Mensalidades cobradas na Fase 2', dec(results.mesesRecria2)],
+                ['Dias de Confinamento', inputs.diasConfinamento], ['GMD no Confinamento (kg/dia)', inputs.gmdConfinamento],
+                ['Custo da Diária (R$)', inputs.dailyCostConfinamento],
+                [],
+                ['Venda e Financeiro', 'Valor'],
+                ['Rendimento de Carcaça (%)', inputs.rendimentoCarcaca],
+                ['Rendimento de Carcaça de Entrada (%) - fixo', Engine.RENDIMENTO_INICIAL_FIXO],
+                ['Arroba do Boi Gordo (R$/@)', inputs.arrobaPriceGordo],
+                ['Quebra de Peso (%)', inputs.quebraPeso], ['Despesas de Venda (%)', inputs.despesasVenda],
+                ['Frete de Saída (R$/cab)', inputs.freteSaida], ['Taxa de Desconto (% a.a.)', inputs.taxaDescontoAnual],
                 [],
                 ['Resultado', 'Valor'],
-                ['Lucro Bruto (R$)', results.grossProfit.toFixed(2)],['Margem Bruta (%)', results.grossMargin.toFixed(2)],['TIR Mensal (%)', isFinite(results.tir) ? results.tir.toFixed(2) : 'N/A'],['Custo Total/@ (R$)', results.costPerArroba.toFixed(2)],['Custo @ Produzida (R$)', results.costPerProducedArroba.toFixed(2)],
-                ['Receita Bruta Total (R$)', results.finalRevenue.toFixed(2)],['Custo Total Final (R$)', results.finalTotalCost.toFixed(2)],['Peso Final de Venda (kg)', results.finalWeightCycle.toFixed(2)],['Arrobas para Venda (@)', results.finalArrobas.toFixed(2)],
+                ['Animais Alojados (cab)', dec(results.placed, 0)], ['Animais Vendidos Esperados (cab)', dec(results.survivors)],
+                ['Peso Vivo Final (kg/cab)', dec(results.pesoFinalBruto)], ['Peso Final de Venda (kg/cab)', dec(results.pesoFinalVenda)],
+                ['Peso de Carcaça (kg/cab)', dec(results.pesoCarcaca)],
+                ['Arrobas Totais (@)', dec(results.arrobasTotais)], ['Arrobas Produzidas (@)', dec(results.arrobasProduzidas)],
+                ['Receita Bruta (R$)', dec(results.receitaBruta)], ['Custo Total (R$)', dec(results.custoTotal)],
+                ['Resultado Operacional (R$)', dec(results.resultadoOperacional)],
+                ['Resultado/Cabeça Alojada (R$)', dec(results.resultadoPorCabecaAlojada)],
+                ['Resultado/Cabeça Vendida (R$)', dec(results.resultadoPorCabecaVendida)],
+                ['Margem Operacional (%)', dec(results.margemOperacional)], ['ROI sobre o Custo (%)', dec(results.roi)],
+                ['Custo Total/@ (R$)', dec(results.custoTotalPorArroba)], ['Custo @ Produzida (R$)', dec(results.custoArrobaProduzida)],
+                ['VPL (R$)', dec(results.vpl)], ['TIR (% ao mês)', dec(results.xirrMonthly)], ['XIRR anual equivalente (%)', dec(results.xirrAnnual)],
+                ['Preço de Equilíbrio (R$/@)', dec(results.precoEquilibrio)], ['GMD de Equilíbrio (kg/dia)', dec(results.gmdEquilibrio, 3)],
+                ['Margem de Segurança (%)', dec(results.margemSegurancaPercentual)],
+                [],
+                ['Fluxo de Caixa', 'Data', 'Valor (R$)', 'Saldo Acumulado (R$)'],
+                ...(() => { let acc = 0; return (results.cashFlow || []).map((row) => { acc += row.amount; return [row.label, brDate(row.date), dec(row.amount), dec(acc)]; }); })()
             ];
             // CSV para Excel pt-BR: separador ';', campos aspeados (nome de simulação
             // com vírgula ou ';' deixa de quebrar a estrutura) e BOM UTF-8, sem o qual
@@ -1268,21 +1764,42 @@
                 { label: 'Raça', value: escapeHtml(inputs.breed || 'N/A') }, { label: 'Sexo', value: escapeHtml(inputs.sex || 'N/A') },
                 { label: 'Categoria', value: escapeHtml(inputs.animalCategory || 'N/A') }, {},
                 { separator: 'Premissas de Aquisição e Venda' },
-                { label: 'Valor Aquisição', value: `${formatCurrency(inputs.pricePerKg)}/kg` }, { label: 'Preço Arroba', value: formatCurrency(inputs.arrobaPriceGordo) },
-                { label: 'Peso Compra', value: `${formatNumber(inputs.initialWeight, 0)} kg` }, { label: 'Rend. Carcaça', value: formatPercent(inputs.rendimentoCarcaca * 100) },
-                { label: 'Custo Sanitário', value: formatCurrency(inputs.sanitaryCost) }, { label: 'Mortalidade', value: formatPercent(inputs.mortalityRate * 100) },
+                { label: 'Animais Alojados', value: `${formatNumber(inputs.quantidade, 0)} cab` }, { label: 'Valor Aquisição', value: `${formatCurrency(inputs.pricePerKg)}/kg` },
+                { label: 'Peso Compra', value: `${formatNumber(inputs.initialWeight, 0)} kg` }, { label: 'Preço Arroba', value: formatCurrency(inputs.arrobaPriceGordo) },
+                { label: 'Custo Sanitário', value: `${formatCurrency(inputs.sanitaryCost)}/cab` }, { label: 'Rend. Carcaça', value: formatPercent(inputs.rendimentoCarcaca) },
+                { label: 'Frete Entrada', value: `${formatCurrency(inputs.freteEntrada)}/cab` }, { label: 'Frete Saída', value: `${formatCurrency(inputs.freteSaida)}/cab` },
+                { label: 'Mortalidade', value: formatPercent(inputs.mortalityRate) }, { label: 'Quebra de Peso', value: formatPercent(inputs.quebraPeso) },
+                { label: 'Despesas de Venda', value: formatPercent(inputs.despesasVenda) }, { label: 'Taxa de Desconto', value: `${formatPercent(inputs.taxaDescontoAnual)} a.a.` },
                 { separator: 'Desempenho e Custos' },
                 { label: 'GMD Recria 1', value: `${formatNumber(inputs.gmdRecria1, 3)} kg/dia` }, { label: 'Custo Diário R1', value: formatCurrency(inputs.dailyCostRecria1) },
                 { label: 'GMD Recria 2', value: `${formatNumber(inputs.gmdRecria2, 3)} kg/dia` }, { label: 'Custo Mensal R2', value: formatCurrency(inputs.monthlyCostRecria2) },
+                { label: 'Cobrança R2', value: inputs.recria2CostMode === 'proRata' ? 'Pró-rata por dias' : 'Mês cheio' }, { label: 'Mensalidades R2', value: formatNumber(results.mesesRecria2) },
                 { label: 'GMD Conf.', value: `${formatNumber(inputs.gmdConfinamento, 3)} kg/dia` }, { label: 'Custo Diária Conf.', value: formatCurrency(inputs.dailyCostConfinamento) },
                 { separator: 'Resultados Econômicos' },
-                { label: 'Receita Bruta Total', value: formatCurrency(results.finalRevenue) }, { label: 'Custo Total Final', value: formatCurrency(results.finalTotalCost) },
-                { label: 'Custo @ Produzida', value: formatCurrency(results.costPerProducedArroba) }, { label: 'Custo Total/@', value: formatCurrency(results.costPerArroba) },
-                { label: 'Margem Bruta', value: formatPercent(results.grossMargin) }, { label: 'TIR Mensal', value: isFinite(results.tir) ? formatPercent(results.tir) : 'N/A' },
+                { label: 'Receita Bruta', value: formatCurrency(results.receitaBruta) }, { label: 'Custo Total', value: formatCurrency(results.custoTotal) },
+                { label: 'Resultado Operacional', value: formatCurrency(results.resultadoOperacional) }, { label: 'Result./Cab. Alojada', value: orNA(results.resultadoPorCabecaAlojada, formatCurrency) },
+                { label: 'Margem Operacional', value: orNA(results.margemOperacional, formatPercent) }, { label: 'ROI sobre o Custo', value: orNA(results.roi, formatPercent) },
+                { label: 'Custo @ Produzida', value: orNA(results.custoArrobaProduzida, formatCurrency) }, { label: 'Custo Total/@', value: orNA(results.custoTotalPorArroba, formatCurrency) },
+                { label: 'VPL', value: orNA(results.vpl, formatCurrency) }, { label: 'TIR (% ao mês)', value: orNA(results.xirrMonthly, formatPercent) },
+                { label: 'XIRR anual (equiv.)', value: orNA(results.xirrAnnual, formatPercent) }, { label: 'Preço de Equilíbrio', value: orNA(results.precoEquilibrio, (v) => `${formatCurrency(v)}/@`) },
                 { separator: 'Resultados Físicos' },
-                { label: 'Peso Final', value: `${formatNumber(results.finalWeightCycle)} kg` }, { label: 'Peso Carcaça', value: `${formatNumber(results.finalCarcassWeight)} kg` },
-                { label: 'Arrobas Totais', value: `${formatNumber(results.finalArrobas)} @` }, {}
+                { label: 'Animais Vendidos', value: `${formatNumber(results.survivors)} cab` }, { label: 'Duração do Ciclo', value: `${formatNumber(results.totalDaysCycle, 0)} dias` },
+                { label: 'Peso Vivo Final', value: `${formatNumber(results.pesoFinalBruto)} kg/cab` }, { label: 'Peso de Carcaça', value: `${formatNumber(results.pesoCarcaca)} kg/cab` },
+                { label: 'Arrobas Totais', value: `${formatNumber(results.arrobasTotais)} @` }, { label: 'Arrobas Produzidas', value: `${formatNumber(results.arrobasProduzidas)} @` },
+                { label: 'GMD de Equilíbrio', value: orNA(results.gmdEquilibrio, (v) => `${formatNumber(v, 3)} kg/dia`) }, { label: 'Margem de Segurança', value: orNA(results.margemSegurancaPercentual, formatPercent) }
             ];
+
+            let acumulado = 0;
+            const cashFlowTableHTML = `<table class="w-full text-xs"><thead><tr class="border-b">
+                    <th class="text-left py-1">Data</th><th class="text-left py-1">Descrição</th>
+                    <th class="text-right py-1">Fluxo</th><th class="text-right py-1">Saldo acumulado</th>
+                </tr></thead><tbody>${(results.cashFlow || []).map(row => {
+                    acumulado += row.amount;
+                    return `<tr><td class="py-1">${new Date(`${row.date}T12:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
+                        <td class="py-1">${escapeHtml(row.label)}</td>
+                        <td class="py-1 text-right">${formatCurrency(row.amount)}</td>
+                        <td class="py-1 text-right">${formatCurrency(acumulado)}</td></tr>`;
+                }).join('')}</tbody></table>`;
 
             let detailedTableHTML = '<table class="w-full text-xs"><tbody>';
             for (let i = 0; i < allData.length; i++) {
@@ -1377,9 +1894,9 @@
                         <section class="mb-4">
                             <h2 class="text-base font-bold text-[--primary] mb-2">Indicadores Chave</h2>
                             <div class="grid grid-cols-3 gap-2 text-center">
-                                <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Lucro Bruto</p><p class="text-lg font-bold ${results.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}">${formatCurrency(results.grossProfit)}</p></div>
-                                <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Margem Bruta</p><p class="text-lg font-bold">${formatPercent(results.grossMargin)}</p></div>
-                                <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Custo @ Prod.</p><p class="text-lg font-bold text-red-600">${formatCurrency(results.costPerProducedArroba)}</p></div>
+                                <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Resultado Operacional</p><p class="text-lg font-bold ${results.resultadoOperacional >= 0 ? 'text-green-600' : 'text-red-600'}">${formatCurrency(results.resultadoOperacional)}</p></div>
+                                <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Margem Operacional</p><p class="text-lg font-bold">${orNA(results.margemOperacional, formatPercent)}</p></div>
+                                <div class="bg-slate-50 p-2 rounded"><p class="text-xs text-slate-500 uppercase">Custo @ Prod.</p><p class="text-lg font-bold text-slate-800">${orNA(results.custoArrobaProduzida, formatCurrency)}</p></div>
                             </div>
                         </section>
                         <section class="mb-4">
@@ -1404,7 +1921,14 @@
                             </div>
                          </div>
                     </div>
-                
+                    <div class="page-break print-card">
+                        <h2 class="text-base font-bold text-[--primary] mb-2">Fluxo de Caixa</h2>
+                        ${cashFlowTableHTML}
+                        <h2 class="text-base font-bold text-[--primary] mt-4 mb-2">Metodologia e Limitações</h2>
+                        <p class="text-xs leading-relaxed text-slate-700">${METHODOLOGY_TEXT}</p>
+                        <p class="text-[10px] leading-relaxed text-slate-500 mt-3">${LEGAL_DISCLAIMER}</p>
+                    </div>
+
     <!-- Rodapé Acadêmico/Profissional — sem 'no-print': a assinatura precisa sair no relatório -->
     <footer class="mt-12 py-6 border-t border-slate-200 text-center text-xs text-slate-500 font-medium" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; clear: both;">
         <p style="margin: 0; padding: 0;">Ricardo Brumatti | FAMEZ/UFMS | ricardobrumatti.pro.br | &copy; 2026</p>
@@ -1455,35 +1979,66 @@
         document.getElementById('prev-step').addEventListener('click', () => { if(state.tourStep > 0) { state.tourStep--; updateTourContent(); } });
 
         // --- FUNÇÕES UTILITÁRIAS ---
+        // Percentuais seguem em BASE 100 (56,5 e não 0,565) e datas em texto ISO, do jeito
+        // que o motor espera. Assim o objeto salvo é o mesmo que volta para o formulário,
+        // sem conversão de escala no caminho de ida e volta.
+        const textValue = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+        const numValue = (id) => { const n = parseFloat(textValue(id)); return Number.isFinite(n) ? n : 0; };
+
         const getFormInputs = () => ({
-            simulationName: document.getElementById('simulationName').value, farmName: document.getElementById('farmName').value,
-            techName: document.getElementById('techName').value,
-            location: document.getElementById('location').value,
-            breed: document.getElementById('breed').value,
-            sex: document.getElementById('sex').value,
-            animalCategory: document.getElementById('animalCategory').value,
-            pricePerKg: parseFloat(document.getElementById('pricePerKg').value) || 0, initialWeight: parseFloat(document.getElementById('initialWeight').value) || 0,
-            sanitaryCost: parseFloat(document.getElementById('sanitaryCost').value) || 0, mortalityRate: (parseFloat(document.getElementById('mortalityRate').value) / 100) || 0,
-            recria1EntryDate: new Date(document.getElementById('recria1EntryDate').value + "T12:00:00Z"), recria1ExitDate: new Date(document.getElementById('recria1ExitDate').value + "T12:00:00Z"),
-            gmdRecria1: parseFloat(document.getElementById('gmdRecria1').value) || 0, dailyCostRecria1: parseFloat(document.getElementById('dailyCostRecria1').value) || 0,
-            recria2ExitDate: new Date(document.getElementById('recria2ExitDate').value + "T12:00:00Z"), gmdRecria2: parseFloat(document.getElementById('gmdRecria2').value) || 0,
-            monthlyCostRecria2: parseFloat(document.getElementById('monthlyCostRecria2').value) || 0, diasConfinamento: parseInt(document.getElementById('diasConfinamento').value, 10) || 0,
-            gmdConfinamento: parseFloat(document.getElementById('gmdConfinamento').value) || 0, dailyCostConfinamento: parseFloat(document.getElementById('dailyCostConfinamento').value) || 0,
-            rendimentoCarcaca: (parseFloat(document.getElementById('rendimentoCarcaca').value) / 100) || 0, arrobaPriceGordo: parseFloat(document.getElementById('arrobaPriceGordo').value) || 0,
+            simulationName: textValue('simulationName'),
+            farmName: textValue('farmName'),
+            techName: textValue('techName'),
+            location: textValue('location'),
+            breed: textValue('breed'),
+            sex: textValue('sex'),
+            animalCategory: textValue('animalCategory'),
+
+            quantidade: Math.round(numValue('quantidade')) || 1,
+            pricePerKg: numValue('pricePerKg'),
+            initialWeight: numValue('initialWeight'),
+            sanitaryCost: numValue('sanitaryCost'),
+            freteEntrada: numValue('freteEntrada'),
+            mortalityRate: numValue('mortalityRate'),
+
+            recria1EntryDate: textValue('recria1EntryDate'),
+            recria1ExitDate: textValue('recria1ExitDate'),
+            gmdRecria1: numValue('gmdRecria1'),
+            dailyCostRecria1: numValue('dailyCostRecria1'),
+
+            recria2ExitDate: textValue('recria2ExitDate'),
+            gmdRecria2: numValue('gmdRecria2'),
+            monthlyCostRecria2: numValue('monthlyCostRecria2'),
+            recria2CostMode: textValue('recria2CostMode') || 'mesCheio',
+
+            diasConfinamento: Math.round(numValue('diasConfinamento')),
+            gmdConfinamento: numValue('gmdConfinamento'),
+            dailyCostConfinamento: numValue('dailyCostConfinamento'),
+
+            rendimentoCarcaca: numValue('rendimentoCarcaca'),
+            arrobaPriceGordo: numValue('arrobaPriceGordo'),
+            quebraPeso: numValue('quebraPeso'),
+            despesasVenda: numValue('despesasVenda'),
+            freteSaida: numValue('freteSaida'),
+
+            taxaDescontoAnual: numValue('taxaDescontoAnual')
         });
 
         const performClear = () => {
             // Seleciona todos os inputs dentro do formulário
             const formInputs = dom.form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
-            
+
             // Itera sobre cada input e define seu valor como uma string vazia para uma limpeza completa
             formInputs.forEach(input => {
                 input.value = '';
             });
+            document.getElementById('recria2CostMode').value = 'mesCheio';
+            highlightInvalidFields([]);
 
             // Atualiza as datas que são exibidas em parágrafos e não em inputs
             updateAutomaticDates();
-            
+            updateRecria2Hint();
+
             // Esconde a seção de resultados e limpa mensagens de erro
             dom.resultsSection.classList.add('hidden');
             document.getElementById('errorMessage').textContent = '';
@@ -1506,7 +2061,14 @@
             document.getElementById('pricePerKg').value = "12.50";
             document.getElementById('initialWeight').value = "210";
             document.getElementById('sanitaryCost').value = "45.00";
-            document.getElementById('mortalityRate').value = "0.50";
+            document.getElementById('mortalityRate').value = "2.00";
+            document.getElementById('quantidade').value = "1";
+            document.getElementById('freteEntrada').value = "0.00";
+            document.getElementById('recria2CostMode').value = "mesCheio";
+            document.getElementById('quebraPeso').value = "0.00";
+            document.getElementById('despesasVenda').value = "0.00";
+            document.getElementById('freteSaida').value = "0.00";
+            document.getElementById('taxaDescontoAnual').value = "12.00";
 
             // Etapa 1: Recria — datas relativas ao dia de acesso, para o cenário de
             // exemplo não envelhecer. Mantém a duração original: 92 e 212 dias.
@@ -1535,7 +2097,24 @@
             document.getElementById('arrobaPriceGordo').value = "320.00";
             
             updateAutomaticDates();
+            updateRecria2Hint();
             showAlert('Sucesso', 'Cenário de exemplo carregado. Clique em "Calcular Simulação" para ver os resultados.', 'success');
+        };
+
+        const updateRecria2Hint = () => {
+            const hint = document.getElementById('recria2CostHint');
+            if (!hint) return;
+            const inputs = getFormInputs();
+            const check = Engine.validateInputs(inputs);
+            if (!check.valid) { hint.textContent = ''; return; }
+
+            const dias = Engine.phaseDays(inputs).recria2;
+            const cheio = Engine.calculateEconomics({ ...inputs, recria2CostMode: 'mesCheio' }, { financial: false });
+            const rata = Engine.calculateEconomics({ ...inputs, recria2CostMode: 'proRata' }, { financial: false });
+            hint.innerHTML = `<i class="fas fa-info-circle mr-1"></i>Fase 2 com <strong>${formatNumber(dias, 0)} dias</strong>: `
+                + `mês cheio cobra <strong>${formatNumber(cheio.mesesRecria2, 2)}</strong> mensalidades `
+                + `(${formatCurrency(cheio.custoRecria2)}); pró-rata cobra <strong>${formatNumber(rata.mesesRecria2, 2)}</strong> `
+                + `(${formatCurrency(rata.custoRecria2)}).`;
         };
 
         const updateAutomaticDates = () => {
