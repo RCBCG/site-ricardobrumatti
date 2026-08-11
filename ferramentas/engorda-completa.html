@@ -74,6 +74,10 @@
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -118,6 +122,50 @@
             position: relative;
         }
         .close-button { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; cursor: pointer; }
+
+        /* Menu de compartilhamento */
+        .share-menu-wrap { position: relative; }
+        .share-dropdown {
+            position: absolute; right: 0; top: calc(100% + 8px); z-index: 60;
+            width: 280px; background: #fff; border: 1px solid #e2e8f0;
+            border-radius: 12px; padding: 14px; box-shadow: 0 10px 30px rgba(15,23,42,.15);
+        }
+        .share-dropdown.hidden { display: none; }
+        /* O botão é um item flex estreito: ancorado nele, um menu de 280px sai pela
+           esquerda da tela no celular (fica cortado pelo overflow-x:hidden da página).
+           Em telas estreitas o menu passa a ocupar a largura útil, preso à viewport. */
+        @media (max-width: 640px) {
+            .share-menu-wrap { position: static; }
+            .share-dropdown { left: 16px; right: 16px; width: auto; }
+        }
+
+        /* Cartão 1080x1350 renderizado fora da tela e capturado pelo html2canvas.
+           Medidas fixas de propósito: é imagem, não layout responsivo. */
+        .social-card-container {
+            position: fixed; top: -20000px; left: -20000px;
+            width: 1080px; height: 1350px; background: #064e65; color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            box-sizing: border-box; padding: 56px 64px; display: flex; flex-direction: column;
+        }
+        .social-header { display: flex; justify-content: space-between; align-items: center; font-size: 22px; font-weight: 600; }
+        .social-header .site { color: #d4af37; }
+        .social-title { font-family: Georgia, Cambria, 'Times New Roman', serif; font-weight: 700; font-size: 52px; margin: 26px 0 6px; line-height: 1.1; }
+        .social-subtitle { font-size: 23px; color: #cfe3e9; margin: 0 0 18px; }
+        .social-kpi { font-family: Georgia, Cambria, 'Times New Roman', serif; font-weight: 800; font-size: 92px; color: #d4af37; line-height: 1.15; margin: 8px 0 0; }
+        .social-kpi-caption { font-size: 22px; color: #e2eef1; margin: 12px 0 28px; }
+        .social-card-body { background: #faf7f0; border-radius: 28px; flex: 1; padding: 32px; display: flex; flex-direction: column; overflow: hidden; }
+        .social-card-body.is-grid-only { justify-content: center; }
+        .social-kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: auto; }
+        .social-card-body.is-grid-only .social-kpi-grid { margin-top: 0; }
+        .social-kpi-grid .box { background: #fff; border: 1px solid #e6e6e6; border-radius: 14px; padding: 24px 18px; text-align: center; }
+        .social-kpi-grid .box .lbl { font-size: 15px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: .02em; }
+        .social-kpi-grid .box .val { font-family: Georgia, Cambria, 'Times New Roman', serif; font-size: 32px; font-weight: 800; color: #064e65; margin-top: 6px; }
+        .social-footer { text-align: center; margin-top: 26px; }
+        .social-footer .source { font-size: 18px; color: #cfe3e9; margin: 0 0 6px; }
+        .social-footer .author { font-size: 15px; font-weight: 700; color: #d4af37; margin: 0 0 12px; }
+        .social-footer .disclaimer { font-size: 13px; color: #9fc0c9; line-height: 1.5; max-width: 860px; margin: 0 auto; }
+
+        @media print { .download-chart-btn, .share-menu-wrap, #monte-carlo-config, #runMonteCarloBtn { display: none !important; } }
 
         /* Campo recusado pela validação do motor */
         .field-invalid {
@@ -461,12 +509,38 @@
                          <!-- Cards serão preenchidos via JS -->
                     </div>
                     <!-- Botões de Exportação -->
-                    <div class="flex flex-wrap gap-4 mt-6 no-print">
-                        <button id="printButton" class="btn-hover flex-1 inline-flex items-center justify-center rounded-lg bg-blue-600 text-white px-5 py-2 font-medium">
-                            <i class="fas fa-print mr-2"></i>Imprimir Relatório
+                    <div class="flex flex-wrap gap-3 mt-6 no-print">
+                        <button id="exportPdfBtn" class="btn-hover flex-1 min-w-[140px] inline-flex items-center justify-center rounded-lg bg-red-600 text-white px-5 py-2 font-medium">
+                            <i class="fas fa-file-pdf mr-2"></i>Relatório PDF
                         </button>
-                        <button id="exportExcelBtn" class="btn-hover flex-1 inline-flex items-center justify-center rounded-lg bg-green-700 text-white px-5 py-2 font-medium">
-                            <i class="fas fa-file-excel mr-2"></i>Exportar para Excel
+                        <button id="exportExcelBtn" class="btn-hover flex-1 min-w-[140px] inline-flex items-center justify-center rounded-lg bg-green-700 text-white px-5 py-2 font-medium">
+                            <i class="fas fa-file-excel mr-2"></i>Planilha Excel
+                        </button>
+                        <div class="share-menu-wrap flex-1 min-w-[140px]">
+                            <button id="btnShare" type="button" class="btn-hover w-full inline-flex items-center justify-center rounded-lg bg-purple-600 text-white px-5 py-2 font-medium">
+                                <i class="fas fa-share-nodes mr-2"></i>Imagem
+                            </button>
+                            <div id="shareDropdown" class="share-dropdown hidden">
+                                <label for="shareType" class="block text-xs font-medium mb-1 text-slate-600">Escolha o conteúdo</label>
+                                <select id="shareType" class="w-full p-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-900 text-sm mb-3">
+                                    <option value="resumo">Resumo (indicadores)</option>
+                                    <option value="financeiro">Indicadores financeiros</option>
+                                    <option value="fisico">Resultados físicos</option>
+                                    <option value="economico">Receita, custo e resultado</option>
+                                    <option value="fluxoCaixa">Fluxo de caixa</option>
+                                    <option value="sensibilidade">Análise de sensibilidade</option>
+                                    <option value="riscoDistribuicao">Monte Carlo — distribuição</option>
+                                    <option value="riscoExcedencia">Monte Carlo — curva de excedência</option>
+                                    <option value="riscoTornado">Monte Carlo — tornado</option>
+                                    <option value="riscoResumo">Monte Carlo — resumo do risco</option>
+                                </select>
+                                <button id="generateShareImageBtn" type="button" class="btn-hover w-full py-2 px-4 bg-purple-600 text-white rounded-lg font-medium text-sm">
+                                    <i class="fas fa-image mr-2"></i>Gerar Imagem
+                                </button>
+                            </div>
+                        </div>
+                        <button id="printButton" class="btn-hover flex-1 min-w-[140px] inline-flex items-center justify-center rounded-lg bg-blue-600 text-white px-5 py-2 font-medium">
+                            <i class="fas fa-print mr-2"></i>Imprimir
                         </button>
                     </div>
                 </div>
@@ -557,17 +631,17 @@
                         <p id="mcMeta" class="text-xs text-slate-500"></p>
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <div class="bg-white p-4 rounded-lg shadow-md border border-slate-200">
-                                <h3 class="text-md font-semibold text-slate-600 mb-2">Distribuição do resultado</h3>
+                                <div class="flex justify-between items-start mb-2"><h3 class="text-md font-semibold text-slate-600">Distribuição do resultado</h3><button type="button" class="download-chart-btn no-print text-slate-400 hover:text-blue-600 p-1" data-chart="mcHistogramChart" title="Baixar gráfico"><i class="fas fa-download"></i></button></div>
                                 <div class="relative h-80"><canvas id="mcHistogramChart"></canvas></div>
                             </div>
                             <div class="bg-white p-4 rounded-lg shadow-md border border-slate-200">
-                                <h3 class="text-md font-semibold text-slate-600 mb-1">Curva de excedência</h3>
+                                <div class="flex justify-between items-start mb-1"><h3 class="text-md font-semibold text-slate-600">Curva de excedência</h3><button type="button" class="download-chart-btn no-print text-slate-400 hover:text-blue-600 p-1" data-chart="mcCdfChart" title="Baixar gráfico"><i class="fas fa-download"></i></button></div>
                                 <p class="text-xs text-slate-500 mb-2">Não é evolução no tempo: cada ponto é a chance de obter resultado igual ou maior que o valor do eixo.</p>
                                 <div class="relative h-80"><canvas id="mcCdfChart"></canvas></div>
                             </div>
                         </div>
                         <div class="bg-white p-4 rounded-lg shadow-md border border-slate-200">
-                            <h3 class="text-md font-semibold text-slate-600 mb-1">Tornado — influência isolada de cada premissa</h3>
+                            <div class="flex justify-between items-start mb-1"><h3 class="text-md font-semibold text-slate-600">Tornado — influência isolada de cada premissa</h3><button type="button" class="download-chart-btn no-print text-slate-400 hover:text-blue-600 p-1" data-chart="mcTornadoChart" title="Baixar gráfico"><i class="fas fa-download"></i></button></div>
                             <p class="text-xs text-slate-500 mb-2">Cada barra leva uma variável ao mínimo e ao máximo do intervalo, mantendo as demais no valor mais provável.</p>
                             <div class="relative h-96"><canvas id="mcTornadoChart"></canvas></div>
                         </div>
@@ -592,9 +666,18 @@
                     <h2 class="text-xl font-semibold text-slate-700 mb-6">Gráficos da Simulação</h2>
                     <div class="space-y-8">
                          <!-- Os 3 canvas para gráficos do seu código original -->
-                        <div class="bg-white p-4 rounded-lg shadow-md relative h-80 sm:h-96 border border-slate-200"><canvas id="metricsChart"></canvas></div>
-                        <div class="bg-white p-4 rounded-lg shadow-md relative h-80 sm:h-96 border border-slate-200"><canvas id="cashFlowChart"></canvas></div>
-                        <div class="bg-white p-4 rounded-lg shadow-md relative h-80 sm:h-96 border border-slate-200"><canvas id="sensitivityChart"></canvas></div>
+                        <div class="bg-white rounded-lg shadow-md border border-slate-200 p-4">
+                            <div class="flex justify-end mb-1"><button type="button" class="download-chart-btn no-print text-slate-400 hover:text-blue-600 p-1" data-chart="metricsChart" title="Baixar gráfico"><i class="fas fa-download"></i></button></div>
+                            <div class="relative h-80 sm:h-96"><canvas id="metricsChart"></canvas></div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-md border border-slate-200 p-4">
+                            <div class="flex justify-end mb-1"><button type="button" class="download-chart-btn no-print text-slate-400 hover:text-blue-600 p-1" data-chart="cashFlowChart" title="Baixar gráfico"><i class="fas fa-download"></i></button></div>
+                            <div class="relative h-80 sm:h-96"><canvas id="cashFlowChart"></canvas></div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-md border border-slate-200 p-4">
+                            <div class="flex justify-end mb-1"><button type="button" class="download-chart-btn no-print text-slate-400 hover:text-blue-600 p-1" data-chart="sensitivityChart" title="Baixar gráfico"><i class="fas fa-download"></i></button></div>
+                            <div class="relative h-80 sm:h-96"><canvas id="sensitivityChart"></canvas></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -658,6 +741,20 @@
     <!-- Modals -->
     <div id="confirmModal" class="modal hidden no-print"><div class="modal-content"><span class="close-button">&times;</span><h3 id="confirmTitle" class="text-lg font-bold text-slate-800"></h3><p id="confirmMessage" class="text-sm text-slate-600 mt-2"></p><div class="mt-6 flex justify-end space-x-4"><button id="cancelBtn" class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50">Cancelar</button><button id="confirmBtn" class="px-4 py-2 rounded-lg border border-transparent bg-red-600 text-white hover:bg-red-700">Confirmar</button></div></div></div>
     <div id="tourModal" class="modal hidden no-print"><div class="modal-content"><span class="close-button">&times;</span><h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fas fa-route mr-2"></i>Tour Guiado</h2><div id="tour-content" class="text-gray-700 text-base leading-relaxed"></div><div class="flex justify-between mt-6"><button id="prev-step" class="px-4 py-2 bg-gray-300 rounded-lg"><i class="fa fa-arrow-left mr-2"></i>Anterior</button><button id="next-step" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Próximo<i class="fas fa-arrow-right ml-2"></i></button></div></div></div>
+    <div id="modalShareImage" class="modal hidden no-print">
+        <div class="modal-content" style="max-width: 460px;">
+            <span class="close-button">&times;</span>
+            <h3 class="text-lg font-bold text-slate-800 mb-3">Imagem para compartilhar</h3>
+            <div class="rounded-lg overflow-hidden border border-slate-200 mb-4">
+                <img id="shareImagePreview" class="w-full block" alt="Prévia da imagem gerada">
+            </div>
+            <a id="shareImageDownload" download="simulacao.png" class="btn-hover block w-full text-center py-2 px-4 bg-purple-600 text-white rounded-lg font-medium mb-2">
+                <i class="fas fa-download mr-2"></i>Baixar imagem
+            </a>
+            <button type="button" class="close-button-alt w-full py-2 px-4 bg-slate-200 text-slate-800 rounded-lg font-medium">Fechar</button>
+        </div>
+    </div>
+
     <div id="alertModal" class="modal hidden no-print"><div class="modal-content text-center"><span class="close-button">&times;</span><div id="alertIcon" class="text-5xl mb-4"></div><h3 id="alertTitle" class="text-lg font-bold text-slate-800 mb-2"></h3><p id="alertMessage" class="text-sm text-slate-600"></p><button id="alertOkBtn" class="mt-6 px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">OK</button></div></div>
     
     <script id="recria-engorda-engine">
@@ -1436,7 +1533,20 @@
             dom.clearFormButton.addEventListener('click', () => showConfirmation('Limpar Formulário', 'Você tem certeza que deseja apagar todos os dados do formulário?', performClear));
             dom.printButton.addEventListener('click', generatePrintReport);
             dom.exportExcelBtn.addEventListener('click', exportToExcel);
+            document.getElementById('exportPdfBtn').addEventListener('click', exportToPDF);
             document.getElementById('runMonteCarloBtn').addEventListener('click', runMonteCarlo);
+            document.getElementById('btnShare').addEventListener('click', toggleShareMenu);
+            document.getElementById('generateShareImageBtn').addEventListener('click', generateSocialImage);
+            document.querySelectorAll('.download-chart-btn').forEach(button => {
+                button.addEventListener('click', () => downloadChart(button.dataset.chart));
+            });
+            document.querySelector('#modalShareImage .close-button-alt').addEventListener('click', () => {
+                document.getElementById('modalShareImage').classList.add('hidden');
+            });
+            // Clicar fora fecha o menu de compartilhamento
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.share-menu-wrap')) document.getElementById('shareDropdown').classList.add('hidden');
+            });
 
             // Atualizadores de data automáticos
             ['recria1ExitDate', 'recria2ExitDate'].forEach(id => {
@@ -2243,108 +2353,586 @@
             updateComparison();
         };
 
-        const monteCarloCsvRows = (mc, dec) => {
-            if (!mc) return [['Monte Carlo', 'Não executado']];
-            const s = mc.summary;
-            const rows = [
-                ['Monte Carlo', 'Valor'],
-                ['Iterações', mc.iterations], ['Semente', mc.seed],
-                ['Correlação compra x venda (pedida)', dec(mc.priceCorrelation)],
-                ['Correlação compra x venda (obtida)', dec(mc.realizedPriceCorrelation)],
-                ['Probabilidade de prejuízo (%)', dec(s.probabilityLoss)],
-                ['Resultado médio por cabeça (R$)', dec(s.mean)], ['Desvio-padrão (R$)', dec(s.stdDev)],
-                ['P5 (R$)', dec(s.p5)], ['P10 (R$)', dec(s.p10)], ['P50 (R$)', dec(s.p50)], ['P90 (R$)', dec(s.p90)], ['P95 (R$)', dec(s.p95)],
-                ['Cauda inferior 5% (R$)', dec(s.expectedShortfall5)],
-                ['VPL médio (R$)', dec(mc.vplSummary.mean)], ['Chance de VPL negativo (%)', dec(mc.vplSummary.probabilityLoss)],
-                [],
-                ['Tornado', 'Menor resultado (R$)', 'Maior resultado (R$)', 'Amplitude (R$)'],
-                ...(mc.tornado || []).map((t) => [t.label, dec(t.low), dec(t.high), dec(t.impact)]),
-                [],
-                ['Correlação de Spearman', 'Valor'],
-                ...mc.correlations.map((c) => [c.label, dec(c.value, 3)])
-            ];
-            if (mc.samples && mc.samples.length) {
-                rows.push([], ['Amostras do Monte Carlo', 'Iteração', ...Engine.MC_KEYS.map((k) => Engine.MC_LABELS[k]), 'Resultado/cabeça (R$)', 'Resultado do lote (R$)', 'VPL (R$)']);
-                mc.samples.forEach((x) => rows.push(['', x.iteracao, ...Engine.MC_KEYS.map((k) => dec(x[k], 4)), dec(x.resultadoPorCabeca), dec(x.resultadoLote), dec(x.vpl)]));
-            }
-            return rows;
-        };
+        // --- ARQUIVOS GERADOS (PDF, XLSX, PNG) ---
 
-        const exportToExcel = () => {
-             if (!state.currentSimulation) { showAlert('Atenção', 'Nenhuma simulação para exportar.', 'warning'); return; }
-            const { inputs, results } = state.currentSimulation;
-            const dec = (v, d = 2) => (isFinite(v) ? Number(v).toFixed(d) : 'N/A');
-            const brDate = (iso) => new Date(`${iso}T12:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-            const data = [
-                ['Parâmetro', 'Valor'],
-                ['Nome da Simulação', inputs.simulationName], ['Fazenda', inputs.farmName],
-                ['Técnico Responsável', inputs.techName],
-                ['Localidade', inputs.location],
-                ['Raça', inputs.breed],
-                ['Sexo', inputs.sex],
-                ['Categoria Animal', inputs.animalCategory],
-                ['Motor econômico', `v${Engine.VERSION}`],
-                [],
-                ['Aquisição', 'Valor'],
-                ['Quantidade de Animais (cab)', inputs.quantidade],
-                ['Valor Aquisição (R$/kg)', inputs.pricePerKg], ['Peso Compra (kg)', inputs.initialWeight],
-                ['Custo Sanitário Entrada (R$/cab)', inputs.sanitaryCost], ['Frete de Entrada (R$/cab)', inputs.freteEntrada],
-                ['Mortalidade no Ciclo (%)', inputs.mortalityRate],
-                [],
-                ['Fases', 'Valor'],
-                ['Data Entrada - Fase 1', brDate(inputs.recria1EntryDate)], ['Data Saída - Fase 1', brDate(inputs.recria1ExitDate)],
-                ['GMD - Fase 1 (kg/dia)', inputs.gmdRecria1], ['Custo Diário - Fase 1 (R$)', inputs.dailyCostRecria1],
-                ['Data Saída - Fase 2', brDate(inputs.recria2ExitDate)], ['GMD - Fase 2 (kg/dia)', inputs.gmdRecria2],
-                ['Custo Mensal - Fase 2 (R$)', inputs.monthlyCostRecria2],
-                ['Forma de Cobrança - Fase 2', inputs.recria2CostMode === 'proRata' ? 'Pró-rata por dias' : 'Mês cheio (contrato)'],
-                ['Mensalidades cobradas na Fase 2', dec(results.mesesRecria2)],
-                ['Dias de Confinamento', inputs.diasConfinamento], ['GMD no Confinamento (kg/dia)', inputs.gmdConfinamento],
-                ['Custo da Diária (R$)', inputs.dailyCostConfinamento],
-                [],
-                ['Venda e Financeiro', 'Valor'],
-                ['Rendimento de Carcaça (%)', inputs.rendimentoCarcaca],
-                ['Rendimento de Carcaça de Entrada (%) - fixo', Engine.RENDIMENTO_INICIAL_FIXO],
-                ['Arroba do Boi Gordo (R$/@)', inputs.arrobaPriceGordo],
-                ['Quebra de Peso (%)', inputs.quebraPeso], ['Despesas de Venda (%)', inputs.despesasVenda],
-                ['Frete de Saída (R$/cab)', inputs.freteSaida], ['Taxa de Desconto (% a.a.)', inputs.taxaDescontoAnual],
-                [],
-                ['Resultado', 'Valor'],
-                ['Animais Alojados (cab)', dec(results.placed, 0)], ['Animais Vendidos Esperados (cab)', dec(results.survivors)],
-                ['Peso Vivo Final (kg/cab)', dec(results.pesoFinalBruto)], ['Peso Final de Venda (kg/cab)', dec(results.pesoFinalVenda)],
-                ['Peso de Carcaça (kg/cab)', dec(results.pesoCarcaca)],
-                ['Arrobas Totais (@)', dec(results.arrobasTotais)], ['Arrobas Produzidas (@)', dec(results.arrobasProduzidas)],
-                ['Receita Bruta (R$)', dec(results.receitaBruta)], ['Custo Total (R$)', dec(results.custoTotal)],
-                ['Resultado Operacional (R$)', dec(results.resultadoOperacional)],
-                ['Resultado/Cabeça Alojada (R$)', dec(results.resultadoPorCabecaAlojada)],
-                ['Resultado/Cabeça Vendida (R$)', dec(results.resultadoPorCabecaVendida)],
-                ['Margem Operacional (%)', dec(results.margemOperacional)], ['ROI sobre o Custo (%)', dec(results.roi)],
-                ['Custo Total/@ (R$)', dec(results.custoTotalPorArroba)], ['Custo @ Produzida (R$)', dec(results.custoArrobaProduzida)],
-                ['VPL (R$)', dec(results.vpl)], ['TIR (% ao mês)', dec(results.xirrMonthly)], ['XIRR anual equivalente (%)', dec(results.xirrAnnual)],
-                ['Preço de Equilíbrio (R$/@)', dec(results.precoEquilibrio)], ['GMD de Equilíbrio (kg/dia)', dec(results.gmdEquilibrio, 3)],
-                ['Margem de Segurança (%)', dec(results.margemSegurancaPercentual)],
-                [],
-                ['Fluxo de Caixa', 'Data', 'Valor (R$)', 'Saldo Acumulado (R$)'],
-                ...(() => { let acc = 0; return (results.cashFlow || []).map((row) => { acc += row.amount; return [row.label, brDate(row.date), dec(row.amount), dec(acc)]; }); })(),
-                [],
-                ...monteCarloCsvRows(state.currentSimulation.monteCarlo, dec)
-            ];
-            // CSV para Excel pt-BR: separador ';', campos aspeados (nome de simulação
-            // com vírgula ou ';' deixa de quebrar a estrutura) e BOM UTF-8, sem o qual
-            // o Excel abre os acentos como mojibake.
-            const escapeCell = (cell) => {
-                const text = String(cell ?? '');
-                return /[";\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-            };
-            const csvBody = data.map(row => row.map(escapeCell).join(';')).join('\r\n');
-            const blob = new Blob(['﻿' + csvBody], { type: 'text/csv;charset=utf-8;' });
+        const brDate = (iso) => new Date(`${iso}T12:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+        const numOrNull = (v) => (Number.isFinite(v) ? v : null);
+
+        const downloadBlob = (blob, filename) => {
             const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
+            const link = document.createElement('a');
             link.href = url;
-            link.download = `simulacao_${safeFilename(inputs.simulationName)}.csv`;
+            link.download = filename;
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        };
+
+        const reportBaseName = () => {
+            const { inputs } = state.currentSimulation;
+            return `relatorio_recria_engorda_${safeFilename(inputs.farmName || inputs.simulationName)}_${inputs.recria1EntryDate}`;
+        };
+
+        // Linhas compartilhadas entre PDF e Excel, para os dois nunca divergirem.
+        const inputRows = (i) => [
+            ['Nome da simulação', i.simulationName, ''], ['Fazenda', i.farmName, ''], ['Técnico', i.techName, ''],
+            ['Localidade', i.location, ''], ['Raça', i.breed, ''], ['Sexo', i.sex, ''], ['Categoria animal', i.animalCategory, ''],
+            ['Quantidade de animais', i.quantidade, 'cabeças'],
+            ['Valor de aquisição', i.pricePerKg, 'R$/kg'], ['Peso de compra', i.initialWeight, 'kg'],
+            ['Custo sanitário de entrada', i.sanitaryCost, 'R$/cab'], ['Frete de entrada', i.freteEntrada, 'R$/cab'],
+            ['Mortalidade no ciclo', i.mortalityRate, '%'],
+            ['Entrada da Fase 1', brDate(i.recria1EntryDate), ''], ['Saída da Fase 1', brDate(i.recria1ExitDate), ''],
+            ['GMD da Fase 1', i.gmdRecria1, 'kg/dia'], ['Custo diário da Fase 1', i.dailyCostRecria1, 'R$/dia'],
+            ['Saída da Fase 2', brDate(i.recria2ExitDate), ''], ['GMD da Fase 2', i.gmdRecria2, 'kg/dia'],
+            ['Custo mensal da Fase 2', i.monthlyCostRecria2, 'R$/mês'],
+            ['Cobrança da Fase 2', i.recria2CostMode === 'proRata' ? 'Pró-rata por dias' : 'Mês cheio (contrato)', ''],
+            ['Dias de confinamento', i.diasConfinamento, 'dias'], ['GMD no confinamento', i.gmdConfinamento, 'kg/dia'],
+            ['Custo da diária de confinamento', i.dailyCostConfinamento, 'R$/dia'],
+            ['Rendimento de carcaça', i.rendimentoCarcaca, '%'],
+            ['Rendimento de carcaça de entrada (fixo)', Engine.RENDIMENTO_INICIAL_FIXO, '%'],
+            ['Arroba do boi gordo', i.arrobaPriceGordo, 'R$/@'],
+            ['Quebra de peso', i.quebraPeso, '%'], ['Despesas de venda', i.despesasVenda, '% da receita'],
+            ['Frete de saída', i.freteSaida, 'R$/cab'], ['Taxa de desconto', i.taxaDescontoAnual, '% a.a.'],
+            ['Motor econômico', `v${Engine.VERSION}`, '']
+        ];
+
+        const resultRows = (r) => [
+            ['Animais alojados', r.placed, 'cabeças'], ['Animais vendidos esperados', r.survivors, 'cabeças'],
+            ['Duração total do ciclo', r.totalDaysCycle, 'dias'], ['Data prevista de venda', brDate(r.saleDate), ''],
+            ['Mensalidades cobradas na Fase 2', r.mesesRecria2, 'meses'],
+            ['Peso ao fim da recria', r.weightAfterRecria2, 'kg/cab'], ['Peso vivo final', r.pesoFinalBruto, 'kg/cab'],
+            ['Peso final de venda', r.pesoFinalVenda, 'kg/cab'], ['Peso de carcaça', r.pesoCarcaca, 'kg/cab'],
+            ['Arrobas por cabeça vendida', r.arrobasPorVendido, '@'], ['Arrobas totais', r.arrobasTotais, '@'],
+            ['Arrobas produzidas', r.arrobasProduzidas, '@'],
+            ['Custo de aquisição', r.custoAquisicao, 'R$'], ['Custo sanitário', r.custoSanitario, 'R$'],
+            ['Frete de entrada', r.custoFreteEntrada, 'R$'], ['Custo da Fase 1', r.custoRecria1, 'R$'],
+            ['Custo da Fase 2', r.custoRecria2, 'R$'], ['Custo do confinamento', r.custoConfinamento, 'R$'],
+            ['Frete de saída', r.custoFreteSaida, 'R$'], ['Despesas de venda', r.custoDespesasVenda, 'R$'],
+            ['Custo total', r.custoTotal, 'R$'], ['Receita bruta', r.receitaBruta, 'R$'],
+            ['Resultado operacional', r.resultadoOperacional, 'R$'],
+            ['Resultado por cabeça alojada', r.resultadoPorCabecaAlojada, 'R$'],
+            ['Resultado por cabeça vendida', r.resultadoPorCabecaVendida, 'R$'],
+            ['Margem operacional', r.margemOperacional, '%'], ['ROI sobre o custo', r.roi, '%'],
+            ['Custo total por arroba', r.custoTotalPorArroba, 'R$/@'], ['Custo da arroba produzida', r.custoArrobaProduzida, 'R$/@'],
+            ['VPL à taxa informada', r.vpl, 'R$'], ['TIR', r.xirrMonthly, '% ao mês'], ['XIRR anual equivalente', r.xirrAnnual, '% a.a.'],
+            ['Preço de equilíbrio', r.precoEquilibrio, 'R$/@'], ['GMD de equilíbrio', r.gmdEquilibrio, 'kg/dia'],
+            ['Margem de segurança', r.margemSegurancaPercentual, '%']
+        ];
+
+        const cashFlowRows = (r) => {
+            let acc = 0;
+            return (r.cashFlow || []).map((row) => {
+                acc += row.amount;
+                return [brDate(row.date), row.label, row.amount, acc];
+            });
+        };
+
+        const reportChartDefinitions = (mc) => {
+            const list = [
+                { id: 'metricsChart', title: 'Indicadores econômicos' },
+                { id: 'cashFlowChart', title: 'Projeção do fluxo de caixa' },
+                { id: 'sensitivityChart', title: 'Análise de sensibilidade' }
+            ];
+            if (mc) list.push(
+                { id: 'mcHistogramChart', title: 'Monte Carlo — distribuição do resultado', risk: true },
+                { id: 'mcCdfChart', title: 'Monte Carlo — curva de excedência', risk: true },
+                { id: 'mcTornadoChart', title: 'Monte Carlo — tornado das premissas', risk: true }
+            );
+            return list;
+        };
+
+        /* ------------------------------------------------------------------ PDF */
+
+        const exportToPDF = () => {
+            if (!state.currentSimulation) { showAlert('Atenção', 'Calcule a simulação antes de exportar.', 'warning'); return; }
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                showAlert('Biblioteca indisponível', 'Não foi possível carregar o gerador de PDF. Verifique a conexão e tente novamente.', 'error');
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+            const { inputs: i, results: r, monteCarlo: mc } = state.currentSimulation;
+
+            const addHeader = (title) => {
+                doc.setFont('times', 'bold'); doc.setTextColor(6, 78, 101); doc.setFontSize(16);
+                doc.text(title, 14, 16);
+                doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.35); doc.line(14, 20, 196, 20);
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(30);
+            };
+
+            addHeader('Relatório — Recria a Pasto + Engorda em Confinamento');
+            doc.setFontSize(11);
+            doc.text(`Simulação: ${i.simulationName || 'Não informada'}`, 14, 30);
+            doc.text(`Fazenda: ${i.farmName || 'Não informada'}`, 14, 36);
+            doc.text(`Técnico: ${i.techName || 'Não informado'}`, 14, 42);
+            doc.text(`Entrada: ${brDate(i.recria1EntryDate)}   •   Venda prevista: ${brDate(r.saleDate)}   •   Motor v${Engine.VERSION}`, 14, 48);
+
+            doc.setFillColor(255, 247, 230); doc.setDrawColor(212, 175, 55); doc.setLineWidth(0.3);
+            doc.roundedRect(14, 52, 182, 11, 1.5, 1.5, 'FD');
+            doc.setFontSize(6.6); doc.setTextColor(122, 92, 0);
+            doc.text(LEGAL_DISCLAIMER, 105, 57, { align: 'center', maxWidth: 176 });
+            doc.setTextColor(30);
+
+            const lote = r.placed > 1;
+            pdfKpiCard(doc, 14, 68, 56, 24, lote ? 'Resultado do lote' : 'Resultado operacional', formatCurrency(r.resultadoOperacional), r.resultadoOperacional >= 0);
+            pdfKpiCard(doc, 77, 68, 56, 24, 'Resultado/cabeça alojada', orNA(r.resultadoPorCabecaAlojada, formatCurrency), r.resultadoPorCabecaAlojada >= 0);
+            pdfKpiCard(doc, 140, 68, 56, 24, 'Margem operacional', orNA(r.margemOperacional, formatPercent), r.margemOperacional >= 0);
+            pdfKpiCard(doc, 14, 96, 56, 24, 'VPL', orNA(r.vpl, formatCurrency), Number.isFinite(r.vpl) ? r.vpl >= 0 : null);
+            pdfKpiCard(doc, 77, 96, 56, 24, 'TIR (% ao mês)', orNA(r.xirrMonthly, formatPercent), Number.isFinite(r.xirrMonthly) ? r.xirrMonthly >= 0 : null);
+            pdfKpiCard(doc, 140, 96, 56, 24, 'Risco de prejuízo', mc ? formatPercent(mc.summary.probabilityLoss) : 'Não executado', mc ? mc.summary.probabilityLoss < 50 : null);
+
+            pdfTable(doc, 128, ['Premissa', 'Valor', 'Unidade'], inputRows(i).map(([a, b, c]) => [a, typeof b === 'number' ? formatNumber(b, 3) : (b || '—'), c]));
+
+            doc.addPage(); addHeader('Resultados');
+            pdfTable(doc, 32, ['Indicador', 'Valor', 'Unidade'], resultRows(r).map(([a, b, c]) => [a, typeof b === 'number' ? (Number.isFinite(b) ? formatNumber(b, 2) : 'N/A') : b, c]));
+
+            doc.addPage(); addHeader('Fluxo de caixa');
+            pdfTable(doc, 32, ['Data', 'Descrição', 'Fluxo', 'Saldo acumulado'],
+                cashFlowRows(r).map(([date, label, amount, acc]) => [date, label, formatCurrency(amount), formatCurrency(acc)]));
+
+            addPdfChartPages(doc, addHeader, reportChartDefinitions(null));
+
+            if (mc) {
+                doc.addPage(); addHeader('Análise de risco — Monte Carlo');
+                doc.setFontSize(9); doc.setTextColor(90);
+                doc.text(`${formatNumber(mc.iterations, 0)} iterações • semente ${mc.seed} • correlação compra × venda ${formatNumber(mc.priceCorrelation, 2)} (obtida ${formatNumber(mc.realizedPriceCorrelation, 2)})`, 14, 27);
+                doc.setTextColor(30);
+                pdfTable(doc, 32, ['Indicador', 'Valor'], [
+                    ['Probabilidade de prejuízo', formatPercent(mc.summary.probabilityLoss)],
+                    ['Resultado médio por cabeça', formatCurrency(mc.summary.mean)],
+                    ['Desvio-padrão', formatCurrency(mc.summary.stdDev)],
+                    ['P5', formatCurrency(mc.summary.p5)], ['P10', formatCurrency(mc.summary.p10)],
+                    ['P50 (mediana)', formatCurrency(mc.summary.p50)], ['P90', formatCurrency(mc.summary.p90)],
+                    ['P95', formatCurrency(mc.summary.p95)],
+                    ['Cauda inferior 5%', formatCurrency(mc.summary.expectedShortfall5)],
+                    ['VPL médio', orNA(mc.vplSummary.mean, formatCurrency)],
+                    ['Chance de VPL negativo', formatPercent(mc.vplSummary.probabilityLoss)]
+                ]);
+                const afterSummary = doc.lastAutoTable ? doc.lastAutoTable.finalY + 8 : 130;
+                pdfTable(doc, afterSummary, ['Premissa', 'Menor resultado', 'Maior resultado', 'Amplitude'],
+                    (mc.tornado || []).map((t) => [t.label, formatCurrency(t.low), formatCurrency(t.high), formatCurrency(t.impact)]));
+                addPdfChartPages(doc, addHeader, reportChartDefinitions(mc).filter((d) => d.risk));
+
+                doc.addPage(); addHeader('Correlação de posto com o resultado');
+                doc.setFontSize(9);
+                const nota = mc.priceCorrelation > 0
+                    ? 'A correlação mede associação, não causalidade. Compra e venda foram sorteadas de forma correlacionada, então o preço de compra herda parte da influência do preço de venda e pode aparecer com sinal invertido em relação ao seu efeito real. Use o tornado para ler o efeito isolado de cada premissa.'
+                    : 'A correlação mede associação, não causalidade. As premissas foram sorteadas de forma independente.';
+                doc.text(doc.splitTextToSize(nota, 182), 14, 28);
+                pdfTable(doc, 46, ['Variável', 'Spearman'], mc.correlations.map((c) => [c.label, formatNumber(c.value, 3)]));
+            } else {
+                doc.addPage(); addHeader('Análise de risco — Monte Carlo');
+                doc.setFontSize(11);
+                doc.text('Análise de risco não executada para este cenário.', 14, 32);
+            }
+
+            doc.addPage(); addHeader('Metodologia e limitações');
+            doc.setFontSize(10);
+            doc.text(doc.splitTextToSize(METHODOLOGY_TEXT, 182), 14, 30);
+
+            addPdfFooters(doc);
+            doc.save(`${reportBaseName()}.pdf`);
+        };
+
+        const pdfTable = (doc, startY, head, body) => {
+            if (typeof doc.autoTable === 'function') {
+                doc.autoTable({
+                    startY, head: [head], body,
+                    styles: { fontSize: 8, cellPadding: 2, lineColor: [229, 231, 235], lineWidth: 0.1 },
+                    headStyles: { fillColor: [6, 78, 101], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    alternateRowStyles: { fillColor: [244, 248, 250] },
+                    margin: { left: 14, right: 14 }
+                });
+            } else {
+                let y = startY; doc.setFontSize(8);
+                [head, ...body].forEach((row) => {
+                    if (y > 282) { doc.addPage(); y = 16; }
+                    doc.text(row.map(String).join(' | ').slice(0, 135), 14, y);
+                    y += 5;
+                });
+            }
+        };
+
+        const pdfKpiCard = (doc, x, y, width, height, label, display, tone) => {
+            const bg = tone === true ? [230, 249, 242] : tone === false ? [254, 226, 226] : [243, 244, 246];
+            const fg = tone === true ? [5, 150, 105] : tone === false ? [220, 38, 38] : [6, 78, 101];
+            doc.setFillColor(bg[0], bg[1], bg[2]); doc.setDrawColor(229, 231, 235); doc.setLineWidth(0.2);
+            doc.roundedRect(x, y, width, height, 2.5, 2.5, 'FD');
+            doc.setTextColor(100, 116, 139); doc.setFontSize(7.5);
+            doc.text(label.toUpperCase(), x + width / 2, y + 7, { align: 'center', maxWidth: width - 4 });
+            doc.setTextColor(fg[0], fg[1], fg[2]); doc.setFontSize(String(display).length > 18 ? 10 : 13); doc.setFont('times', 'bold');
+            doc.text(String(display), x + width / 2, y + 17, { align: 'center', maxWidth: width - 5 });
+            doc.setFont('helvetica', 'normal'); doc.setTextColor(30);
+        };
+
+        const addChartToPdf = (doc, id, x, y, w, h, title) => {
+            const canvas = document.getElementById(id);
+            if (!canvas || !canvas.width) return;
+            doc.setFontSize(9); doc.text(title, x, y - 3);
+            try {
+                const ratio = canvas.width && canvas.height ? canvas.width / canvas.height : 1.8;
+                doc.addImage(canvas.toDataURL('image/png', 0.92), 'PNG', x, y, w, Math.min(h, w / ratio), undefined, 'FAST');
+            } catch (e) { /* gráfico é opcional no relatório */ }
+        };
+
+        const addPdfChartPages = (doc, addHeader, definitions) => {
+            const available = definitions.filter((d) => {
+                const canvas = document.getElementById(d.id);
+                return canvas && state.chartInstances[d.id] && canvas.width && canvas.height;
+            });
+            for (let index = 0; index < available.length; index += 2) {
+                doc.addPage();
+                addHeader(available[index].risk ? 'Gráficos de risco' : 'Análise gráfica');
+                addChartToPdf(doc, available[index].id, 14, 35, 182, 100, available[index].title);
+                if (available[index + 1]) addChartToPdf(doc, available[index + 1].id, 14, 166, 182, 100, available[index + 1].title);
+            }
+        };
+
+        const addPdfFooters = (doc) => {
+            const pages = doc.getNumberOfPages();
+            for (let p = 1; p <= pages; p += 1) {
+                doc.setPage(p);
+                doc.setFontSize(6.5); doc.setTextColor(140);
+                doc.text(LEGAL_DISCLAIMER, 105, 286, { align: 'center', maxWidth: 182 });
+                doc.setFontSize(8); doc.setTextColor(100);
+                doc.text(`Ricardo Brumatti | FAMEZ/UFMS | ricardobrumatti.pro.br | © 2026 • Página ${p}/${pages}`, 105, 292, { align: 'center' });
+            }
+        };
+
+        /* ----------------------------------------------------------------- XLSX */
+
+        const EXCEL_COLORS = { primary: 'FF064E65', gold: 'FFD4AF37', white: 'FFFFFFFF', cream: 'FFFAF7F0', red: 'FFCF1818', zebra: 'FFF4F8FA' };
+
+        const exportToExcel = async () => {
+            if (!state.currentSimulation) { showAlert('Atenção', 'Calcule a simulação antes de exportar.', 'warning'); return; }
+            if (!window.ExcelJS) {
+                showAlert('Biblioteca indisponível', 'Não foi possível carregar o gerador de Excel. Verifique a conexão e tente novamente.', 'error');
+                return;
+            }
+            const { inputs: i, results: r, monteCarlo: mc } = state.currentSimulation;
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Prof. Ricardo C. Brumatti — FAMEZ/UFMS';
+            workbook.created = new Date();
+
+            addExcelDashboard(workbook, i, r, mc);
+            addExcelTable(workbook, 'Premissas', ['Campo', 'Valor', 'Unidade'], inputRows(i));
+            addExcelTable(workbook, 'Resultados', ['Indicador', 'Valor', 'Unidade'],
+                resultRows(r).map(([label, value, unit]) => [label, typeof value === 'number' ? numOrNull(value) : value, unit]));
+            addExcelTable(workbook, 'Fluxo de Caixa', ['Data', 'Descrição', 'Fluxo (R$)', 'Saldo acumulado (R$)'], cashFlowRows(r));
+
+            if (mc) {
+                addExcelTable(workbook, 'Monte Carlo - Resumo', ['Indicador', 'Valor'], [
+                    ['Iterações', mc.iterations], ['Semente', mc.seed],
+                    ['Correlação compra x venda (pedida)', mc.priceCorrelation],
+                    ['Correlação compra x venda (obtida)', mc.realizedPriceCorrelation],
+                    ['Probabilidade de prejuízo (%)', mc.summary.probabilityLoss],
+                    ['Média por cabeça (R$)', mc.summary.mean], ['Desvio-padrão (R$)', mc.summary.stdDev],
+                    ['P5', mc.summary.p5], ['P10', mc.summary.p10], ['P50', mc.summary.p50], ['P90', mc.summary.p90], ['P95', mc.summary.p95],
+                    ['Cauda inferior 5% (R$)', mc.summary.expectedShortfall5],
+                    ['VPL médio (R$)', numOrNull(mc.vplSummary.mean)], ['Chance de VPL negativo (%)', mc.vplSummary.probabilityLoss],
+                    ['Interpretação', 'Curva de excedência: chance de atingir ou superar cada meta']
+                ]);
+                addExcelTable(workbook, 'Monte Carlo - Tornado', ['Premissa', 'Menor resultado (R$)', 'Maior resultado (R$)', 'Amplitude (R$)'],
+                    (mc.tornado || []).map((t) => [t.label, t.low, t.high, t.impact]));
+                addExcelTable(workbook, 'Monte Carlo - Correlacoes', ['Variável', 'Spearman', 'Observação'],
+                    mc.correlations.map((c) => [c.label, c.value, mc.priceCorrelation > 0 && c.variable === 'pricePerKg'
+                        ? 'Contaminada pelo fator de mercado comum — leia o tornado' : 'Associação, não causalidade']));
+                addExcelTable(workbook, 'Monte Carlo - Amostras',
+                    ['Iteração', ...Engine.MC_KEYS.map((k) => Engine.MC_LABELS[k]), 'Resultado/cabeça (R$)', 'Resultado do lote (R$)', 'VPL (R$)'],
+                    (mc.samples || []).map((x) => [x.iteracao, ...Engine.MC_KEYS.map((k) => x[k]), x.resultadoPorCabeca, x.resultadoLote, numOrNull(x.vpl)]));
+            } else {
+                addExcelTable(workbook, 'Monte Carlo - Resumo', ['Status', 'Observação'],
+                    [['Não executado', 'Execute o Monte Carlo antes de exportar para incluir a análise de risco.']]);
+            }
+
+            addExcelCharts(workbook, reportChartDefinitions(mc));
+
+            try {
+                const buffer = await workbook.xlsx.writeBuffer();
+                downloadBlob(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `${reportBaseName()}.xlsx`);
+            } catch (error) {
+                showAlert('Erro ao gerar Excel', `Não foi possível concluir o arquivo: ${escapeHtml(error.message)}`, 'error');
+            }
+        };
+
+        const addExcelDashboard = (workbook, inputs, results, mc) => {
+            const sheet = workbook.addWorksheet('Resumo Executivo', { views: [{ showGridLines: false }] });
+            sheet.columns = Array.from({ length: 8 }, () => ({ width: 15 }));
+            sheet.mergeCells('A1:H2');
+            const title = sheet.getCell('A1');
+            title.value = 'RECRIA A PASTO + ENGORDA EM CONFINAMENTO';
+            title.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_COLORS.primary } };
+            title.font = { name: 'Georgia', size: 18, bold: true, color: { argb: EXCEL_COLORS.white } };
+            title.alignment = { vertical: 'middle', horizontal: 'center' };
+            sheet.getRow(1).height = 28; sheet.getRow(2).height = 22;
+
+            excelCard(sheet, 'A4:D6', results.placed > 1 ? 'Resultado do lote' : 'Resultado operacional', results.resultadoOperacional, 'currency', results.resultadoOperacional >= 0);
+            excelCard(sheet, 'E4:H6', 'Resultado por cabeça alojada', results.resultadoPorCabecaAlojada, 'currency', results.resultadoPorCabecaAlojada >= 0);
+            excelCard(sheet, 'A8:D10', 'Margem operacional', results.margemOperacional, 'percent', results.margemOperacional >= 0);
+            excelCard(sheet, 'E8:H10', 'Preço de equilíbrio', results.precoEquilibrio, 'currency', true);
+            excelCard(sheet, 'A12:D14', 'VPL à taxa informada', results.vpl, 'currency', results.vpl >= 0);
+            excelCard(sheet, 'E12:H14', 'Probabilidade de prejuízo', mc ? mc.summary.probabilityLoss : null, 'percent', mc ? mc.summary.probabilityLoss < 50 : true);
+
+            const metadata = [
+                ['Simulação', inputs.simulationName || 'Não informada'],
+                ['Fazenda', inputs.farmName || 'Não informada'],
+                ['Técnico', inputs.techName || 'Não informado'],
+                ['Localidade', inputs.location || 'Não informada'],
+                ['Entrada', brDate(inputs.recria1EntryDate)],
+                ['Venda prevista', brDate(results.saleDate)],
+                ['Motor econômico', `v${Engine.VERSION}`],
+                ['Rendimento de carcaça de entrada', `${Engine.RENDIMENTO_INICIAL_FIXO}% (fixo)`]
+            ];
+            metadata.forEach(([label, value], index) => {
+                const row = 17 + index;
+                sheet.getCell(row, 1).value = label;
+                sheet.getCell(row, 1).font = { bold: true, color: { argb: EXCEL_COLORS.primary } };
+                sheet.mergeCells(row, 2, row, 8);
+                sheet.getCell(row, 2).value = value;
+            });
+
+            const disclaimerRow = 17 + metadata.length + 1;
+            sheet.mergeCells(disclaimerRow, 1, disclaimerRow, 8);
+            const cell = sheet.getCell(disclaimerRow, 1);
+            cell.value = LEGAL_DISCLAIMER;
+            cell.font = { italic: true, size: 9 };
+            cell.alignment = { wrapText: true, vertical: 'middle' };
+            sheet.getRow(disclaimerRow).height = 30;
+            sheet.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 1, paperSize: 9 };
+        };
+
+        const excelCard = (sheet, range, label, value, format, positive) => {
+            sheet.mergeCells(range);
+            const cell = sheet.getCell(range.split(':')[0]);
+            const display = value == null || !Number.isFinite(value)
+                ? 'Não executado'
+                : (format === 'currency' ? formatCurrency(value) : formatPercent(value));
+            cell.value = `${label}\n${display}`;
+            cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+            cell.font = { name: 'Georgia', size: 14, bold: true, color: { argb: positive ? EXCEL_COLORS.primary : EXCEL_COLORS.red } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_COLORS.cream } };
+            const gold = { style: 'thin', color: { argb: EXCEL_COLORS.gold } };
+            cell.border = { top: { style: 'medium', color: { argb: EXCEL_COLORS.gold } }, left: gold, bottom: gold, right: gold };
+        };
+
+        const addExcelTable = (workbook, name, headers, rows) => {
+            const sheet = workbook.addWorksheet(name, { views: [{ state: 'frozen', ySplit: 1 }] });
+            sheet.addRow(headers);
+            sheet.addRows(rows);
+            const header = sheet.getRow(1);
+            header.height = 24;
+            header.eachCell((cell) => {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_COLORS.primary } };
+                cell.font = { bold: true, color: { argb: EXCEL_COLORS.white } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+            });
+            sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: headers.length } };
+            sheet.columns.forEach((column, index) => {
+                let width = String(headers[index] || '').length + 2;
+                for (let row = 2; row <= Math.min(sheet.rowCount, 250); row += 1) {
+                    width = Math.max(width, String(sheet.getCell(row, index + 1).value ?? '').length + 2);
+                }
+                column.width = Math.min(42, Math.max(12, width));
+            });
+            sheet.eachRow((row, rowNumber) => {
+                if (rowNumber > 1 && rowNumber % 2 === 0) {
+                    row.eachCell((cell) => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_COLORS.zebra } }; });
+                }
+                row.eachCell((cell) => { if (typeof cell.value === 'number') cell.numFmt = '#,##0.00;[Red]-#,##0.00'; });
+            });
+        };
+
+        const addExcelCharts = (workbook, definitions) => {
+            const sheet = workbook.addWorksheet('Gráficos', { views: [{ showGridLines: false }] });
+            sheet.columns = Array.from({ length: 12 }, () => ({ width: 11 }));
+            let row = 1;
+            let added = 0;
+            definitions.forEach((definition) => {
+                const canvas = document.getElementById(definition.id);
+                if (!canvas || !state.chartInstances[definition.id] || !canvas.width || !canvas.height) return;
+                const imageId = workbook.addImage({ base64: canvas.toDataURL('image/png', 0.92), extension: 'png' });
+                sheet.mergeCells(row, 1, row, 12);
+                const heading = sheet.getCell(row, 1);
+                heading.value = definition.title;
+                heading.font = { name: 'Georgia', size: 14, bold: true, color: { argb: EXCEL_COLORS.primary } };
+                heading.alignment = { horizontal: 'center' };
+                sheet.addImage(imageId, { tl: { col: 0.25, row }, ext: { width: 900, height: 410 } });
+                for (let line = row + 1; line <= row + 21; line += 1) sheet.getRow(line).height = 15;
+                row += 24; added += 1;
+            });
+            if (!added) sheet.getCell('A1').value = 'Nenhum gráfico disponível. Calcule a simulação antes de exportar.';
+            sheet.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, paperSize: 9 };
+        };
+
+        /* ------------------------------------------------------------- imagem */
+
+        const downloadChart = (chartId) => {
+            const canvas = document.getElementById(chartId);
+            if (!canvas || !canvas.width) { showAlert('Gráfico indisponível', 'Calcule a simulação antes de baixar o gráfico.', 'warning'); return; }
+            canvas.toBlob((blob) => {
+                if (blob) downloadBlob(blob, `${chartId}_${safeFilename(state.currentSimulation?.inputs.simulationName || 'simulacao')}.png`);
+            });
+        };
+
+        const toggleShareMenu = () => document.getElementById('shareDropdown').classList.toggle('hidden');
+
+        const generateSocialImage = () => {
+            if (!state.currentSimulation) { showAlert('Atenção', 'Calcule a simulação antes de gerar a imagem.', 'warning'); return; }
+            if (!window.html2canvas) { showAlert('Biblioteca indisponível', 'Não foi possível carregar o gerador de imagens.', 'error'); return; }
+
+            const { inputs: i, results: r, monteCarlo: mc } = state.currentSimulation;
+            const selected = document.getElementById('shareType').value;
+            const types = {
+                resumo: { title: 'Resumo da Simulação', chart: null },
+                financeiro: { title: 'Indicadores Financeiros', chart: null },
+                fisico: { title: 'Resultados Físicos', chart: null },
+                economico: { title: 'Receita, Custo e Resultado', chart: 'metricsChart' },
+                fluxoCaixa: { title: 'Fluxo de Caixa Projetado', chart: 'cashFlowChart' },
+                sensibilidade: { title: 'Análise de Sensibilidade', chart: 'sensitivityChart' },
+                riscoDistribuicao: { title: 'Monte Carlo — Distribuição', chart: 'mcHistogramChart', risk: true },
+                riscoExcedencia: { title: 'Monte Carlo — Curva de Excedência', chart: 'mcCdfChart', risk: true },
+                riscoTornado: { title: 'Monte Carlo — Tornado', chart: 'mcTornadoChart', risk: true },
+                riscoResumo: { title: 'Monte Carlo — Resumo do Risco', chart: null, risk: true }
+            };
+            const type = types[selected] || types.resumo;
+            if (type.risk && !mc) { showAlert('Análise não executada', 'Execute o Monte Carlo antes de gerar esta imagem.', 'warning'); return; }
+
+            const card = document.createElement('div');
+            card.className = 'social-card-container';
+
+            const header = document.createElement('div');
+            header.className = 'social-header';
+            const author = document.createElement('span');
+            author.textContent = 'Prof. Ricardo Brumatti';
+            const site = document.createElement('span');
+            site.className = 'site';
+            site.textContent = 'Recria + Engorda';
+            header.append(author, site);
+
+            const title = document.createElement('h2');
+            title.className = 'social-title';
+            title.textContent = type.title;
+
+            const subtitle = document.createElement('p');
+            subtitle.className = 'social-subtitle';
+            subtitle.textContent = `${i.farmName || i.simulationName || 'Cenário simulado'} • ciclo de ${formatNumber(r.totalDaysCycle, 0)} dias`;
+
+            const destaque = type.risk && mc
+                ? { valor: formatPercent(mc.summary.probabilityLoss), legenda: `Probabilidade de prejuízo em ${formatNumber(mc.iterations, 0)} cenários` }
+                : { valor: formatCurrency(r.resultadoOperacional), legenda: r.placed > 1
+                        ? `Resultado operacional do lote • ${formatNumber(r.placed, 0)} cabeças alojadas`
+                        : 'Resultado operacional por cabeça alojada' };
+
+            const main = document.createElement('div');
+            main.className = 'social-kpi';
+            main.textContent = destaque.valor;
+            const caption = document.createElement('p');
+            caption.className = 'social-kpi-caption';
+            caption.textContent = destaque.legenda;
+
+            const body = document.createElement('div');
+            body.className = 'social-card-body';
+
+            const appendGrid = (items) => {
+                body.classList.add('is-grid-only');
+                const grid = document.createElement('div');
+                grid.className = 'social-kpi-grid';
+                items.forEach(([label, value]) => {
+                    const box = document.createElement('div');
+                    box.className = 'box';
+                    const lbl = document.createElement('div');
+                    lbl.className = 'lbl';
+                    lbl.textContent = label;
+                    const val = document.createElement('div');
+                    val.className = 'val';
+                    val.textContent = value;
+                    box.append(lbl, val);
+                    grid.append(box);
+                });
+                body.append(grid);
+            };
+
+            if (type.chart) {
+                const source = document.getElementById(type.chart);
+                if (!source || !source.width) { showAlert('Gráfico indisponível', 'Recalcule a simulação antes de gerar a imagem.', 'warning'); return; }
+                const img = document.createElement('img');
+                img.src = source.toDataURL('image/png', 1);
+                img.alt = type.title;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'contain';
+                body.append(img);
+            } else if (selected === 'financeiro') {
+                appendGrid([
+                    ['Margem operacional', orNA(r.margemOperacional, formatPercent)],
+                    ['ROI sobre o custo', orNA(r.roi, formatPercent)],
+                    ['VPL', orNA(r.vpl, formatCurrency)],
+                    ['TIR (% ao mês)', orNA(r.xirrMonthly, formatPercent)],
+                    ['Preço de equilíbrio', orNA(r.precoEquilibrio, (v) => `${formatCurrency(v)}/@`)],
+                    ['Margem de segurança', orNA(r.margemSegurancaPercentual, formatPercent)]
+                ]);
+            } else if (selected === 'fisico') {
+                appendGrid([
+                    ['Peso vivo final', `${formatNumber(r.pesoFinalBruto)} kg`],
+                    ['Peso de carcaça', `${formatNumber(r.pesoCarcaca)} kg`],
+                    ['Arrobas totais', `${formatNumber(r.arrobasTotais)} @`],
+                    ['Arrobas produzidas', `${formatNumber(r.arrobasProduzidas)} @`],
+                    ['Duração do ciclo', `${formatNumber(r.totalDaysCycle, 0)} dias`],
+                    ['GMD de equilíbrio', orNA(r.gmdEquilibrio, (v) => `${formatNumber(v, 3)} kg/d`)]
+                ]);
+            } else if (selected === 'riscoResumo') {
+                appendGrid([
+                    ['Pessimista (P10)', formatCurrency(mc.summary.p10)],
+                    ['Mediano (P50)', formatCurrency(mc.summary.p50)],
+                    ['Otimista (P90)', formatCurrency(mc.summary.p90)],
+                    ['Resultado médio', formatCurrency(mc.summary.mean)],
+                    ['Cauda inferior 5%', formatCurrency(mc.summary.expectedShortfall5)],
+                    ['Chance de VPL negativo', formatPercent(mc.vplSummary.probabilityLoss)]
+                ]);
+            } else {
+                appendGrid([
+                    ['Resultado/cabeça', orNA(r.resultadoPorCabecaAlojada, formatCurrency)],
+                    ['Receita bruta', formatCurrency(r.receitaBruta)],
+                    ['Custo total', formatCurrency(r.custoTotal)],
+                    ['Margem operacional', orNA(r.margemOperacional, formatPercent)],
+                    ['Custo da @ produzida', orNA(r.custoArrobaProduzida, formatCurrency)],
+                    ['Risco de prejuízo', mc ? formatPercent(mc.summary.probabilityLoss) : 'Não executado']
+                ]);
+            }
+
+            const footer = document.createElement('div');
+            footer.className = 'social-footer';
+            const source = document.createElement('p');
+            source.className = 'source';
+            source.textContent = 'Simulação econômica — premissas informadas pelo usuário';
+            const authorText = document.createElement('p');
+            authorText.className = 'author';
+            authorText.textContent = 'Prof. Ricardo C. Brumatti — FAMEZ/UFMS • ricardobrumatti.pro.br';
+            const disclaimer = document.createElement('p');
+            disclaimer.className = 'disclaimer';
+            disclaimer.textContent = LEGAL_DISCLAIMER;
+            footer.append(source, authorText, disclaimer);
+
+            card.append(header, title, subtitle, main, caption, body, footer);
+            document.body.append(card);
+
+            html2canvas(card, { scale: 1, width: 1080, height: 1350, backgroundColor: '#064e65', useCORS: true })
+                .then((canvas) => {
+                    const url = canvas.toDataURL('image/png');
+                    document.getElementById('shareImagePreview').src = url;
+                    const link = document.getElementById('shareImageDownload');
+                    link.href = url;
+                    link.download = `${selected}_${safeFilename(i.farmName || i.simulationName)}.png`;
+                    document.getElementById('modalShareImage').classList.remove('hidden');
+                    card.remove();
+                })
+                .catch(() => {
+                    card.remove();
+                    showAlert('Erro', 'Não foi possível gerar a imagem.', 'error');
+                });
+
+            document.getElementById('shareDropdown').classList.add('hidden');
         };
         
         const generatePrintReport = () => {
