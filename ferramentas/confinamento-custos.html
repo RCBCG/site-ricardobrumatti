@@ -420,6 +420,10 @@
         .social-card-body.is-grid-only .social-kpi-grid { margin-top: 0; }
         .social-card-body.is-grid-only .social-kpi-grid .box { padding: 30px 18px; }
         .social-card-body.is-grid-only .social-kpi-grid .box .val { font-size: 36px; }
+        .social-sim-banner { background: #7a3b00; border: 2px solid #d4af37; border-radius: 16px; padding: 18px 22px; margin-bottom: 22px; display: flex; align-items: flex-start; gap: 14px; }
+        .social-sim-banner .icon { font-size: 30px; line-height: 1; }
+        .social-sim-banner .text { font-size: 17px; font-weight: 700; color: #fff8e7; line-height: 1.4; }
+        .social-note { font-size: 15px; color: #475569; text-align: center; margin-top: 16px; line-height: 1.4; }
     </style>
 
     <style id="v2-enhancements">
@@ -872,7 +876,9 @@
                                             <option value="indicadores">Indicadores Complementares</option>
                                             <option value="sensibilidadeLucro">Análise de Sensibilidade do Lucro</option>
                                             <option value="tornado">Tornado de Sensibilidade</option>
-                                            <option value="risco">Monte Carlo — Risco</option>
+                                            <option value="risco">Monte Carlo — Risco (gráfico)</option>
+                                            <option value="riscoPremissas">Monte Carlo — Premissas usadas</option>
+                                            <option value="riscoConclusao">Monte Carlo — Resultado provável</option>
                                         </select>
                                         <button onclick="App.generateSocialImage()" class="btn-hover w-full py-2 px-4 bg-purple-600 text-white rounded-lg font-medium text-sm"><i class="fas fa-image mr-2"></i>Gerar Imagem</button>
                                         <p class="text-[11px] text-gray-400 mt-2 leading-tight">Formato quadrado/vertical, pronto para Instagram, TikTok, X e WhatsApp.</p>
@@ -2666,10 +2672,13 @@
       indicadores: { title: 'Indicadores Complementares', chart: null },
       sensibilidadeLucro: { title: 'Comparativo Integrado — Todas as Curvas', chart: 'simulacaoCustoReceitaChart' },
       tornado: { title: 'Tornado de Sensibilidade', chart: 'tornadoChart' },
-      risco: { title: 'Monte Carlo — Risco do Resultado', chart: 'mcCdfChart' }
+      risco: { title: 'Monte Carlo — Risco do Resultado', chart: 'mcCdfChart' },
+      riscoPremissas: { title: 'Premissas da Simulação', chart: null },
+      riscoConclusao: { title: 'Resultado Provável (Simulação)', chart: null }
     };
     const type = types[selected] || types.resumo;
-    if (selected === 'risco' && !mc) return showModal('Análise não executada', 'Execute o Monte Carlo antes de gerar esta imagem.');
+    const isMcType = selected === 'risco' || selected === 'riscoPremissas' || selected === 'riscoConclusao';
+    if (isMcType && !mc) return showModal('Análise não executada', 'Execute o Monte Carlo antes de gerar esta imagem.');
 
     const card = document.createElement('div'); card.className = 'social-card-container';
     const header = document.createElement('div'); header.className = 'social-header';
@@ -2678,8 +2687,18 @@
     header.append(author, site);
     const title = document.createElement('h2'); title.className = 'social-title'; title.textContent = type.title;
     const subtitle = document.createElement('p'); subtitle.className = 'social-subtitle'; subtitle.textContent = `${i.fazenda || 'Fazenda não informada'} • ${i.dataSimulacao || ''}`;
-    const main = document.createElement('div'); main.className = 'social-kpi'; main.textContent = formatBRL(r.resultadoOperacional);
-    const caption = document.createElement('p'); caption.className = 'social-kpi-caption'; caption.textContent = `Resultado operacional do lote • ${i.quantidade} cabeça${i.quantidade === 1 ? '' : 's'} alojada${i.quantidade === 1 ? '' : 's'}`;
+    const main = document.createElement('div'); main.className = 'social-kpi';
+    const caption = document.createElement('p'); caption.className = 'social-kpi-caption';
+    if (selected === 'riscoPremissas') {
+      main.textContent = mc.iterations.toLocaleString('pt-BR');
+      caption.textContent = `simulações sorteadas (semente ${mc.seed}) a partir das faixas informadas — não é um valor único garantido`;
+    } else if (selected === 'riscoConclusao') {
+      main.textContent = formatPercent(100 - mc.summary.probabilityLoss);
+      caption.textContent = `chance estimada de o lote NÃO dar prejuízo, entre as ${mc.iterations.toLocaleString('pt-BR')} simulações rodadas`;
+    } else {
+      main.textContent = formatBRL(r.resultadoOperacional);
+      caption.textContent = `Resultado operacional do lote • ${i.quantidade} cabeça${i.quantidade === 1 ? '' : 's'} alojada${i.quantidade === 1 ? '' : 's'}`;
+    }
     const body = document.createElement('div'); body.className = 'social-card-body';
 
     const appendGrid = (items) => {
@@ -2693,7 +2712,39 @@
       body.append(grid);
     };
 
-    if (type.chart) {
+    const appendSimBanner = (text) => {
+      const banner = document.createElement('div'); banner.className = 'social-sim-banner';
+      const icon = document.createElement('span'); icon.className = 'icon'; icon.textContent = '⚠️';
+      const txt = document.createElement('span'); txt.className = 'text'; txt.textContent = text;
+      banner.append(icon, txt); body.append(banner);
+    };
+
+    if (selected === 'riscoPremissas') {
+      body.classList.add('is-grid-only');
+      appendSimBanner('SIMULAÇÃO — os valores abaixo são as premissas informadas para o cálculo. Preço, custos, GMD e rendimento variam dentro de faixas a cada uma das simulações, não são garantidos.');
+      appendGrid([
+        ['Dias de confinamento', `${formatNumber(i.dias, 0)} dias`],
+        ['Peso inicial', `${formatNumber(i.peso, 0)} kg`],
+        ['GMD considerado', `${formatNumber(mc.ranges.gmd.mode, 2)} kg/dia`],
+        ['Preço da arroba', formatBRL(mc.ranges.receita.mode)],
+        ['Custo de aquisição', formatBRL(mc.ranges.custoAq.mode)],
+        ['Custo da diária', formatBRL(mc.ranges.custoDiaria.mode)]
+      ]);
+      const note = document.createElement('p'); note.className = 'social-note';
+      note.textContent = `Faixas simuladas: arroba ${formatBRL(mc.ranges.receita.min)}–${formatBRL(mc.ranges.receita.max)} • aquisição ${formatBRL(mc.ranges.custoAq.min)}–${formatBRL(mc.ranges.custoAq.max)} • GMD ${formatNumber(mc.ranges.gmd.min, 2)}–${formatNumber(mc.ranges.gmd.max, 2)} kg/dia`;
+      body.append(note);
+    } else if (selected === 'riscoConclusao') {
+      body.classList.add('is-grid-only');
+      appendSimBanner('SIMULAÇÃO, NÃO É PREVISÃO — os números abaixo vêm de milhares de cenários sorteados a partir das premissas informadas. Resultados reais podem ser diferentes.');
+      appendGrid([
+        ['Resultado típico (mediana)', formatBRL(mc.summary.median)],
+        ['Cenário ruim (P5)', formatBRL(mc.summary.p5)],
+        ['Cenário bom (P95)', formatBRL(mc.summary.p95)],
+        ['Risco de prejuízo', formatPercent(mc.summary.probabilityLoss)],
+        ['Pior 5% dos casos (média)', formatBRL(mc.summary.expectedShortfall5)],
+        ['Simulações rodadas', mc.iterations.toLocaleString('pt-BR')]
+      ]);
+    } else if (type.chart) {
       const source = $(type.chart);
       if (!source || !source.width || !source.height) return showModal('Gráfico indisponível', 'Exiba ou recalcule o gráfico antes de gerar a imagem.');
       const img = document.createElement('img'); img.alt = type.title; img.src = source.toDataURL('image/png', 1);
