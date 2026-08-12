@@ -133,10 +133,16 @@
         .share-dropdown.hidden { display: none; }
         /* O botão é um item flex estreito: ancorado nele, um menu de 280px sai pela
            esquerda da tela no celular (fica cortado pelo overflow-x:hidden da página).
-           Em telas estreitas o menu passa a ocupar a largura útil, preso à viewport. */
+           Em telas estreitas o menu vira position:fixed, preso à viewport horizontalmente
+           e com o "top" calculado em JS (toggleShareMenu) a partir da posição real do
+           botão — sem isso, position:absolute sem o wrap como ancestral posicionado
+           (que passaria a position:static) faz o menu ser posicionado em relação ao
+           documento inteiro, saindo cerca de uma tela inteira abaixo do botão. */
         @media (max-width: 640px) {
-            .share-menu-wrap { position: static; }
-            .share-dropdown { left: 16px; right: 16px; width: auto; }
+            .share-dropdown {
+                position: fixed; left: 16px; right: 16px; width: auto;
+                top: var(--share-dropdown-top, 72px);
+            }
         }
 
         /* Cartão 1080x1350 renderizado fora da tela e capturado pelo html2canvas.
@@ -1344,7 +1350,16 @@
   function defaultRanges(raw) {
     const i = normalizeInputs(raw);
     const pct = (value, down, up) => ({ min: value * (1 - down), mode: value, max: value * (1 + up) });
-    const gmd = (value) => ({ min: Math.max(-1.99, value * 0.85), mode: value, max: value * 1.15 });
+    // Para GMD negativo (perda de peso — RULES permite até -2), multiplicar por 0.85/1.15
+    // inverte qual candidato é o menor: value*0.85 fica mais perto de zero (maior) e
+    // value*1.15 mais longe de zero (menor). Sem ordenar explicitamente, min>mode>max
+    // e o Monte Carlo travava para qualquer GMD negativo válido no formulário principal.
+    const gmd = (value) => {
+        const candidates = [value * 0.85, value * 1.15];
+        const lo = Math.min(...candidates);
+        const hi = Math.max(...candidates);
+        return { min: Math.min(value, Math.max(-1.99, lo)), mode: value, max: Math.max(value, hi) };
+    };
     return {
       arrobaPriceGordo: pct(i.arrobaPriceGordo, 0.1, 0.1),
       pricePerKg: pct(i.pricePerKg, 0.1, 0.1),
@@ -1355,7 +1370,9 @@
       monthlyCostRecria2: pct(i.monthlyCostRecria2, 0.1, 0.1),
       dailyCostConfinamento: pct(i.dailyCostConfinamento, 0.1, 0.1),
       rendimentoCarcaca: { min: clamp(i.rendimentoCarcaca - 2, 1, 100), mode: i.rendimentoCarcaca, max: clamp(i.rendimentoCarcaca + 2, 1, 100) },
-      mortalityRate: { min: Math.max(0, i.mortalityRate - 1), mode: i.mortalityRate, max: clamp(i.mortalityRate + 2, 0, 99.9) }
+      // O teto de 99.9 no "max" não era propagado ao "mode": para mortalityRate acima de
+      // 99.9 (RULES permite até 100), mode ficava maior que max e o Monte Carlo travava.
+      mortalityRate: { min: Math.max(0, i.mortalityRate - 1), mode: i.mortalityRate, max: Math.max(i.mortalityRate, clamp(i.mortalityRate + 2, 0, 99.9)) }
     };
   }
 
@@ -1644,9 +1661,14 @@
             document.querySelector('#modalShareImage .close-button-alt').addEventListener('click', () => {
                 document.getElementById('modalShareImage').classList.add('hidden');
             });
-            // Clicar fora fecha o menu de compartilhamento
+            // Clicar fora fecha o menu de compartilhamento. No celular o dropdown é
+            // reanexado ao <body> (ver toggleShareMenu), então deixa de estar dentro de
+            // .share-menu-wrap — sem o segundo closest, clicar no <select> ou no botão
+            // "Gerar Imagem" fecharia o menu na hora.
             document.addEventListener('click', (e) => {
-                if (!e.target.closest('.share-menu-wrap')) document.getElementById('shareDropdown').classList.add('hidden');
+                if (!e.target.closest('.share-menu-wrap') && !e.target.closest('#shareDropdown')) {
+                    document.getElementById('shareDropdown').classList.add('hidden');
+                }
             });
 
             // Atualizadores de data automáticos
@@ -2269,7 +2291,10 @@
             const professionalOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: { duration: 800, easing: 'easeInOutCubic' },
+                // Respeita Chart.defaults.animation = false (usado por withLightCharts ao
+                // exportar): sem isso, esta opção por instância sempre venceria o default
+                // global e a exportação capturaria o gráfico no meio da animação de entrada.
+                animation: Chart.defaults.animation === false ? false : { duration: 800, easing: 'easeInOutCubic' },
                 plugins: {
                     legend: {
                         position: 'bottom',
@@ -2555,15 +2580,26 @@
                 Chart.defaults.animation = animacaoSalva;
                 refreshCharts();
             };
-            try {
-                const retorno = fn();
-                if (retorno && typeof retorno.finally === 'function') return retorno.finally(restaurar);
+            // Mesmo com animation:false, o Chart.js agenda o desenho inicial via
+            // requestAnimationFrame (o serviço de animação sempre processa em lote no
+            // próximo frame) — sem esperar, a captura (PDF/Excel/imagem/impressão) corre
+            // o risco de pegar o canvas ainda em branco. Dois rAF garantem que o frame já
+            // foi pintado antes de prosseguir. O setTimeout é um fallback: navegadores
+            // suspendem requestAnimationFrame em abas em segundo plano/ocultas — sem ele,
+            // exportar com a aba fora de foco travaria a Promise (e o tema) para sempre.
+            const proximoFrame = () => new Promise((resolve) => {
+                let resolvido = false;
+                const concluir = () => { if (!resolvido) { resolvido = true; resolve(); } };
+                requestAnimationFrame(() => requestAnimationFrame(concluir));
+                setTimeout(concluir, 150);
+            });
+            return proximoFrame().then(() => fn()).then((retorno) => {
                 restaurar();
                 return retorno;
-            } catch (erro) {
+            }).catch((erro) => {
                 restaurar();
                 throw erro;
-            }
+            });
         };
 
         // O canvas do Chart.js é transparente: sobre papel branco isso passa despercebido,
@@ -2834,44 +2870,48 @@
                 return;
             }
             const { inputs: i, results: r, monteCarlo: mc } = state.currentSimulation;
-            const workbook = new ExcelJS.Workbook();
-            workbook.creator = 'Prof. Ricardo C. Brumatti — FAMEZ/UFMS';
-            workbook.created = new Date();
 
-            addExcelDashboard(workbook, i, r, mc);
-            addExcelTable(workbook, 'Premissas', ['Campo', 'Valor', 'Unidade'], inputRows(i));
-            addExcelTable(workbook, 'Resultados', ['Indicador', 'Valor', 'Unidade'],
-                resultRows(r).map(([label, value, unit]) => [label, typeof value === 'number' ? numOrNull(value) : value, unit]));
-            addExcelTable(workbook, 'Fluxo de Caixa', ['Data', 'Descrição', 'Fluxo (R$)', 'Saldo acumulado (R$)'], cashFlowRows(r));
-
-            if (mc) {
-                addExcelTable(workbook, 'Monte Carlo - Resumo', ['Indicador', 'Valor'], [
-                    ['Iterações', mc.iterations], ['Semente', mc.seed],
-                    ['Correlação compra x venda (pedida)', mc.priceCorrelation],
-                    ['Correlação compra x venda (obtida)', mc.realizedPriceCorrelation],
-                    ['Probabilidade de prejuízo (%)', mc.summary.probabilityLoss],
-                    ['Média por cabeça (R$)', mc.summary.mean], ['Desvio-padrão (R$)', mc.summary.stdDev],
-                    ['P5', mc.summary.p5], ['P10', mc.summary.p10], ['P50', mc.summary.p50], ['P90', mc.summary.p90], ['P95', mc.summary.p95],
-                    ['Cauda inferior 5% (R$)', mc.summary.expectedShortfall5],
-                    ['VPL médio (R$)', numOrNull(mc.vplSummary.mean)], ['Chance de VPL negativo (%)', mc.vplSummary.probabilityLoss],
-                    ['Interpretação', 'Curva de excedência: chance de atingir ou superar cada meta']
-                ]);
-                addExcelTable(workbook, 'Monte Carlo - Tornado', ['Premissa', 'Menor resultado (R$)', 'Maior resultado (R$)', 'Amplitude (R$)'],
-                    (mc.tornado || []).map((t) => [t.label, t.low, t.high, t.impact]));
-                addExcelTable(workbook, 'Monte Carlo - Correlacoes', ['Variável', 'Spearman', 'Observação'],
-                    mc.correlations.map((c) => [c.label, c.value, mc.priceCorrelation > 0 && c.variable === 'pricePerKg'
-                        ? 'Contaminada pelo fator de mercado comum — leia o tornado' : 'Associação, não causalidade']));
-                addExcelTable(workbook, 'Monte Carlo - Amostras',
-                    ['Iteração', ...Engine.MC_KEYS.map((k) => Engine.MC_LABELS[k]), 'Resultado/cabeça (R$)', 'Resultado do lote (R$)', 'VPL (R$)'],
-                    (mc.samples || []).map((x) => [x.iteracao, ...Engine.MC_KEYS.map((k) => x[k]), x.resultadoPorCabeca, x.resultadoLote, numOrNull(x.vpl)]));
-            } else {
-                addExcelTable(workbook, 'Monte Carlo - Resumo', ['Status', 'Observação'],
-                    [['Não executado', 'Execute o Monte Carlo antes de exportar para incluir a análise de risco.']]);
-            }
-
-            addExcelCharts(workbook, reportChartDefinitions(mc));
-
+            // Todo o preenchimento do workbook entra no try: uma exceção síncrona em
+            // qualquer addExcel* (ex. dado malformado) antes ficava fora do catch e virava
+            // uma rejeição não tratada — o clique não fazia nada visível para o usuário.
             try {
+                const workbook = new ExcelJS.Workbook();
+                workbook.creator = 'Prof. Ricardo C. Brumatti — FAMEZ/UFMS';
+                workbook.created = new Date();
+
+                addExcelDashboard(workbook, i, r, mc);
+                addExcelTable(workbook, 'Premissas', ['Campo', 'Valor', 'Unidade'], inputRows(i));
+                addExcelTable(workbook, 'Resultados', ['Indicador', 'Valor', 'Unidade'],
+                    resultRows(r).map(([label, value, unit]) => [label, typeof value === 'number' ? numOrNull(value) : value, unit]));
+                addExcelTable(workbook, 'Fluxo de Caixa', ['Data', 'Descrição', 'Fluxo (R$)', 'Saldo acumulado (R$)'], cashFlowRows(r));
+
+                if (mc) {
+                    addExcelTable(workbook, 'Monte Carlo - Resumo', ['Indicador', 'Valor'], [
+                        ['Iterações', mc.iterations], ['Semente', mc.seed],
+                        ['Correlação compra x venda (pedida)', mc.priceCorrelation],
+                        ['Correlação compra x venda (obtida)', mc.realizedPriceCorrelation],
+                        ['Probabilidade de prejuízo (%)', mc.summary.probabilityLoss],
+                        ['Média por cabeça (R$)', mc.summary.mean], ['Desvio-padrão (R$)', mc.summary.stdDev],
+                        ['P5', mc.summary.p5], ['P10', mc.summary.p10], ['P50', mc.summary.p50], ['P90', mc.summary.p90], ['P95', mc.summary.p95],
+                        ['Cauda inferior 5% (R$)', mc.summary.expectedShortfall5],
+                        ['VPL médio (R$)', numOrNull(mc.vplSummary.mean)], ['Chance de VPL negativo (%)', mc.vplSummary.probabilityLoss],
+                        ['Interpretação', 'Curva de excedência: chance de atingir ou superar cada meta']
+                    ]);
+                    addExcelTable(workbook, 'Monte Carlo - Tornado', ['Premissa', 'Menor resultado (R$)', 'Maior resultado (R$)', 'Amplitude (R$)'],
+                        (mc.tornado || []).map((t) => [t.label, t.low, t.high, t.impact]));
+                    addExcelTable(workbook, 'Monte Carlo - Correlacoes', ['Variável', 'Spearman', 'Observação'],
+                        mc.correlations.map((c) => [c.label, c.value, mc.priceCorrelation > 0 && c.variable === 'pricePerKg'
+                            ? 'Contaminada pelo fator de mercado comum — leia o tornado' : 'Associação, não causalidade']));
+                    addExcelTable(workbook, 'Monte Carlo - Amostras',
+                        ['Iteração', ...Engine.MC_KEYS.map((k) => Engine.MC_LABELS[k]), 'Resultado/cabeça (R$)', 'Resultado do lote (R$)', 'VPL (R$)'],
+                        (mc.samples || []).map((x) => [x.iteracao, ...Engine.MC_KEYS.map((k) => x[k]), x.resultadoPorCabeca, x.resultadoLote, numOrNull(x.vpl)]));
+                } else {
+                    addExcelTable(workbook, 'Monte Carlo - Resumo', ['Status', 'Observação'],
+                        [['Não executado', 'Execute o Monte Carlo antes de exportar para incluir a análise de risco.']]);
+                }
+
+                addExcelCharts(workbook, reportChartDefinitions(mc));
+
                 const buffer = await workbook.xlsx.writeBuffer();
                 downloadBlob(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `${reportBaseName()}.xlsx`);
             } catch (error) {
@@ -2993,12 +3033,44 @@
         const downloadChart = (chartId) => {
             const canvas = document.getElementById(chartId);
             if (!canvas || !canvas.width) { showAlert('Gráfico indisponível', 'Calcule a simulação antes de baixar o gráfico.', 'warning'); return; }
-            canvas.toBlob((blob) => {
-                if (blob) downloadBlob(blob, `${chartId}_${safeFilename(state.currentSimulation?.inputs.simulationName || 'simulacao')}.png`);
+            // canvas.toBlob é assíncrono — precisa virar Promise para que withLightCharts
+            // espere o blob sair antes de restaurar o tema e recriar este mesmo canvas
+            // (chart.destroy + new Chart), o que corrompia o PNG baixado.
+            return new Promise((resolve) => {
+                canvas.toBlob((blob) => {
+                    if (blob) downloadBlob(blob, `${chartId}_${safeFilename(state.currentSimulation?.inputs.simulationName || 'simulacao')}.png`);
+                    resolve();
+                });
             });
         };
 
-        const toggleShareMenu = () => document.getElementById('shareDropdown').classList.toggle('hidden');
+        const toggleShareMenu = () => {
+            const dropdown = document.getElementById('shareDropdown');
+            const abrindo = dropdown.classList.contains('hidden');
+            dropdown.classList.toggle('hidden');
+            if (!abrindo) return;
+
+            const btn = document.getElementById('btnShare');
+            const wrap = btn.closest('.share-menu-wrap');
+            const mobile = window.matchMedia('(max-width: 640px)').matches;
+            if (mobile) {
+                // No celular o menu é position:fixed, ancorado à viewport — mas os
+                // cartões da página têm a classe .fade-in, cuja animação de entrada
+                // deixa um "transform: translateY(0)" residual (fill-mode: forwards).
+                // Qualquer transform em um ancestral vira o containing block de
+                // position:fixed, então sem reanexar ao <body> o menu ficaria preso à
+                // posição do cartão, não à viewport. O "top" é calculado a partir da
+                // posição real do botão a cada abertura.
+                if (dropdown.parentElement !== document.body) document.body.appendChild(dropdown);
+                const rect = btn.getBoundingClientRect();
+                dropdown.style.setProperty('--share-dropdown-top', `${Math.round(rect.bottom + 8)}px`);
+            } else if (dropdown.parentElement !== wrap) {
+                // Tela cresceu depois de o menu ter sido reanexado ao body: devolve pro
+                // lugar original, onde o CSS de desktop (position:absolute; right:0)
+                // ancora o menu no próprio botão.
+                wrap.appendChild(dropdown);
+            }
+        };
 
         const generateSocialImage = () => {
             if (!state.currentSimulation) { showAlert('Atenção', 'Calcule a simulação antes de gerar a imagem.', 'warning'); return; }
@@ -3140,7 +3212,12 @@
             card.append(header, title, subtitle, main, caption, body, footer);
             document.body.append(card);
 
-            html2canvas(card, { scale: 1, width: 1080, height: 1350, backgroundColor: '#064e65', useCORS: true })
+            document.getElementById('shareDropdown').classList.add('hidden');
+
+            // Retorna a Promise: withLightCharts precisa esperar a captura terminar antes
+            // de restaurar o tema e recriar os gráficos da página — do contrário isso
+            // acontecia em paralelo com o html2canvas varrendo o DOM.
+            return html2canvas(card, { scale: 1, width: 1080, height: 1350, backgroundColor: '#064e65', useCORS: true })
                 .then((canvas) => {
                     const url = canvas.toDataURL('image/png');
                     document.getElementById('shareImagePreview').src = url;
@@ -3154,8 +3231,6 @@
                     card.remove();
                     showAlert('Erro', 'Não foi possível gerar a imagem.', 'error');
                 });
-
-            document.getElementById('shareDropdown').classList.add('hidden');
         };
         
         const generatePrintReport = () => {
