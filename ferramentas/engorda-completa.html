@@ -1641,6 +1641,15 @@
         };
 
         const setupEventListeners = () => {
+            // A animação .fade-in (fill-mode: forwards) deixa um "transform: translateY(0)"
+            // residual no cartão ao terminar. Qualquer transform vira stacking context,
+            // o que prende dropdowns com z-index (ex.: menu "Imagem") atrás do próximo
+            // cartão. Encerrar a animação ao final remove esse transform sem mudar o
+            // resultado visual (opacidade e posição finais já eram essas mesmas).
+            document.addEventListener('animationend', (e) => {
+                if (e.animationName === 'fadeIn') e.target.style.animation = 'none';
+            });
+
             dom.form.addEventListener('submit', handleFormSubmit);
             dom.tabButtons.forEach(btn => btn.addEventListener('click', handleTabSwitch));
             dom.saveBtn.addEventListener('click', handleSaveSimulation);
