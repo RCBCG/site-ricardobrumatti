@@ -2197,8 +2197,9 @@
                 }
             });
 
-            // Tornado — barras flutuantes do menor ao maior resultado
-            const tornado = (mc.tornado || []).slice().reverse();
+            // Tornado — barras flutuantes, maior amplitude no topo (Engine.sensitivity já
+            // ordena por impacto decrescente; sem reverse, index 0 fica no topo no Chart.js)
+            const tornado = mc.tornado || [];
             createOrUpdateChart('mcTornadoChart', 'bar', {
                 labels: tornado.map(t => t.label),
                 datasets: [{
