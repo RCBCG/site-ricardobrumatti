@@ -1413,26 +1413,26 @@ footer {
           </div>
           <div class="phone-screen">
             <div class="market-carousel-track" id="mercadoTrack">
-              <div class="market-slide" onclick="openMarketLightbox('img/mercado-boi-gordo.png','Boi gordo — cotação do dia')">
-                <img src="img/mercado-boi-gordo.png" alt="Boi gordo — cotação do dia" loading="lazy">
+              <div class="market-slide" onclick="openMarketLightbox('img/boletim/01.png','Boi gordo — cotação do dia')">
+                <img src="img/boletim/01.png" alt="Boi gordo — cotação do dia" loading="lazy">
               </div>
-              <div class="market-slide" onclick="openMarketLightbox('img/mercado-bezerro.png','Bezerro — cotação do dia')">
-                <img src="img/mercado-bezerro.png" alt="Bezerro — cotação do dia" loading="lazy">
+              <div class="market-slide" onclick="openMarketLightbox('img/boletim/02.png','Bezerro — cotação do dia')">
+                <img src="img/boletim/02.png" alt="Bezerro — cotação do dia" loading="lazy">
               </div>
-              <div class="market-slide" onclick="openMarketLightbox('img/mercado-soja.png','Soja — cotação do dia')">
-                <img src="img/mercado-soja.png" alt="Soja — cotação do dia" loading="lazy">
+              <div class="market-slide" onclick="openMarketLightbox('img/boletim/03.png','Soja — cotação do dia')">
+                <img src="img/boletim/03.png" alt="Soja — cotação do dia" loading="lazy">
               </div>
-              <div class="market-slide" onclick="openMarketLightbox('img/mercado-milho.png','Milho — cotação do dia')">
-                <img src="img/mercado-milho.png" alt="Milho — cotação do dia" loading="lazy">
+              <div class="market-slide" onclick="openMarketLightbox('img/boletim/04.png','Milho — cotação do dia')">
+                <img src="img/boletim/04.png" alt="Milho — cotação do dia" loading="lazy">
               </div>
-              <div class="market-slide" onclick="openMarketLightbox('img/mercado-projecao.png','Projeção R$/@ — 180 dias úteis')">
-                <img src="img/mercado-projecao.png" alt="Projeção R$/@ — 180 dias úteis" loading="lazy">
+              <div class="market-slide" onclick="openMarketLightbox('img/boletim/05.png','Projeção R$/@ — 180 dias úteis')">
+                <img src="img/boletim/05.png" alt="Projeção R$/@ — 180 dias úteis" loading="lazy">
               </div>
-              <div class="market-slide" onclick="openMarketLightbox('img/mercado-agio-bezerro.png','Ágio do bezerro')">
-                <img src="img/mercado-agio-bezerro.png" alt="Ágio do bezerro" loading="lazy">
+              <div class="market-slide" onclick="openMarketLightbox('img/boletim/06.png','Ágio do bezerro')">
+                <img src="img/boletim/06.png" alt="Ágio do bezerro" loading="lazy">
               </div>
-              <div class="market-slide" onclick="openMarketLightbox('img/mercado-sazonalidade.png','Sazonalidade — boi gordo')">
-                <img src="img/mercado-sazonalidade.png" alt="Sazonalidade — boi gordo" loading="lazy">
+              <div class="market-slide" onclick="openMarketLightbox('img/boletim/07.png','Sazonalidade — boi gordo')">
+                <img src="img/boletim/07.png" alt="Sazonalidade — boi gordo" loading="lazy">
               </div>
             </div>
             <div class="market-zoom-hint" aria-hidden="true">
@@ -1447,15 +1447,7 @@ footer {
         <button class="market-nav-btn market-next" id="mercadoNext" aria-label="Próximo">&#8594;</button>
       </div>
 
-      <div class="carousel-dots market-dots" id="mercadoDots">
-        <button class="dot active" aria-label="Slide 1"></button>
-        <button class="dot" aria-label="Slide 2"></button>
-        <button class="dot" aria-label="Slide 3"></button>
-        <button class="dot" aria-label="Slide 4"></button>
-        <button class="dot" aria-label="Slide 5"></button>
-        <button class="dot" aria-label="Slide 6"></button>
-        <button class="dot" aria-label="Slide 7"></button>
-      </div>
+      <div class="carousel-dots market-dots" id="mercadoDots"></div>
     </div>
   </div>
 </section>
@@ -1983,8 +1975,16 @@ function submitForm(e) {
 <script>
 (function() {
   var track = document.getElementById('mercadoTrack');
+  var dotsContainer = document.getElementById('mercadoDots');
+  var total = track ? track.children.length : 0;
+  if (!track || !total) return;
+  for (var s = 0; s < total; s++) {
+    var dotBtn = document.createElement('button');
+    dotBtn.className = 'dot' + (s === 0 ? ' active' : '');
+    dotBtn.setAttribute('aria-label', 'Slide ' + (s + 1));
+    dotsContainer.appendChild(dotBtn);
+  }
   var dots = document.querySelectorAll('#mercadoDots .dot');
-  var total = 7;
   var current = 0;
   var timer;
 
