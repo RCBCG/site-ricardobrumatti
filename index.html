@@ -973,8 +973,20 @@ footer {
 .market-carousel-inner {
   position: relative;
   display: flex;
+  align-items: center;
   justify-content: center;
   width: 100%;
+}
+
+.market-carousel-stage {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+}
+
+.market-peek {
+  display: none;
 }
 
 .phone-mockup {
@@ -1167,6 +1179,46 @@ footer {
 
 @media (min-width: 1024px) {
   .phone-mockup { width: 360px; }
+
+  .market-peek {
+    display: block;
+    position: relative;
+    z-index: 1;
+    width: 200px;
+    aspect-ratio: 4 / 5;
+    flex-shrink: 0;
+    padding: 0;
+    border: none;
+    border-radius: 18px;
+    overflow: hidden;
+    cursor: pointer;
+    background: none;
+    opacity: 0.55;
+    filter: grayscale(15%) brightness(0.85);
+    transform: scale(0.94);
+    transition: opacity 0.35s ease, transform 0.35s ease, filter 0.35s ease;
+  }
+
+  .market-peek:hover {
+    opacity: 0.85;
+    transform: scale(1);
+    filter: grayscale(0%) brightness(1);
+  }
+
+  .market-peek img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+
+  .market-peek-prev { margin-right: -28px; }
+  .market-peek-next { margin-left: -28px; }
+}
+
+@media (min-width: 1200px) {
+  .market-peek { width: 230px; }
 }
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
@@ -1407,6 +1459,11 @@ footer {
 
     <div class="market-carousel-wrapper reveal">
       <div class="market-carousel-inner">
+        <button class="market-peek market-peek-prev" id="mercadoPeekPrev" aria-label="Slide anterior">
+          <img id="mercadoPeekPrevImg" src="" alt="">
+        </button>
+
+        <div class="market-carousel-stage">
         <div class="phone-mockup">
           <div class="phone-topbar">
             <div class="phone-camera-dot"></div>
@@ -1553,6 +1610,11 @@ footer {
         </div>
         <button class="market-nav-btn market-prev" id="mercadoPrev" aria-label="Anterior">&#8592;</button>
         <button class="market-nav-btn market-next" id="mercadoNext" aria-label="Próximo">&#8594;</button>
+        </div>
+
+        <button class="market-peek market-peek-next" id="mercadoPeekNext" aria-label="Próximo slide">
+          <img id="mercadoPeekNextImg" src="" alt="">
+        </button>
       </div>
 
       <div class="carousel-dots market-dots" id="mercadoDots"></div>
@@ -2096,19 +2158,36 @@ function submitForm(e) {
   var current = 0;
   var timer;
 
+  var slideImgs = Array.from(track.querySelectorAll('.market-slide img'));
+  var peekPrevBtn = document.getElementById('mercadoPeekPrev');
+  var peekNextBtn = document.getElementById('mercadoPeekNext');
+  var peekPrevImg = document.getElementById('mercadoPeekPrevImg');
+  var peekNextImg = document.getElementById('mercadoPeekNextImg');
+
+  function updatePeeks() {
+    if (!peekPrevImg || !peekNextImg) return;
+    var prevIdx = (current - 1 + total) % total;
+    var nextIdx = (current + 1) % total;
+    peekPrevImg.src = slideImgs[prevIdx].src;
+    peekPrevImg.alt = slideImgs[prevIdx].alt;
+    peekNextImg.src = slideImgs[nextIdx].src;
+    peekNextImg.alt = slideImgs[nextIdx].alt;
+  }
+
   function goTo(index) {
     current = (index + total) % total;
     track.style.transform = 'translateX(-' + (current * 100) + '%)';
     dots.forEach(function(d, i) {
       d.classList.toggle('active', i === current);
     });
+    updatePeeks();
   }
 
   function next() { goTo(current + 1); }
   function prev() { goTo(current - 1); }
 
   function startAuto() {
-    timer = setInterval(next, 5000);
+    timer = setInterval(next, 8000);
   }
 
   function stopAuto() {
@@ -2117,6 +2196,9 @@ function submitForm(e) {
 
   document.getElementById('mercadoNext').addEventListener('click', function(e) { e.stopPropagation(); stopAuto(); next(); startAuto(); });
   document.getElementById('mercadoPrev').addEventListener('click', function(e) { e.stopPropagation(); stopAuto(); prev(); startAuto(); });
+
+  if (peekPrevBtn) peekPrevBtn.addEventListener('click', function(e) { e.stopPropagation(); stopAuto(); prev(); startAuto(); });
+  if (peekNextBtn) peekNextBtn.addEventListener('click', function(e) { e.stopPropagation(); stopAuto(); next(); startAuto(); });
 
   dots.forEach(function(dot, i) {
     dot.addEventListener('click', function() { stopAuto(); goTo(i); startAuto(); });
@@ -2128,22 +2210,31 @@ function submitForm(e) {
     wrapper.addEventListener('mouseleave', startAuto);
   }
 
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) stopAuto(); else startAuto();
+  });
+
   var touchStartX = 0;
+  var touchActive = false;
   var screenEl = document.querySelector('.phone-screen');
   if (screenEl) {
     screenEl.addEventListener('touchstart', function(e) {
       touchStartX = e.changedTouches[0].screenX;
-      stopAuto();
+      touchActive = true;
     }, { passive: true });
     screenEl.addEventListener('touchend', function(e) {
+      if (!touchActive) return;
+      touchActive = false;
       var delta = e.changedTouches[0].screenX - touchStartX;
       if (Math.abs(delta) > 40) {
+        stopAuto();
         delta < 0 ? next() : prev();
+        startAuto();
       }
-      startAuto();
     }, { passive: true });
   }
 
+  updatePeeks();
   startAuto();
 })();
 
