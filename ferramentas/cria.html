@@ -76,7 +76,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Configuração Tailwind para Dark Mode -->
@@ -113,10 +115,35 @@
         .dark .tour-highlight { background: #1e293b; }
         #tourTooltip { position: fixed; z-index: 80; background: white; padding: 20px; border-radius: 8px; max-width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transition: all 0.3s; }
 
-        /* --- PDF OCULTO --- */
-        #printContainer { position: fixed; top: 0; left: -9999px; z-index: -1; background-color: #f8fafc; }
-        .a4-page { width: 210mm; height: 297mm; padding: 15mm; background: white; display: flex; flex-direction: column; box-sizing: border-box; }
-        .pdf-table td, .pdf-table th { border-bottom: 1px solid #e2e8f0; }
+        /* --- RISCO / MONTE CARLO --- */
+        .risk-card { background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 0.75rem; padding: 0.75rem; text-align: center; }
+        .dark .risk-card { background: rgba(147,51,234,0.08); border-color: rgba(147,51,234,0.3); }
+        .risk-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #7e22ce; letter-spacing: 0.02em; }
+        .dark .risk-label { color: #d8b4fe; }
+        .risk-value { font-size: 1.15rem; font-weight: 800; color: #581c87; margin-top: 0.15rem; }
+        .dark .risk-value { color: #f3e8ff; }
+        .scenario-badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; }
+
+        /* --- CARTÃO SOCIAL (imagem para redes) --- */
+        .social-card-container { position: absolute; top: -9999px; left: -9999px; width: 1080px; height: 1350px; background: #064e65; color: #ffffff; font-family: 'Inter', sans-serif; box-sizing: border-box; padding: 56px 64px; display: flex; flex-direction: column; }
+        .social-header { display: flex; justify-content: space-between; align-items: center; font-size: 22px; font-weight: 600; }
+        .social-header .site { color: #d4af37; font-weight: 600; }
+        .social-title { font-family: Georgia, Cambria, 'Times New Roman', serif; font-weight: 700; font-size: 50px; margin: 26px 0 6px; line-height: 1.1; }
+        .social-subtitle { font-size: 22px; color: #cfe3e9; margin: 0 0 18px; }
+        .social-kpi { font-family: Georgia, Cambria, 'Times New Roman', serif; font-weight: 800; font-size: 88px; color: #d4af37; line-height: 1.15; margin: 8px 0 0; }
+        .social-kpi-caption { font-size: 20px; color: #e2eef1; margin: 12px 0 28px; }
+        .social-card-body { background: #faf7f0; border-radius: 28px; flex: 1; padding: 32px; display: flex; flex-direction: column; overflow: hidden; }
+        .social-card-body img, .social-card-body canvas { max-width: 100%; }
+        .social-footer { text-align: center; margin-top: 26px; }
+        .social-footer .source { font-size: 18px; color: #cfe3e9; margin: 0 0 4px; }
+        .social-footer .author { font-size: 20px; font-weight: 700; color: #d4af37; margin: 0 0 12px; }
+        .social-footer .disclaimer { font-size: 14px; color: #9fc0c9; line-height: 1.5; max-width: 820px; margin: 0 auto; }
+        .social-kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: auto; }
+        .social-kpi-grid.cols-1 { grid-template-columns: 1fr; }
+        .social-kpi-grid .box { background: #ffffff; border: 1px solid #e6e6e6; border-radius: 14px; padding: 18px; text-align: center; }
+        .social-kpi-grid .box .lbl { font-size: 15px; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: .02em; }
+        .social-kpi-grid .box .val { font-family: Georgia, Cambria, 'Times New Roman', serif; font-size: 30px; font-weight: 800; color: #064e65; margin-top: 4px; }
+        .social-banner { background: #7a3b00; border: 2px solid #d4af37; border-radius: 14px; padding: 14px 18px; font-size: 15px; line-height: 1.4; color: #ffe9c2; margin-bottom: 16px; }
     </style>
 
     <!-- CSS Overrides for Typography & Colors (Images 1 & 2) -->
@@ -230,8 +257,30 @@
                             <i class="fa-solid fa-clock-rotate-left"></i> Histórico
                         </button>
                         <button onclick="gerarPDF()" id="btnPDF" class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-xs font-bold transition flex items-center gap-2 shadow-lg hover:shadow-blue-900/50">
-                            <i class="fa-solid fa-file-pdf"></i> Relatório
+                            <i class="fa-solid fa-file-pdf"></i> PDF
                         </button>
+                        <button onclick="gerarExcel()" id="btnExcel" class="bg-emerald-600 hover:bg-emerald-700 px-3 py-2 rounded text-xs font-bold transition flex items-center gap-2 shadow-lg hover:shadow-emerald-900/50">
+                            <i class="fa-solid fa-file-excel"></i> Excel
+                        </button>
+                        <div class="relative">
+                            <button onclick="toggleShareMenu()" id="btnShare" class="bg-amber-600 hover:bg-amber-700 px-3 py-2 rounded text-xs font-bold transition flex items-center gap-2 shadow-lg hover:shadow-amber-900/50">
+                                <i class="fa-solid fa-share-nodes"></i> Imagem
+                            </button>
+                            <div id="shareDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl p-3 z-[90] text-left">
+                                <label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Escolha o conteúdo</label>
+                                <select id="shareType" class="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white mb-3">
+                                    <option value="resumo">Resumo (KPIs)</option>
+                                    <option value="custos">Composição dos Custos</option>
+                                    <option value="financeiro">Análise Financeira</option>
+                                    <option value="tornado">Tornado de Sensibilidade</option>
+                                    <option value="cenarios">Quadro de Cenários</option>
+                                    <option value="riscoDistribuicao">Monte Carlo — Distribuição</option>
+                                    <option value="riscoConclusao">Monte Carlo — Resultado provável</option>
+                                </select>
+                                <button onclick="gerarImagemSocial()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded text-sm font-bold"><i class="fa-solid fa-image mr-1"></i> Gerar Imagem</button>
+                                <p class="text-[11px] text-slate-400 mt-2 leading-tight">Formato vertical, pronto para Instagram, TikTok, X e WhatsApp.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -380,27 +429,107 @@
                 <!-- Gráficos -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
-                        <h3 class="text-sm font-bold text-slate-700 dark:text-white mb-4 border-b dark:border-slate-700 pb-2">Composição dos Custos</h3>
+                        <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2"><h3 class="text-sm font-bold text-slate-700 dark:text-white">Composição dos Custos</h3><button type="button" onclick="downloadChart('doughnutChart')" class="text-xs text-slate-400 hover:text-blue-600"><i class="fa-solid fa-download"></i></button></div>
                         <div class="relative h-64 w-full">
                             <canvas id="doughnutChart"></canvas>
                         </div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
-                        <h3 class="text-sm font-bold text-slate-700 dark:text-white mb-4 border-b dark:border-slate-700 pb-2">Análise Financeira (Total)</h3>
+                        <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2"><h3 class="text-sm font-bold text-slate-700 dark:text-white">Análise Financeira (Total)</h3><button type="button" onclick="downloadChart('barChart')" class="text-xs text-slate-400 hover:text-blue-600"><i class="fa-solid fa-download"></i></button></div>
                         <div class="relative h-64 w-full">
                             <canvas id="barChart"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <!-- Tornado -->
+                <!-- Gráficos de Sensibilidade -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
                     <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
-                        <h3 class="text-sm font-bold text-slate-700 dark:text-white">Sensibilidade do Lucro (+/- 10%)</h3>
-                        <span class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-slate-500 dark:text-slate-300">Análise de Impacto</span>
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-white">Curvas de Sensibilidade do Lucro (-10% a +10%)</h3>
+                        <span class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-slate-500 dark:text-slate-300" id="download-sens-btn"><button type="button" onclick="downloadChart('sensCombinadoChart')" class="hover:text-blue-600"><i class="fa-solid fa-download mr-1"></i>PNG</button></span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div><p class="text-xs font-semibold text-center text-emerald-600 dark:text-emerald-400 mb-1">Receita (Preço de Venda)</p><div class="relative h-48 w-full"><canvas id="sensReceitaChart"></canvas></div></div>
+                        <div><p class="text-xs font-semibold text-center text-red-500 dark:text-red-400 mb-1">Custos (Vaca + Bezerro)</p><div class="relative h-48 w-full"><canvas id="sensCustosChart"></canvas></div></div>
+                        <div><p class="text-xs font-semibold text-center text-blue-600 dark:text-blue-400 mb-1">Taxas Produtivas/Reprodutivas</p><div class="relative h-48 w-full"><canvas id="sensTaxasChart"></canvas></div></div>
+                    </div>
+                    <p class="text-xs font-semibold text-center text-slate-500 dark:text-slate-400 mb-1">Cenário Integrado (pessimista → otimista, todas as variáveis juntas)</p>
+                    <div class="relative h-56 w-full">
+                        <canvas id="sensCombinadoChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Tornado -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 chart-container">
+                    <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-2">
+                        <h3 class="text-sm font-bold text-slate-700 dark:text-white">Diagrama de Tornado — Impacto no Lucro</h3>
+                        <button type="button" onclick="downloadChart('tornadoChart')" class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-slate-500 dark:text-slate-300 hover:text-blue-600"><i class="fa-solid fa-download mr-1"></i>PNG</button>
                     </div>
                     <div class="relative h-64 w-full">
                         <canvas id="tornadoChart"></canvas>
+                    </div>
+                    <p class="text-center text-xs text-slate-400 mt-2 italic">Cada barra mostra o intervalo de lucro ao levar a variável isoladamente ao mínimo e ao máximo da faixa de risco, ordenado por impacto.</p>
+                </div>
+
+                <!-- Quadro de Cenários -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
+                    <h3 class="text-sm font-bold text-slate-700 dark:text-white mb-4 border-b dark:border-slate-700 pb-2">Quadro de Cenários de Lucro</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left dark:text-slate-300" id="scenarioTable">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+                                    <th class="p-2">Cenário</th><th class="p-2 text-right">Prenhez</th><th class="p-2 text-right">Mortalidade</th><th class="p-2 text-right">Preço Venda</th><th class="p-2 text-right">Lucro Total</th><th class="p-2 text-right">Margem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scenarioTableBody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-3 italic">Pessimista: prenhez -10%, mortalidade +30%, preço de venda -8%, custos +8%. Otimista: prenhez +8%, mortalidade -20%, preço de venda +6%, custos -5%.</p>
+                </div>
+
+                <!-- Monte Carlo -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4 border-b dark:border-slate-700 pb-2">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 dark:text-white"><i class="fa-solid fa-dice mr-2 text-purple-600"></i>Análise de Risco — Monte Carlo</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Simula milhares de cenários sorteando as variáveis dentro das faixas informadas (distribuição triangular).</p>
+                        </div>
+                        <button type="button" id="runMonteCarloBtn" onclick="runMonteCarlo()" class="bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-lg font-bold shadow flex items-center gap-2 shrink-0"><i class="fa-solid fa-dice"></i> Executar Monte Carlo</button>
+                    </div>
+
+                    <details class="mb-4 border border-purple-200 dark:border-purple-800 rounded-lg" open>
+                        <summary class="p-3 font-bold text-purple-900 dark:text-purple-300 cursor-pointer text-sm"><i class="fas fa-sliders mr-2"></i>Faixas de incerteza (editáveis)</summary>
+                        <div class="p-3 pt-0 overflow-x-auto">
+                            <table class="w-full text-xs text-center" id="mcRangesTable">
+                                <thead><tr class="text-slate-500 dark:text-slate-400"><th class="p-1 text-left">Variável</th><th class="p-1">Mínimo</th><th class="p-1">Mais Provável</th><th class="p-1">Máximo</th></tr></thead>
+                                <tbody id="mcRangesBody"></tbody>
+                            </table>
+                            <div class="grid grid-cols-2 gap-3 mt-3">
+                                <div class="input-group"><label class="dark:text-slate-300 text-xs">Iterações</label>
+                                    <select id="mcIterations" class="w-full p-1.5 rounded border dark:bg-slate-700 dark:border-slate-600 dark:text-white text-sm">
+                                        <option value="1000">1.000</option><option value="5000">5.000</option><option value="10000" selected>10.000</option><option value="25000">25.000</option>
+                                    </select>
+                                </div>
+                                <div class="input-group"><label class="dark:text-slate-300 text-xs">Semente (reprodutibilidade)</label><input type="number" id="mcSeed" value="12345" class="w-full p-1.5 rounded border dark:bg-slate-700 dark:border-slate-600 dark:text-white text-sm"></div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <div id="mc-empty-state" class="bg-purple-50 dark:bg-slate-700/30 border border-dashed border-purple-300 dark:border-purple-800 rounded-xl p-6 text-center text-slate-600 dark:text-slate-300 text-sm">Análise de risco não executada. Revise as faixas acima e clique em "Executar Monte Carlo".</div>
+
+                    <div id="mc-results" class="hidden">
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4" id="mc-summary-grid"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <div class="flex justify-between items-center mb-2"><p class="text-xs font-semibold text-center text-slate-500 dark:text-slate-400 flex-1">Distribuição do Lucro</p><button type="button" onclick="downloadChart('mcHistogramChart')" class="text-xs text-slate-400 hover:text-blue-600"><i class="fa-solid fa-download"></i></button></div>
+                                <div class="relative h-64 w-full"><canvas id="mcHistogramChart"></canvas></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-2"><p class="text-xs font-semibold text-center text-slate-500 dark:text-slate-400 flex-1">Curva de Excedência (Probabilidade de Superar X)</p><button type="button" onclick="downloadChart('mcCdfChart')" class="text-xs text-slate-400 hover:text-blue-600"><i class="fa-solid fa-download"></i></button></div>
+                                <div class="relative h-64 w-full"><canvas id="mcCdfChart"></canvas></div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-3 italic">SIMULAÇÃO, NÃO É PREVISÃO — os números acima vêm de milhares de cenários sorteados a partir das premissas informadas. Resultados reais podem ser diferentes.</p>
                     </div>
                 </div>
 
@@ -561,75 +690,197 @@
         </div>
     </div>
 
-    <!-- Container Oculto PDF -->
-    <div id="printContainer">
-        <!-- PÁGINA 1 -->
-        <div id="pdfPage1" class="a4-page">
-            <div class="flex items-center gap-4 mb-8 border-b-2 border-slate-800 pb-4">
-                <i class="fa-solid fa-cow text-4xl text-blue-600"></i>
-                <div>
-                    <h1 class="text-3xl font-bold text-slate-900">Cria Certa</h1>
-                    <p class="text-slate-500">Simulador de Custo Real do Bezerro Desmamado</p>
-                    <p class="text-[10px] text-slate-400 mt-1">Aplicação desenvolvida por Prof. Ricardo C. Brumatti - FAMEZ/UFMS</p>
-                </div>
-                <div class="ml-auto text-right text-sm text-slate-400">
-                    <p id="pdfDate">Data: </p>
-                    <p>Prof. Ricardo Brumatti</p>
-                </div>
+    <!-- Modal Imagem para Compartilhar -->
+    <div id="modalShareImage" class="fixed inset-0 bg-black/70 hidden z-[110] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-lg max-w-sm w-full p-5 shadow-2xl text-center">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-1">Imagem pronta!</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">No celular, toque e segure na imagem para salvar. No PC, clique com o botão direito e escolha "Salvar imagem", ou use o botão abaixo.</p>
+            <div class="max-h-[55vh] overflow-auto border border-slate-200 dark:border-slate-600 rounded-lg mb-4 bg-slate-100 dark:bg-slate-900">
+                <img id="shareImagePreview" class="w-full block" alt="Imagem para compartilhar">
             </div>
-            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
-                <h2 class="text-lg font-bold text-slate-800 mb-4 uppercase tracking-wide border-b border-slate-200 pb-2">Resumo Executivo</h2>
-                <div class="grid grid-cols-4 gap-4">
-                    <div class="p-4 bg-white rounded-lg border-l-4 border-emerald-500 shadow-sm"><p class="text-xs text-slate-500 font-bold">Lucro Total</p><p class="text-xl font-bold text-emerald-600" id="pdfLucro">R$ 0,00</p></div>
-                    <div class="p-4 bg-white rounded-lg border-l-4 border-blue-500 shadow-sm"><p class="text-xs text-slate-500 font-bold">ROI</p><p class="text-xl font-bold text-blue-600" id="pdfROI">0%</p></div>
-                    <div class="p-4 bg-white rounded-lg border-l-4 border-amber-500 shadow-sm"><p class="text-xs text-slate-500 font-bold">Custo Unitário</p><p class="text-xl font-bold text-amber-600" id="pdfCusto">R$ 0,00</p></div>
-                    <div class="p-4 bg-white rounded-lg border-l-4 border-purple-500 shadow-sm"><p class="text-xs text-slate-500 font-bold">Produção</p><p class="text-xl font-bold text-purple-600" id="pdfProd">0 cab</p></div>
-                </div>
-            </div>
-            <h2 class="text-lg font-bold text-slate-800 mb-4 uppercase tracking-wide border-b border-slate-200 pb-2">Parâmetros Utilizados</h2>
-            <div class="grid grid-cols-3 gap-6 text-sm">
-                <div class="space-y-4">
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">1. Rebanho</p><div class="flex justify-between border-b py-1"><span>Vacas:</span><strong id="pdfInVacas"></strong></div><div class="flex justify-between border-b py-1"><span>Valor:</span><strong id="pdfInValorVaca"></strong></div><div class="flex justify-between py-1"><span>Manut:</span><strong id="pdfInManut"></strong></div></div>
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">2. Reprodução</p><div class="flex justify-between py-1"><span>Custo:</span><strong id="pdfInMonta"></strong></div></div>
-                </div>
-                <div class="space-y-4">
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">3. Cria</p><div class="flex justify-between border-b py-1"><span>Custo Bez:</span><strong id="pdfInCustoBez"></strong></div><div class="flex justify-between py-1"><span>Duração:</span><strong id="pdfInDuracao"></strong></div></div>
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">5. Comercial</p><div class="flex justify-between border-b py-1"><span>Venda:</span><strong id="pdfInPreco"></strong></div><div class="flex justify-between py-1"><span>Peso:</span><strong id="pdfInPeso"></strong></div></div>
-                </div>
-                <div class="space-y-4">
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">4. Índices</p><div class="flex justify-between border-b py-1"><span>Prenhez:</span><strong id="pdfInPrenhez"></strong></div><div class="flex justify-between border-b py-1"><span>M. Pré:</span><strong id="pdfInMortPre"></strong></div><div class="flex justify-between py-1"><span>M. Pós:</span><strong id="pdfInMortPos"></strong></div></div>
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200"><p class="font-bold text-blue-600 mb-2">Outros</p><div class="flex justify-between py-1"><span>Fixos:</span><strong id="pdfInFixos"></strong></div></div>
-                </div>
-            </div>
-            <div class="mt-auto border-t border-slate-200 pt-4 text-center text-xs text-slate-400">Página 1 de 2 - Simulação Cria Certa | Prof. Ricardo Brumatti - FAMEZ/UFMS</div>
-        </div>
-        <!-- PÁGINA 2 -->
-        <div id="pdfPage2" class="a4-page">
-            <div class="flex justify-between items-center mb-6 border-b border-slate-200 pb-2"><h2 class="text-xl font-bold text-slate-800">Análise Detalhada</h2><span class="text-sm text-slate-400">Resultados</span></div>
-            <div class="grid grid-cols-2 gap-8 mb-8 h-64">
-                <div class="flex flex-col items-center"><h3 class="text-sm font-bold text-slate-600 mb-2">Composição de Custos</h3><img id="pdfChartRosca" class="max-h-56 max-w-full object-contain"></div>
-                <div class="flex flex-col items-center"><h3 class="text-sm font-bold text-slate-600 mb-2">Fluxo Financeiro</h3><img id="pdfChartBarra" class="max-h-56 max-w-full object-contain"></div>
-            </div>
-            <div class="mb-8 h-48 flex flex-col items-center border-t border-slate-100 pt-4"><h3 class="text-sm font-bold text-slate-600 mb-2 w-full text-left">Sensibilidade do Lucro</h3><img id="pdfChartTornado" class="max-h-40 w-full object-contain"></div>
-            <div class="grid grid-cols-2 gap-8 mt-4 text-sm">
-                <div><h3 class="text-sm font-bold text-white bg-slate-600 p-2 rounded-t-lg">Por Cabeça</h3><table class="w-full border border-slate-200 text-sm pdf-table"><tr class="border-b"><td class="p-2">Venda</td><td class="p-2 text-right font-bold" id="pdfTabCabVenda"></td></tr><tr class="border-b"><td class="p-2">Custo Total</td><td class="p-2 text-right font-bold text-red-600" id="pdfTabCabCusto"></td></tr><tr class="bg-slate-100 border-b"><td class="p-2 font-bold">Lucro</td><td class="p-2 text-right font-bold" id="pdfTabCabLucro"></td></tr><tr><td class="p-2">Margem</td><td class="p-2 text-right" id="pdfTabCabMargem"></td></tr></table></div>
-                <div><h3 class="text-sm font-bold text-white bg-slate-600 p-2 rounded-t-lg">Por Peso (kg)</h3><table class="w-full border border-slate-200 text-sm pdf-table"><tr class="border-b"><td class="p-2">Venda/kg</td><td class="p-2 text-right font-bold" id="pdfTabKgVenda"></td></tr><tr class="border-b"><td class="p-2">Custo/kg</td><td class="p-2 text-right font-bold text-red-600" id="pdfTabKgCusto"></td></tr><tr class="bg-slate-100 border-b"><td class="p-2 font-bold">Margem/kg</td><td class="p-2 text-right font-bold" id="pdfTabKgMargem"></td></tr><tr><td class="p-2">Ponto Equil.</td><td class="p-2 text-right" id="pdfTabPesoEq"></td></tr></table></div>
-            </div>
-            <div class="mt-auto border-t border-slate-200 pt-4 text-center text-xs text-slate-400">Página 2 de 2 - Simulação Cria Certa | Prof. Ricardo Brumatti - FAMEZ/UFMS</div>
+            <a id="shareImageDownload" href="#" download="imagem.png" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-bold flex items-center justify-center gap-2 mb-2"><i class="fa-solid fa-download"></i> Baixar Imagem</a>
+            <button onclick="document.getElementById('modalShareImage').classList.add('hidden')" class="w-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 py-2 rounded">Fechar</button>
         </div>
     </div>
 
     <script>
+        // --- ENGINE (cálculo puro, sem DOM) ---
+        const CriaEngine = (function () {
+            function calculateEconomics(data) {
+                const bezNascidos = data.qtdVacas * (data.taxaPrenhez / 100) * (1 - (data.mortPre / 100));
+                const bezDesmamados = bezNascidos * (1 - (data.mortPos / 100));
+
+                const custoAnualVacas = data.custoMesVaca * 12 * data.qtdVacas;
+                const custoReprodTotal = data.custoEstacaoMonta * data.qtdVacas;
+                const custosFixosTotal = data.custosFixos * data.qtdVacas;
+                const custoBezTotal = data.custoMesBezerro * data.duracaoCria * bezNascidos;
+
+                const custoTotal = custoAnualVacas + custoReprodTotal + custoBezTotal + custosFixosTotal;
+                const custoUnit = bezDesmamados > 0 ? custoTotal / bezDesmamados : 0;
+
+                const receita = bezDesmamados * data.precoVenda;
+                const lucro = receita - custoTotal;
+                const margem = receita > 0 ? (lucro / receita) * 100 : 0;
+                const roi = custoTotal > 0 ? (lucro / custoTotal) * 100 : 0;
+
+                const precoKg = data.pesoDesmama > 0 ? data.precoVenda / data.pesoDesmama : 0;
+                const custoKg = data.pesoDesmama > 0 ? custoUnit / data.pesoDesmama : 0;
+                const margemKg = precoKg - custoKg;
+                const pontoEq = data.precoVenda > 0 ? custoTotal / data.precoVenda : 0;
+
+                return { bezDesmamados, custoAnualVacas, custoReprodTotal, custoBezTotal, custosFixosTotal, custoTotal, custoUnit, receita, lucro, margem, roi, precoKg, custoKg, margemKg, pontoEq };
+            }
+
+            // PRNG determinístico (mulberry32) — mesma semente sempre gera a mesma sequência.
+            function mulberry32(seed) {
+                return function () {
+                    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+                    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+                    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+                    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+                };
+            }
+
+            // Amostragem por inversão da CDF triangular.
+            function triangular(random, min, mode, max) {
+                if (max < min) max = min;
+                if (mode < min) mode = min;
+                if (mode > max) mode = max;
+                const u = random();
+                const f = (mode - min) / ((max - min) || 1);
+                return u < f
+                    ? min + Math.sqrt(u * (max - min) * (mode - min))
+                    : max - Math.sqrt((1 - u) * (max - min) * (max - mode));
+            }
+
+            function percentile(sorted, p) {
+                if (!sorted.length) return 0;
+                const i = (sorted.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i);
+                return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo);
+            }
+
+            function ranks(arr) {
+                const idx = arr.map((_, i) => i).sort((a, b) => arr[a] - arr[b]);
+                const r = new Array(arr.length);
+                let i = 0;
+                while (i < idx.length) {
+                    let j = i;
+                    while (j + 1 < idx.length && arr[idx[j + 1]] === arr[idx[i]]) j++;
+                    const avgRank = (i + j) / 2 + 1;
+                    for (let k = i; k <= j; k++) r[idx[k]] = avgRank;
+                    i = j + 1;
+                }
+                return r;
+            }
+
+            function pearson(x, y) {
+                const n = x.length; if (!n) return 0;
+                const mx = x.reduce((a, b) => a + b, 0) / n, my = y.reduce((a, b) => a + b, 0) / n;
+                let num = 0, dx2 = 0, dy2 = 0;
+                for (let i = 0; i < n; i++) { const dx = x[i] - mx, dy = y[i] - my; num += dx * dy; dx2 += dx * dx; dy2 += dy * dy; }
+                const den = Math.sqrt(dx2 * dy2);
+                return den ? num / den : 0;
+            }
+
+            function spearman(x, y) { return pearson(ranks(x), ranks(y)); }
+
+            function histogram(sorted, bins) {
+                if (!sorted.length) return [];
+                const min = sorted[0], max = sorted[sorted.length - 1];
+                const step = (max - min) / bins || 1;
+                const buckets = Array.from({ length: bins }, (_, i) => ({ start: min + i * step, end: min + (i + 1) * step, count: 0 }));
+                sorted.forEach(v => {
+                    let idx = Math.floor((v - min) / step);
+                    if (idx >= bins) idx = bins - 1; if (idx < 0) idx = 0;
+                    buckets[idx].count++;
+                });
+                return buckets;
+            }
+
+            const MC_KEYS = ['precoVenda', 'taxaPrenhez', 'mortPre', 'mortPos', 'custoMesVaca', 'custoMesBezerro'];
+            const MC_LABELS = {
+                precoVenda: 'Preço de Venda (R$/cab)', taxaPrenhez: 'Taxa de Prenhez (%)',
+                mortPre: 'Mortalidade Pré-Parto (%)', mortPos: 'Mortalidade Pós-Parto (%)',
+                custoMesVaca: 'Custo Vaca (R$/mês)', custoMesBezerro: 'Custo Bezerro (R$/mês)'
+            };
+
+            function defaultRanges(inputs) {
+                return {
+                    precoVenda: { min: inputs.precoVenda * 0.90, mode: inputs.precoVenda, max: inputs.precoVenda * 1.10 },
+                    taxaPrenhez: { min: Math.max(0, inputs.taxaPrenhez * 0.90), mode: inputs.taxaPrenhez, max: Math.min(100, inputs.taxaPrenhez * 1.10) },
+                    mortPre: { min: Math.max(0, inputs.mortPre * 0.70), mode: inputs.mortPre, max: Math.min(100, inputs.mortPre * 1.30) },
+                    mortPos: { min: Math.max(0, inputs.mortPos * 0.70), mode: inputs.mortPos, max: Math.min(100, inputs.mortPos * 1.30) },
+                    custoMesVaca: { min: inputs.custoMesVaca * 0.90, mode: inputs.custoMesVaca, max: inputs.custoMesVaca * 1.10 },
+                    custoMesBezerro: { min: inputs.custoMesBezerro * 0.90, mode: inputs.custoMesBezerro, max: inputs.custoMesBezerro * 1.10 }
+                };
+            }
+
+            function validateRanges(ranges) {
+                MC_KEYS.forEach(key => {
+                    const r = ranges[key];
+                    if (!r) return;
+                    if (r.min > r.mode || r.mode > r.max) throw new Error(`Faixa inválida em "${MC_LABELS[key]}": mínimo deve ser ≤ mais provável ≤ máximo.`);
+                });
+            }
+
+            // Leva cada variável isoladamente ao mín/máx da faixa, mede o impacto no lucro.
+            function sensitivity(inputs, ranges) {
+                return MC_KEYS.map(key => {
+                    const r = ranges[key];
+                    const lowProfit = calculateEconomics({ ...inputs, [key]: r.min }).lucro;
+                    const highProfit = calculateEconomics({ ...inputs, [key]: r.max }).lucro;
+                    return { key, label: MC_LABELS[key], low: Math.min(lowProfit, highProfit), high: Math.max(lowProfit, highProfit), impact: Math.abs(highProfit - lowProfit) };
+                }).sort((a, b) => b.impact - a.impact);
+            }
+
+            function runMonteCarlo(inputs, config) {
+                const iterations = Math.max(500, Math.min(50000, Math.round(config.iterations || 10000)));
+                const seed = Math.round(config.seed) || 12345;
+                const ranges = config.ranges || defaultRanges(inputs);
+                validateRanges(ranges);
+                const random = mulberry32(seed);
+                const samples = [];
+                for (let i = 0; i < iterations; i++) {
+                    const sampled = {};
+                    MC_KEYS.forEach(key => { sampled[key] = triangular(random, ranges[key].min, ranges[key].mode, ranges[key].max); });
+                    const res = calculateEconomics({ ...inputs, ...sampled });
+                    samples.push({ iteracao: i + 1, ...sampled, lucro: res.lucro, roi: res.roi });
+                }
+                const profits = samples.map(s => s.lucro).sort((a, b) => a - b);
+                const mean = profits.reduce((a, b) => a + b, 0) / iterations;
+                const variance = profits.reduce((a, v) => a + (v - mean) * (v - mean), 0) / iterations;
+                const tailN = Math.max(1, Math.round(iterations * 0.05));
+                const summary = {
+                    iterations, seed, mean, stdDev: Math.sqrt(variance),
+                    probabilityLoss: profits.filter(x => x < 0).length / iterations,
+                    p5: percentile(profits, .05), p10: percentile(profits, .10), p50: percentile(profits, .50), p90: percentile(profits, .90), p95: percentile(profits, .95),
+                    expectedShortfall5: profits.slice(0, tailN).reduce((a, b) => a + b, 0) / tailN,
+                    min: profits[0], max: profits[profits.length - 1]
+                };
+                const correlations = MC_KEYS.map(key => ({ key, label: MC_LABELS[key], value: spearman(samples.map(s => s[key]), samples.map(s => s.lucro)) }))
+                    .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+                const bins = histogram(profits, 30);
+                const cdf = Array.from({ length: 21 }, (_, i) => { const p = i / 20; return { p, value: percentile(profits, p), exceedance: (1 - p) * 100 }; });
+                return { version: 1, generatedAt: Date.now(), iterations, seed, ranges, summary, correlations, bins, cdf, samples };
+            }
+
+            return Object.freeze({ calculateEconomics, mulberry32, triangular, percentile, ranks, pearson, spearman, histogram, defaultRanges, validateRanges, sensitivity, runMonteCarlo, MC_KEYS, MC_LABELS });
+        })();
+
         // --- GLOBAL & INIT ---
         let doughnutChart = null;
         let barChart = null;
         let tornadoChart = null;
+        let sensReceitaChart = null, sensCustosChart = null, sensTaxasChart = null, sensCombinadoChart = null;
+        let mcHistogramChart = null, mcCdfChart = null;
+        const state = { monteCarlo: null, scenarios: null };
 
         const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const formatNum = (v, d = 2) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
         const formatPercent = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
         document.addEventListener('DOMContentLoaded', () => {
+            buildMcRangesTable();
             calcularResultados();
             loadHistoryList();
             window.addEventListener('resize', adjustAllFonts);
@@ -660,30 +911,7 @@
             calcularResultados();
         }
 
-        function runSimulation(data) {
-            const bezNascidos = data.qtdVacas * (data.taxaPrenhez / 100) * (1 - (data.mortPre / 100));
-            const bezDesmamados = bezNascidos * (1 - (data.mortPos / 100));
-
-            const custoAnualVacas = data.custoMesVaca * 12 * data.qtdVacas;
-            const custoReprodTotal = data.custoEstacaoMonta * data.qtdVacas;
-            const custosFixosTotal = data.custosFixos * data.qtdVacas;
-            const custoBezTotal = data.custoMesBezerro * data.duracaoCria * bezNascidos; 
-            
-            const custoTotal = custoAnualVacas + custoReprodTotal + custoBezTotal + custosFixosTotal;
-            const custoUnit = bezDesmamados > 0 ? custoTotal / bezDesmamados : 0;
-
-            const receita = bezDesmamados * data.precoVenda;
-            const lucro = receita - custoTotal;
-            const margem = receita > 0 ? (lucro / receita) * 100 : 0;
-            const roi = custoTotal > 0 ? (lucro / custoTotal) * 100 : 0;
-
-            const precoKg = data.pesoDesmama > 0 ? data.precoVenda / data.pesoDesmama : 0;
-            const custoKg = data.pesoDesmama > 0 ? custoUnit / data.pesoDesmama : 0;
-            const margemKg = precoKg - custoKg;
-            const pontoEq = data.precoVenda > 0 ? custoTotal / data.precoVenda : 0;
-
-            return { bezDesmamados, custoAnualVacas, custoReprodTotal, custoBezTotal, custosFixosTotal, custoTotal, custoUnit, receita, lucro, margem, roi, precoKg, custoKg, margemKg, pontoEq };
-        }
+        function runSimulation(data) { return CriaEngine.calculateEconomics(data); }
 
         function calcularResultados() {
             const inputs = getInputs();
@@ -715,6 +943,8 @@
             setTxt('tabPesoEquilibrio', formatNum(peKg, 1) + ' kg');
 
             updateCharts(inputs, res);
+            syncMcPlaceholders(inputs);
+            renderScenarios(inputs);
             adjustAllFonts();
         }
 
@@ -752,27 +982,232 @@
                 });
             }
 
-            // Tornado
-            const run = (inp) => runSimulation(inp).lucro;
-            let pDiff = run({...inputs, taxaPrenhez: Math.min(100, inputs.taxaPrenhez*1.1)}) - run({...inputs, taxaPrenhez: inputs.taxaPrenhez*0.9});
-            let cDiff = run({...inputs, custoMesVaca: inputs.custoMesVaca*0.9}) - run({...inputs, custoMesVaca: inputs.custoMesVaca*1.1}); // Inverso
-            let vDiff = run({...inputs, precoVenda: inputs.precoVenda*1.1}) - run({...inputs, precoVenda: inputs.precoVenda*0.9});
-
-            const tDataP = [vDiff/2, pDiff/2, cDiff/2];
-            const tDataN = [-vDiff/2, -pDiff/2, -cDiff/2];
+            // Tornado — impacto de cada variável de risco no lucro, ordenado por magnitude
+            const ranges = getMcRanges(inputs);
+            const sens = CriaEngine.sensitivity(inputs, ranges);
             const tCtx = document.getElementById('tornadoChart').getContext('2d');
-            if (tornadoChart) { 
-                tornadoChart.data.datasets[0].data = tDataP; tornadoChart.data.datasets[1].data = tDataN; 
+            const tData = sens.map(s => [s.low, s.high]);
+            const tLabels = sens.map(s => s.label);
+            if (tornadoChart) {
+                tornadoChart.data.labels = tLabels;
+                tornadoChart.data.datasets[0].data = tData;
                 tornadoChart.options.scales.x.ticks.color = tColor; tornadoChart.options.scales.y.ticks.color = tColor;
-                tornadoChart.options.plugins.legend.labels.color = tColor;
-                tornadoChart.update(); 
+                tornadoChart.update();
             } else {
                 tornadoChart = new Chart(tCtx, {
                     type: 'bar', indexAxis: 'y',
-                    data: { labels: ['Preço Venda', 'Prenhez', 'Custo Vaca'], datasets: [{ label: '+ Lucro', data: tDataP, backgroundColor: '#10b981' }, { label: '- Lucro', data: tDataN, backgroundColor: '#ef4444' }] },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: tColor, callback: v => (Math.abs(v)/1000).toFixed(0)+'k' } }, y: { ticks: { color: tColor } } }, plugins: { legend: { labels: { color: tColor } } } }
+                    data: { labels: tLabels, datasets: [{ data: tData, backgroundColor: 'rgba(37,99,235,.65)', borderColor: '#2563eb', borderWidth: 1 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `R$ ${formatNum(ctx.raw[0],0)} a R$ ${formatNum(ctx.raw[1],0)}` } } }, scales: { x: { ticks: { color: tColor, callback: v => (v/1000).toFixed(0)+'k' } }, y: { ticks: { color: tColor } } } }
                 });
             }
+
+            renderSensitivityCharts(inputs, tColor);
+        }
+
+        // --- SENSIBILIDADE (curvas -10% a +10%) ---
+        function renderSensitivityCharts(inputs, tColor) {
+            const steps = [];
+            for (let s = -10; s <= 10; s += 2) steps.push(s);
+            const lineOpts = (color) => ({ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: tColor, maxTicksLimit: 6 } }, y: { ticks: { color: tColor, callback: v => (v/1000).toFixed(0)+'k' } } }, elements: { point: { radius: 2 } } });
+
+            // Receita: variação do preço de venda
+            const receitaData = steps.map(s => CriaEngine.calculateEconomics({ ...inputs, precoVenda: inputs.precoVenda * (1 + s/100) }).lucro);
+            upsertLineChart('sensReceitaChart', () => sensReceitaChart, (c) => sensReceitaChart = c, steps, receitaData, '#10b981', lineOpts());
+
+            // Custos: variação conjunta do custo da vaca e do bezerro
+            const custosData = steps.map(s => CriaEngine.calculateEconomics({ ...inputs, custoMesVaca: inputs.custoMesVaca * (1 + s/100), custoMesBezerro: inputs.custoMesBezerro * (1 + s/100) }).lucro);
+            upsertLineChart('sensCustosChart', () => sensCustosChart, (c) => sensCustosChart = c, steps, custosData, '#ef4444', lineOpts());
+
+            // Taxas produtivas/reprodutivas: prenhez sobe, mortalidade cai (e vice-versa) no mesmo passo
+            const taxasData = steps.map(s => CriaEngine.calculateEconomics({
+                ...inputs,
+                taxaPrenhez: Math.min(100, Math.max(0, inputs.taxaPrenhez * (1 + s/100))),
+                mortPre: Math.max(0, inputs.mortPre * (1 - s/100)),
+                mortPos: Math.max(0, inputs.mortPos * (1 - s/100))
+            }).lucro);
+            upsertLineChart('sensTaxasChart', () => sensTaxasChart, (c) => sensTaxasChart = c, steps, taxasData, '#3b82f6', lineOpts());
+
+            // Cenário integrado: interpola de pessimista (0) a otimista (1) usando as faixas de risco
+            const ranges = getMcRanges(inputs);
+            const combLabels = [], combData = [];
+            for (let i = 0; i <= 20; i++) {
+                const t = i / 20;
+                const inp = {
+                    ...inputs,
+                    precoVenda: ranges.precoVenda.min + t * (ranges.precoVenda.max - ranges.precoVenda.min),
+                    taxaPrenhez: ranges.taxaPrenhez.min + t * (ranges.taxaPrenhez.max - ranges.taxaPrenhez.min),
+                    mortPre: ranges.mortPre.max - t * (ranges.mortPre.max - ranges.mortPre.min),
+                    mortPos: ranges.mortPos.max - t * (ranges.mortPos.max - ranges.mortPos.min),
+                    custoMesVaca: ranges.custoMesVaca.max - t * (ranges.custoMesVaca.max - ranges.custoMesVaca.min),
+                    custoMesBezerro: ranges.custoMesBezerro.max - t * (ranges.custoMesBezerro.max - ranges.custoMesBezerro.min)
+                };
+                combLabels.push(i === 0 ? 'Pessimista' : i === 20 ? 'Otimista' : '');
+                combData.push(CriaEngine.calculateEconomics(inp).lucro);
+            }
+            if (sensCombinadoChart) {
+                sensCombinadoChart.data.labels = combLabels;
+                sensCombinadoChart.data.datasets[0].data = combData;
+                sensCombinadoChart.options.scales.x.ticks.color = tColor; sensCombinadoChart.options.scales.y.ticks.color = tColor;
+                sensCombinadoChart.update();
+            } else {
+                sensCombinadoChart = new Chart(document.getElementById('sensCombinadoChart').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: combLabels, datasets: [{ label: 'Lucro', data: combData, borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,.15)', fill: true, tension: .25, pointRadius: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: tColor } }, y: { ticks: { color: tColor, callback: v => (v/1000).toFixed(0)+'k' } } } }
+                });
+            }
+        }
+
+        function upsertLineChart(canvasId, getChart, setChart, labels, data, color, opts) {
+            let chart = getChart();
+            if (chart) {
+                chart.data.labels = labels.map(s => (s > 0 ? '+' : '') + s + '%');
+                chart.data.datasets[0].data = data;
+                chart.options.scales.x.ticks.color = opts.scales.x.ticks.color;
+                chart.options.scales.y.ticks.color = opts.scales.y.ticks.color;
+                chart.update();
+            } else {
+                chart = new Chart(document.getElementById(canvasId).getContext('2d'), {
+                    type: 'line',
+                    data: { labels: labels.map(s => (s > 0 ? '+' : '') + s + '%'), datasets: [{ label: 'Lucro', data, borderColor: color, backgroundColor: color + '22', fill: true, tension: .25 }] },
+                    options: opts
+                });
+                setChart(chart);
+            }
+        }
+
+        // --- FAIXAS DE RISCO (Monte Carlo / Tornado / Cenário Integrado) ---
+        function buildMcRangesTable() {
+            const tbody = document.getElementById('mcRangesBody');
+            tbody.innerHTML = CriaEngine.MC_KEYS.map(key => `
+                <tr>
+                    <td class="p-1 text-left text-slate-600 dark:text-slate-300">${CriaEngine.MC_LABELS[key]}</td>
+                    <td class="p-1"><input type="number" step="0.01" id="mcMin_${key}" class="w-full p-1 text-center rounded border dark:bg-slate-700 dark:border-slate-600 dark:text-white" oninput="calcularResultados()"></td>
+                    <td class="p-1"><input type="number" step="0.01" id="mcMode_${key}" class="w-full p-1 text-center rounded border dark:bg-slate-700 dark:border-slate-600 dark:text-white" oninput="calcularResultados()"></td>
+                    <td class="p-1"><input type="number" step="0.01" id="mcMax_${key}" class="w-full p-1 text-center rounded border dark:bg-slate-700 dark:border-slate-600 dark:text-white" oninput="calcularResultados()"></td>
+                </tr>`).join('');
+        }
+
+        function syncMcPlaceholders(inputs) {
+            const defaults = CriaEngine.defaultRanges(inputs);
+            CriaEngine.MC_KEYS.forEach(key => {
+                const minEl = document.getElementById('mcMin_' + key), modeEl = document.getElementById('mcMode_' + key), maxEl = document.getElementById('mcMax_' + key);
+                if (minEl) minEl.placeholder = formatNum(defaults[key].min, 2);
+                if (modeEl) modeEl.placeholder = formatNum(defaults[key].mode, 2);
+                if (maxEl) maxEl.placeholder = formatNum(defaults[key].max, 2);
+            });
+        }
+
+        function getMcRanges(inputs) {
+            const defaults = CriaEngine.defaultRanges(inputs);
+            const ranges = {};
+            CriaEngine.MC_KEYS.forEach(key => {
+                const minEl = document.getElementById('mcMin_' + key), modeEl = document.getElementById('mcMode_' + key), maxEl = document.getElementById('mcMax_' + key);
+                ranges[key] = {
+                    min: (minEl && minEl.value !== '') ? parseFloat(minEl.value) : defaults[key].min,
+                    mode: (modeEl && modeEl.value !== '') ? parseFloat(modeEl.value) : defaults[key].mode,
+                    max: (maxEl && maxEl.value !== '') ? parseFloat(maxEl.value) : defaults[key].max
+                };
+            });
+            return ranges;
+        }
+
+        // --- MONTE CARLO ---
+        async function runMonteCarlo() {
+            const btn = document.getElementById('runMonteCarloBtn');
+            const inputs = getInputs();
+            const iterations = parseInt(document.getElementById('mcIterations').value) || 10000;
+            const seed = parseInt(document.getElementById('mcSeed').value) || 12345;
+            const ranges = getMcRanges(inputs);
+            try { CriaEngine.validateRanges(ranges); } catch (e) { alert(e.message); return; }
+
+            const originalTxt = btn.innerHTML;
+            btn.innerHTML = `<span class="loader"></span> Executando ${iterations.toLocaleString('pt-BR')} cenários…`;
+            btn.disabled = true;
+            await new Promise(resolve => setTimeout(resolve, 20));
+            try {
+                const mc = CriaEngine.runMonteCarlo(inputs, { iterations, seed, ranges });
+                state.monteCarlo = mc;
+                renderMonteCarlo(mc);
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao executar Monte Carlo: ' + e.message);
+            } finally {
+                btn.innerHTML = originalTxt;
+                btn.disabled = false;
+            }
+        }
+
+        function renderMonteCarlo(mc) {
+            document.getElementById('mc-empty-state').classList.add('hidden');
+            document.getElementById('mc-results').classList.remove('hidden');
+            const s = mc.summary;
+            const cards = [
+                ['Probabilidade de Prejuízo', formatPercent(s.probabilityLoss * 100)],
+                ['Lucro Médio', formatBRL(s.mean)],
+                ['P5 (Pessimista)', formatBRL(s.p5)],
+                ['P50 (Mediano)', formatBRL(s.p50)],
+                ['P95 (Otimista)', formatBRL(s.p95)],
+                ['Cauda Inferior 5%', formatBRL(s.expectedShortfall5)]
+            ];
+            document.getElementById('mc-summary-grid').innerHTML = cards.map(([l, v]) => `<div class="risk-card"><p class="risk-label">${l}</p><p class="risk-value">${v}</p></div>`).join('');
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const tColor = isDark ? '#e2e8f0' : '#475569';
+
+            const hLabels = mc.bins.map(b => formatBRL((b.start + b.end) / 2));
+            const hCounts = mc.bins.map(b => b.count);
+            const hColors = mc.bins.map(b => b.end <= 0 ? '#ef4444' : '#7e22ce');
+            if (mcHistogramChart) mcHistogramChart.destroy();
+            mcHistogramChart = new Chart(document.getElementById('mcHistogramChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: hLabels, datasets: [{ label: 'Cenários', data: hCounts, backgroundColor: hColors }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: tColor, maxTicksLimit: 7 } }, y: { ticks: { color: tColor } } } }
+            });
+
+            if (mcCdfChart) mcCdfChart.destroy();
+            mcCdfChart = new Chart(document.getElementById('mcCdfChart').getContext('2d'), {
+                type: 'line',
+                data: { labels: mc.cdf.map(pt => formatBRL(pt.value)), datasets: [{ label: 'Prob. de superar (%)', data: mc.cdf.map(pt => pt.exceedance), borderColor: '#7e22ce', backgroundColor: 'rgba(126,34,206,0.15)', fill: true, tension: 0.2, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: tColor, maxTicksLimit: 6 } }, y: { ticks: { color: tColor, callback: v => v + '%' } } } }
+            });
+        }
+
+        // --- QUADRO DE CENÁRIOS ---
+        function calcScenarios(inputs) {
+            const defs = [
+                { name: 'Pessimista', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300', changes: { taxaPrenhez: inputs.taxaPrenhez * 0.90, mortPre: Math.min(100, inputs.mortPre * 1.30), mortPos: Math.min(100, inputs.mortPos * 1.30), precoVenda: inputs.precoVenda * 0.92, custoMesVaca: inputs.custoMesVaca * 1.08, custoMesBezerro: inputs.custoMesBezerro * 1.08 } },
+                { name: 'Base', color: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200', changes: {} },
+                { name: 'Otimista', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300', changes: { taxaPrenhez: Math.min(100, inputs.taxaPrenhez * 1.08), mortPre: inputs.mortPre * 0.80, mortPos: inputs.mortPos * 0.80, precoVenda: inputs.precoVenda * 1.06, custoMesVaca: inputs.custoMesVaca * 0.95, custoMesBezerro: inputs.custoMesBezerro * 0.95 } }
+            ];
+            return defs.map(def => {
+                const inp = { ...inputs, ...def.changes };
+                return { name: def.name, color: def.color, inputs: inp, res: CriaEngine.calculateEconomics(inp) };
+            });
+        }
+
+        function renderScenarios(inputs) {
+            const rows = calcScenarios(inputs);
+            state.scenarios = rows;
+            document.getElementById('scenarioTableBody').innerHTML = rows.map(r => `
+                <tr class="${r.name === 'Base' ? 'bg-slate-50 dark:bg-slate-700/40 font-semibold' : ''} dark:text-slate-300">
+                    <td class="p-2"><span class="scenario-badge ${r.color}">${r.name}</span></td>
+                    <td class="p-2 text-right">${formatNum(r.inputs.taxaPrenhez, 1)}%</td>
+                    <td class="p-2 text-right">${formatNum(r.inputs.mortPre + r.inputs.mortPos, 1)}%</td>
+                    <td class="p-2 text-right">${formatBRL(r.inputs.precoVenda)}</td>
+                    <td class="p-2 text-right font-bold ${r.res.lucro >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}">${formatBRL(r.res.lucro)}</td>
+                    <td class="p-2 text-right">${formatPercent(r.res.margem)}</td>
+                </tr>`).join('');
+        }
+
+        // --- DOWNLOAD DE GRÁFICO (PNG) ---
+        function downloadChart(chartId) {
+            const canvas = document.getElementById(chartId);
+            if (!canvas) return;
+            const link = document.createElement('a');
+            link.download = chartId + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
         }
 
         // --- FEATURES EXTRAS ---
@@ -956,67 +1391,360 @@
             document.getElementById('calcResKg').innerText = formatBRL(val/30) + " / kg PV";
         }
 
-        // PDF Generation
+        // --- EXPORTAÇÃO PDF (desenho nativo jsPDF + autoTable) ---
+        const LEGAL_DISCLAIMER = 'Ferramenta de apoio à decisão. Os resultados dependem inteiramente das premissas informadas pelo usuário e não constituem garantia de resultado futuro.';
+        const PDF_PRIMARY = [6, 78, 101];
+
+        function reportChartDefinitions(monteCarlo) {
+            const defs = [
+                { id: 'doughnutChart', title: 'Composição dos Custos' },
+                { id: 'barChart', title: 'Análise Financeira (Total)' },
+                { id: 'sensReceitaChart', title: 'Sensibilidade — Receita' },
+                { id: 'sensCustosChart', title: 'Sensibilidade — Custos' },
+                { id: 'sensTaxasChart', title: 'Sensibilidade — Taxas Produtivas/Reprodutivas' },
+                { id: 'sensCombinadoChart', title: 'Cenário Integrado' },
+                { id: 'tornadoChart', title: 'Diagrama de Tornado' }
+            ];
+            if (monteCarlo) defs.push(
+                { id: 'mcHistogramChart', title: 'Monte Carlo — Distribuição do Lucro', risk: true },
+                { id: 'mcCdfChart', title: 'Monte Carlo — Curva de Excedência', risk: true }
+            );
+            return defs;
+        }
+
+        function chartImageDataUrl(id) {
+            const canvas = document.getElementById(id);
+            if (!canvas || !canvas.getContext) return null;
+            const tmp = document.createElement('canvas');
+            tmp.width = canvas.width; tmp.height = canvas.height;
+            const ctx = tmp.getContext('2d');
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, tmp.width, tmp.height);
+            ctx.drawImage(canvas, 0, 0);
+            return tmp.toDataURL('image/png', 0.92);
+        }
+
         async function gerarPDF() {
+            if (!window.jspdf || !window.jspdf.jsPDF) { alert('Biblioteca de PDF indisponível. Verifique a conexão e tente novamente.'); return; }
             const btn = document.getElementById('btnPDF');
             const txt = btn.innerHTML;
             btn.innerHTML = '<span class="loader"></span> Gerando...';
             btn.disabled = true;
 
-            const inputs = getInputs();
-            const res = runSimulation(inputs);
-            const hoje = new Date().toLocaleDateString('pt-BR');
-
-            // Popula PDF Oculto
-            document.getElementById('pdfDate').innerText = 'Data: ' + hoje;
-            document.getElementById('pdfLucro').innerText = formatBRL(res.lucro);
-            document.getElementById('pdfLucro').className = `text-xl font-bold ${res.lucro >= 0 ? 'text-emerald-600' : 'text-red-600'}`;
-            document.getElementById('pdfROI').innerText = formatPercent(res.roi);
-            document.getElementById('pdfCusto').innerText = formatBRL(res.custoUnit);
-            document.getElementById('pdfProd').innerText = Math.floor(res.bezDesmamados) + ' cab';
-
-            const fields = [
-                ['pdfInVacas', inputs.qtdVacas], ['pdfInValorVaca', formatBRL(inputs.valorVaca)], ['pdfInManut', formatBRL(inputs.custoMesVaca)],
-                ['pdfInMonta', formatBRL(inputs.custoEstacaoMonta)], ['pdfInCustoBez', formatBRL(inputs.custoMesBezerro)], ['pdfInDuracao', inputs.duracaoCria],
-                ['pdfInPreco', formatBRL(inputs.precoVenda)], ['pdfInPeso', inputs.pesoDesmama], ['pdfInPrenhez', inputs.taxaPrenhez],
-                ['pdfInMortPre', inputs.mortPre], ['pdfInMortPos', inputs.mortPos], ['pdfInFixos', formatBRL(inputs.custosFixos)]
-            ];
-            fields.forEach(([id, val]) => document.getElementById(id).innerText = val);
-
-            if(doughnutChart) document.getElementById('pdfChartRosca').src = doughnutChart.toBase64Image();
-            if(barChart) document.getElementById('pdfChartBarra').src = barChart.toBase64Image();
-            if(tornadoChart) document.getElementById('pdfChartTornado').src = tornadoChart.toBase64Image();
-
-            document.getElementById('pdfTabCabVenda').innerText = formatBRL(inputs.precoVenda);
-            document.getElementById('pdfTabCabCusto').innerText = formatBRL(res.custoUnit);
-            document.getElementById('pdfTabCabLucro').innerText = formatBRL(res.lucro / (res.bezDesmamados || 1));
-            document.getElementById('pdfTabCabMargem').innerText = formatPercent(res.margem);
-            document.getElementById('pdfTabKgVenda').innerText = formatBRL(res.precoKg);
-            document.getElementById('pdfTabKgCusto').innerText = formatBRL(res.custoKg);
-            document.getElementById('pdfTabKgMargem').innerText = formatBRL(res.margemKg);
-            document.getElementById('pdfTabPesoEq').innerText = formatNum(res.precoKg > 0 ? res.custoUnit/res.precoKg : 0, 1) + ' kg';
-
             try {
+                const wasDark = document.documentElement.classList.contains('dark');
+                if (wasDark) { document.documentElement.classList.remove('dark'); calcularResultados(); await new Promise(r => setTimeout(r, 60)); }
+
+                const inputs = getInputs();
+                const res = CriaEngine.calculateEconomics(inputs);
+                const hoje = new Date().toLocaleDateString('pt-BR');
                 const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const opt = { scale: 2, backgroundColor: '#ffffff' };
+                const doc = new jsPDF('p', 'mm', 'a4');
+                let page = 1;
+                const totalPagesLabel = '{total_pages}';
 
-                const p1 = await html2canvas(document.getElementById('pdfPage1'), opt);
-                pdf.addImage(p1.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
-                
-                pdf.addPage();
-                const p2 = await html2canvas(document.getElementById('pdfPage2'), opt);
-                pdf.addImage(p2.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
+                function addHeader(title) {
+                    doc.setFont('times', 'bold'); doc.setFontSize(16); doc.setTextColor(...PDF_PRIMARY);
+                    doc.text('Cria Certa', 14, 18);
+                    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100);
+                    doc.text('Simulador de Custo Real do Bezerro Desmamado', 14, 24);
+                    doc.setDrawColor(...PDF_PRIMARY); doc.setLineWidth(0.6); doc.line(14, 27, 196, 27);
+                    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(30);
+                    doc.text(title, 14, 35);
+                }
+                function addFooter() {
+                    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(150);
+                    const wrapped = doc.splitTextToSize(LEGAL_DISCLAIMER, 182);
+                    doc.text(wrapped, 14, 280);
+                    doc.text(`Ricardo Brumatti | FAMEZ/UFMS | ricardobrumatti.pro.br | © 2026 • Página ${page}/${totalPagesLabel}`, 14, 291);
+                }
+                function pdfKpiCard(x, y, w, label, value, color) {
+                    doc.setFillColor(248, 250, 252); doc.setDrawColor(226, 232, 240);
+                    doc.roundedRect(x, y, w, 20, 2, 2, 'FD');
+                    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(100);
+                    doc.text(label, x + 4, y + 7);
+                    doc.setFont('times', 'bold'); doc.setFontSize(13); doc.setTextColor(...color);
+                    doc.text(value, x + 4, y + 15);
+                }
+                function pdfTable(startY, head, body) {
+                    doc.autoTable({ startY, head: [head], body, theme: 'grid', headStyles: { fillColor: PDF_PRIMARY, fontSize: 8 }, styles: { fontSize: 8, cellPadding: 2 }, margin: { left: 14, right: 14 } });
+                    return doc.lastAutoTable.finalY;
+                }
 
-                pdf.save(`Relatorio_CriaCerta_${hoje.replace(/\//g,'-')}.pdf`);
+                // Página 1 — Resumo executivo e premissas
+                addHeader('Relatório de Simulação — ' + hoje);
+                pdfKpiCard(14, 40, 44, 'Lucro Total', formatBRL(res.lucro), res.lucro >= 0 ? [16,124,74] : [185,28,28]);
+                pdfKpiCard(60, 40, 44, 'ROI', formatPercent(res.roi), [30,64,175]);
+                pdfKpiCard(106, 40, 44, 'Custo Unitário', formatBRL(res.custoUnit), [180,83,9]);
+                pdfKpiCard(152, 40, 44, 'Produção', Math.floor(res.bezDesmamados) + ' cab', [107,33,168]);
+
+                let y = pdfTable(66, ['Premissa', 'Valor'], [
+                    ['Quantidade de Vacas', formatNum(inputs.qtdVacas, 0)], ['Valor da Vaca', formatBRL(inputs.valorVaca)], ['Custo Manutenção Vaca/mês', formatBRL(inputs.custoMesVaca)],
+                    ['Custo Estação de Monta', formatBRL(inputs.custoEstacaoMonta)], ['Custo Bezerro/mês', formatBRL(inputs.custoMesBezerro)], ['Duração da Cria (meses)', formatNum(inputs.duracaoCria, 0)],
+                    ['Taxa de Prenhez', formatPercent(inputs.taxaPrenhez)], ['Mortalidade Pré-Parto', formatPercent(inputs.mortPre)], ['Mortalidade Pós-Parto', formatPercent(inputs.mortPos)],
+                    ['Preço de Venda', formatBRL(inputs.precoVenda)], ['Peso à Desmama', formatNum(inputs.pesoDesmama, 1) + ' kg'], ['Custos Fixos/vaca/ano', formatBRL(inputs.custosFixos)]
+                ]);
+
+                pdfTable(y + 6, ['Resultado', 'Valor'], [
+                    ['Receita Total', formatBRL(res.receita)], ['Custo Total', formatBRL(res.custoTotal)], ['Lucro Total', formatBRL(res.lucro)],
+                    ['Margem Líquida', formatPercent(res.margem)], ['Bezerros Desmamados', formatNum(res.bezDesmamados, 0)], ['Break-even (cab)', formatNum(res.pontoEq, 0)],
+                    ['Preço de Venda/kg', formatBRL(res.precoKg)], ['Custo de Produção/kg', formatBRL(res.custoKg)], ['Margem/kg', formatBRL(res.margemKg)]
+                ]);
+                addFooter();
+
+                // Página 2 — Gráficos
+                doc.addPage(); page++;
+                addHeader('Análise Gráfica');
+                const chartDefs = reportChartDefinitions(state.monteCarlo);
+                let cx = 14, cy = 40, colW = 88, rowH = 62, col = 0;
+                chartDefs.filter(d => !d.risk).forEach(def => {
+                    const img = chartImageDataUrl(def.id);
+                    if (!img) return;
+                    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(60);
+                    doc.text(def.title, cx, cy - 2);
+                    doc.addImage(img, 'PNG', cx, cy, colW, rowH - 8, undefined, 'FAST');
+                    col++;
+                    if (col % 2 === 0) { cx = 14; cy += rowH; } else { cx = 14 + colW + 6; }
+                    if (cy > 240) { addFooter(); doc.addPage(); page++; addHeader('Análise Gráfica (continuação)'); cx = 14; cy = 40; col = 0; }
+                });
+                addFooter();
+
+                // Página 3 — Quadro de cenários
+                doc.addPage(); page++;
+                addHeader('Quadro de Cenários de Lucro');
+                const scenarios = state.scenarios || calcScenarios(inputs);
+                pdfTable(40, ['Cenário', 'Prenhez', 'Mortalidade', 'Preço Venda', 'Lucro Total', 'Margem'], scenarios.map(s => [
+                    s.name, formatPercent(s.inputs.taxaPrenhez), formatPercent(s.inputs.mortPre + s.inputs.mortPos), formatBRL(s.inputs.precoVenda), formatBRL(s.res.lucro), formatPercent(s.res.margem)
+                ]));
+                doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(120);
+                doc.text('Pessimista: prenhez -10%, mortalidade +30%, preço de venda -8%, custos +8%. Otimista: prenhez +8%, mortalidade -20%, preço de venda +6%, custos -5%.', 14, doc.lastAutoTable.finalY + 6, { maxWidth: 182 });
+                addFooter();
+
+                // Página 4 — Monte Carlo
+                doc.addPage(); page++;
+                const mc = state.monteCarlo;
+                if (mc) {
+                    addHeader('Análise de Risco — Monte Carlo');
+                    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(90);
+                    doc.text(`${mc.iterations.toLocaleString('pt-BR')} cenários simulados • semente ${mc.seed} • SIMULAÇÃO, NÃO É PREVISÃO`, 14, 40);
+                    let my = pdfTable(46, ['Métrica', 'Valor'], [
+                        ['Probabilidade de Prejuízo', formatPercent(mc.summary.probabilityLoss * 100)], ['Lucro Médio', formatBRL(mc.summary.mean)],
+                        ['P5 (Pessimista)', formatBRL(mc.summary.p5)], ['P50 (Mediano)', formatBRL(mc.summary.p50)], ['P95 (Otimista)', formatBRL(mc.summary.p95)],
+                        ['Cauda Inferior 5%', formatBRL(mc.summary.expectedShortfall5)]
+                    ]);
+                    pdfTable(my + 6, ['Variável', 'Correlação c/ Lucro (Spearman)'], mc.correlations.map(c => [c.label, formatNum(c.value, 2)]));
+                    const histImg = chartImageDataUrl('mcHistogramChart'), cdfImg = chartImageDataUrl('mcCdfChart');
+                    if (histImg) doc.addImage(histImg, 'PNG', 14, 190, 88, 54, undefined, 'FAST');
+                    if (cdfImg) doc.addImage(cdfImg, 'PNG', 108, 190, 88, 54, undefined, 'FAST');
+                } else {
+                    addHeader('Análise de Risco — Monte Carlo');
+                    doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(90);
+                    doc.text('Análise de risco não executada. Execute o Monte Carlo na tela de simulação para incluir esta seção.', 14, 45, { maxWidth: 182 });
+                }
+                addFooter();
+
+                if (typeof doc.putTotalPages === 'function') doc.putTotalPages(totalPagesLabel);
+                doc.save(`Relatorio_CriaCerta_${hoje.replace(/\//g,'-')}.pdf`);
+
+                if (wasDark) { document.documentElement.classList.add('dark'); calcularResultados(); }
             } catch (e) {
                 console.error(e);
-                alert('Erro ao gerar PDF');
+                alert('Erro ao gerar PDF: ' + e.message);
             } finally {
                 btn.innerHTML = txt;
                 btn.disabled = false;
             }
         }
+
+        // --- EXPORTAÇÃO EXCEL (ExcelJS) ---
+        const EXCEL_COLORS = { primary: 'FF064E65', gold: 'FFD4AF37', cream: 'FFFAF7F0', green: 'FF15803D', red: 'FFB91C1C' };
+
+        function addExcelTable(workbook, sheetName, headers, rows) {
+            const sheet = workbook.addWorksheet(sheetName);
+            sheet.addRow(headers);
+            const headerRow = sheet.getRow(1);
+            headerRow.eachCell(cell => { cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_COLORS.primary } }; });
+            rows.forEach((r, i) => { const row = sheet.addRow(r); if (i % 2 === 1) row.eachCell(c => c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } }); });
+            sheet.columns.forEach(col => {
+                let max = 10;
+                col.eachCell({ includeEmpty: true }, cell => { max = Math.max(max, String(cell.value ?? '').length + 2); });
+                col.width = Math.min(max, 40);
+            });
+            sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: headers.length } };
+            return sheet;
+        }
+
+        async function gerarExcel() {
+            if (!window.ExcelJS) { alert('Biblioteca de Excel indisponível. Verifique a conexão e tente novamente.'); return; }
+            const btn = document.getElementById('btnExcel');
+            const txt = btn.innerHTML;
+            btn.innerHTML = '<span class="loader"></span> Gerando...';
+            btn.disabled = true;
+            try {
+                const inputs = getInputs();
+                const res = CriaEngine.calculateEconomics(inputs);
+                const mc = state.monteCarlo;
+                const workbook = new ExcelJS.Workbook();
+                workbook.creator = 'Cria Certa — Prof. Ricardo C. Brumatti (FAMEZ/UFMS)';
+                workbook.created = new Date();
+
+                const dash = workbook.addWorksheet('Resumo Executivo');
+                dash.mergeCells('A1:D2'); dash.getCell('A1').value = 'Cria Certa — Resumo Executivo';
+                dash.getCell('A1').font = { size: 16, bold: true, color: { argb: EXCEL_COLORS.primary } };
+                const kpis = [['Lucro Total', formatBRL(res.lucro)], ['ROI', formatPercent(res.roi)], ['Custo Unitário', formatBRL(res.custoUnit)], ['Bezerros Desmamados', formatNum(res.bezDesmamados, 0)]];
+                kpis.forEach((k, i) => {
+                    const row = 4 + i;
+                    dash.getCell(`A${row}`).value = k[0]; dash.getCell(`A${row}`).font = { bold: true };
+                    dash.getCell(`B${row}`).value = k[1];
+                    dash.getCell(`A${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_COLORS.cream } };
+                    dash.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_COLORS.cream } };
+                });
+                dash.getCell('A9').value = 'Gerado em: ' + new Date().toLocaleString('pt-BR');
+                dash.columns = [{ width: 22 }, { width: 22 }, { width: 22 }, { width: 22 }];
+
+                addExcelTable(workbook, 'Premissas', ['Variável', 'Valor'], [
+                    ['Quantidade de Vacas', inputs.qtdVacas], ['Valor da Vaca (R$)', inputs.valorVaca], ['Custo Manutenção Vaca/mês (R$)', inputs.custoMesVaca],
+                    ['Custo Estação de Monta (R$)', inputs.custoEstacaoMonta], ['Custo Bezerro/mês (R$)', inputs.custoMesBezerro], ['Duração da Cria (meses)', inputs.duracaoCria],
+                    ['Taxa de Prenhez (%)', inputs.taxaPrenhez], ['Mortalidade Pré-Parto (%)', inputs.mortPre], ['Mortalidade Pós-Parto (%)', inputs.mortPos],
+                    ['Preço de Venda (R$)', inputs.precoVenda], ['Peso à Desmama (kg)', inputs.pesoDesmama], ['Custos Fixos/vaca/ano (R$)', inputs.custosFixos]
+                ]);
+
+                addExcelTable(workbook, 'Resultados', ['Indicador', 'Valor'], [
+                    ['Receita Total', res.receita], ['Custo Total', res.custoTotal], ['Lucro Total', res.lucro], ['Margem Líquida (%)', res.margem],
+                    ['ROI (%)', res.roi], ['Bezerros Desmamados', res.bezDesmamados], ['Break-even (cab)', res.pontoEq],
+                    ['Preço de Venda/kg', res.precoKg], ['Custo de Produção/kg', res.custoKg], ['Margem/kg', res.margemKg]
+                ]);
+
+                const scenarios = state.scenarios || calcScenarios(inputs);
+                addExcelTable(workbook, 'Cenários', ['Cenário', 'Prenhez (%)', 'Mortalidade (%)', 'Preço Venda (R$)', 'Lucro Total (R$)', 'Margem (%)'], scenarios.map(s => [
+                    s.name, s.inputs.taxaPrenhez, s.inputs.mortPre + s.inputs.mortPos, s.inputs.precoVenda, s.res.lucro, s.res.margem
+                ]));
+
+                const sens = CriaEngine.sensitivity(inputs, getMcRanges(inputs));
+                addExcelTable(workbook, 'Sensibilidade', ['Variável', 'Lucro no Mínimo', 'Lucro no Máximo', 'Impacto'], sens.map(s => [s.label, s.low, s.high, s.impact]));
+
+                if (mc) {
+                    addExcelTable(workbook, 'Monte Carlo - Resumo', ['Métrica', 'Valor'], [
+                        ['Iterações', mc.iterations], ['Semente', mc.seed], ['Probabilidade de Prejuízo (%)', mc.summary.probabilityLoss * 100],
+                        ['Lucro Médio', mc.summary.mean], ['Desvio-Padrão', mc.summary.stdDev], ['P5', mc.summary.p5], ['P10', mc.summary.p10],
+                        ['P50', mc.summary.p50], ['P90', mc.summary.p90], ['P95', mc.summary.p95], ['Cauda Inferior 5%', mc.summary.expectedShortfall5]
+                    ]);
+                    addExcelTable(workbook, 'Monte Carlo - Correlações', ['Variável', 'Correlação (Spearman)'], mc.correlations.map(c => [c.label, c.value]));
+                    addExcelTable(workbook, 'Monte Carlo - Amostras', ['Iteração', 'Preço Venda', 'Prenhez', 'Mort. Pré', 'Mort. Pós', 'Custo Vaca', 'Custo Bezerro', 'Lucro'], mc.samples.map(x => [x.iteracao, x.precoVenda, x.taxaPrenhez, x.mortPre, x.mortPos, x.custoMesVaca, x.custoMesBezerro, x.lucro]));
+                } else {
+                    addExcelTable(workbook, 'Monte Carlo - Resumo', ['Status', 'Observação'], [['Não executado', 'Execute o Monte Carlo antes da exportação para incluir os dados de risco.']]);
+                }
+
+                const chartsSheet = workbook.addWorksheet('Gráficos');
+                let rowCursor = 1;
+                reportChartDefinitions(mc).forEach(def => {
+                    const img = chartImageDataUrl(def.id);
+                    if (!img) return;
+                    chartsSheet.getCell(`A${rowCursor}`).value = def.title;
+                    chartsSheet.getCell(`A${rowCursor}`).font = { bold: true };
+                    const imgId = workbook.addImage({ base64: img, extension: 'png' });
+                    chartsSheet.addImage(imgId, { tl: { col: 0, row: rowCursor }, ext: { width: 480, height: 280 } });
+                    rowCursor += 16;
+                });
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `CriaCerta_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.xlsx`;
+                a.click(); URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error(e);
+                alert('Erro ao gerar Excel: ' + e.message);
+            } finally {
+                btn.innerHTML = txt;
+                btn.disabled = false;
+            }
+        }
+
+        // --- IMAGEM PARA REDES SOCIAIS ---
+        function toggleShareMenu() { document.getElementById('shareDropdown').classList.toggle('hidden'); }
+
+        function buildSocialFrame(bodyHtml, opts) {
+            return `
+                <div class="social-header"><span>${opts.subtitle ? '' : ''}Prof. Ricardo Brumatti</span><span class="site">ricardobrumatti.pro.br</span></div>
+                <h1 class="social-title">${opts.title}</h1>
+                <p class="social-subtitle">${opts.subtitle}</p>
+                ${opts.kpi ? `<p class="social-kpi">${opts.kpi}</p><p class="social-kpi-caption">${opts.kpiCaption || ''}</p>` : ''}
+                <div class="social-card-body">${bodyHtml}</div>
+                <div class="social-footer">
+                    <p class="source">Cria Certa — Simulador de Custo Real do Bezerro Desmamado</p>
+                    <p class="author">Prof. Ricardo C. Brumatti — FAMEZ/UFMS</p>
+                    <p class="disclaimer">${LEGAL_DISCLAIMER}</p>
+                </div>`;
+        }
+
+        function rasterizeSocialCard(holder, filename) {
+            if (!window.html2canvas) { alert('Biblioteca de imagem indisponível.'); holder.remove(); return; }
+            html2canvas(holder, { scale: 1, width: 1080, height: 1350, backgroundColor: '#064e65', useCORS: true }).then(canvas => {
+                const dataUrl = canvas.toDataURL('image/png');
+                document.getElementById('shareImagePreview').src = dataUrl;
+                const dl = document.getElementById('shareImageDownload');
+                dl.href = dataUrl; dl.setAttribute('download', filename);
+                document.getElementById('modalShareImage').classList.remove('hidden');
+                holder.remove();
+            });
+        }
+
+        function gerarImagemSocial() {
+            const inputs = getInputs();
+            const res = CriaEngine.calculateEconomics(inputs);
+            const type = document.getElementById('shareType').value;
+            const mc = state.monteCarlo;
+            if ((type === 'riscoDistribuicao' || type === 'riscoConclusao') && !mc) { alert('Execute o Monte Carlo antes de gerar esta imagem.'); return; }
+
+            const holder = document.createElement('div');
+            holder.className = 'social-card-container';
+            document.body.appendChild(holder);
+
+            const types = {
+                resumo: { title: 'Cria Certa', subtitle: 'Simulação de custo do bezerro desmamado', kpi: formatBRL(res.lucro), kpiCaption: 'lucro total estimado', chart: null,
+                    body: `<div class="social-kpi-grid" style="flex:1; margin-top:0;">
+                        <div class="box"><div class="lbl">ROI</div><div class="val">${formatPercent(res.roi)}</div></div>
+                        <div class="box"><div class="lbl">Custo Unitário</div><div class="val">${formatBRL(res.custoUnit)}</div></div>
+                        <div class="box"><div class="lbl">Margem</div><div class="val">${formatPercent(res.margem)}</div></div>
+                        <div class="box"><div class="lbl">Bezerros Desmamados</div><div class="val">${formatNum(res.bezDesmamados,0)}</div></div>
+                        <div class="box"><div class="lbl">Receita Total</div><div class="val">${formatBRL(res.receita)}</div></div>
+                        <div class="box"><div class="lbl">Custo Total</div><div class="val">${formatBRL(res.custoTotal)}</div></div>
+                    </div>` },
+                custos: { title: 'Composição dos Custos', subtitle: 'Cria Certa — para onde vai cada real investido', kpi: formatBRL(res.custoTotal), kpiCaption: 'custo total da atividade', chart: 'doughnutChart' },
+                financeiro: { title: 'Análise Financeira', subtitle: 'Receita, custo e lucro da safra', kpi: formatBRL(res.lucro), kpiCaption: 'lucro total estimado', chart: 'barChart' },
+                tornado: { title: 'Sensibilidade do Lucro', subtitle: 'O que mais impacta o resultado', kpi: formatBRL(res.lucro), kpiCaption: 'lucro no cenário atual', chart: 'tornadoChart' },
+                cenarios: { title: 'Quadro de Cenários', subtitle: 'Pessimista, Base e Otimista', kpi: formatBRL(res.lucro), kpiCaption: 'lucro no cenário base', chart: null,
+                    body: `<table style="width:100%; border-collapse:collapse; font-size:22px;">
+                        <tr style="background:#064e65; color:#fff;"><th style="padding:12px;">Cenário</th><th style="padding:12px;">Lucro Total</th><th style="padding:12px;">Margem</th></tr>
+                        ${(state.scenarios || calcScenarios(inputs)).map(s => `<tr style="border-bottom:2px solid #faf7f0;"><td style="padding:12px; text-align:center; font-weight:700;">${s.name}</td><td style="padding:12px; text-align:center;">${formatBRL(s.res.lucro)}</td><td style="padding:12px; text-align:center;">${formatPercent(s.res.margem)}</td></tr>`).join('')}
+                    </table>` },
+                riscoDistribuicao: { title: 'Análise de Risco', subtitle: 'Distribuição do lucro — Monte Carlo', kpi: mc ? formatBRL(mc.summary.mean) : '', kpiCaption: 'lucro médio simulado', chart: 'mcHistogramChart', banner: 'SIMULAÇÃO, NÃO É PREVISÃO — os números vêm de milhares de cenários sorteados a partir das premissas informadas.' },
+                riscoConclusao: { title: 'Qual o Risco?', subtitle: 'Resultado provável da atividade', kpi: mc ? formatPercent(mc.summary.probabilityLoss * 100) : '', kpiCaption: 'probabilidade de prejuízo', chart: null, banner: 'SIMULAÇÃO, NÃO É PREVISÃO — os números abaixo vêm de milhares de cenários sorteados a partir das premissas informadas. Resultados reais podem ser diferentes.',
+                    body: mc ? `<div class="social-kpi-grid cols-1" style="flex:1;">
+                        <div class="box" style="padding:28px;"><div class="lbl">Cenário Pessimista (P5)</div><div class="val" style="font-size:40px;">${formatBRL(mc.summary.p5)}</div></div>
+                        <div class="box" style="padding:28px;"><div class="lbl">Cenário Mediano (P50)</div><div class="val" style="font-size:40px;">${formatBRL(mc.summary.p50)}</div></div>
+                        <div class="box" style="padding:28px;"><div class="lbl">Cenário Otimista (P95)</div><div class="val" style="font-size:40px;">${formatBRL(mc.summary.p95)}</div></div>
+                    </div>` : '' }
+            };
+            const t = types[type];
+            let bodyHtml = t.body || '';
+            if (t.chart) {
+                const img = chartImageDataUrl(t.chart);
+                bodyHtml = `<div style="flex:1; display:flex; align-items:center; justify-content:center;">${img ? `<img src="${img}" style="max-width:100%; max-height:100%;">` : ''}</div>`;
+            }
+            if (t.banner) bodyHtml = `<div class="social-banner"><i class="fa-solid fa-triangle-exclamation"></i> ${t.banner}</div>${bodyHtml}`;
+
+            holder.innerHTML = buildSocialFrame(bodyHtml, t);
+            rasterizeSocialCard(holder, `criacerta_${type}.png`);
+            document.getElementById('shareDropdown').classList.add('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const wrap = e.target.closest('.relative');
+            const dropdown = document.getElementById('shareDropdown');
+            if (dropdown && !dropdown.classList.contains('hidden') && !(wrap && wrap.contains(dropdown))) dropdown.classList.add('hidden');
+        });
     </script>
 
     <!-- Rodapé Acadêmico/Profissional -->

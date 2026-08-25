@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8000"],
       "port": 8000
+    },
+    {
+      "name": "static-site-node",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "8010", "."],
+      "port": 8010
     }
   ]
 }
