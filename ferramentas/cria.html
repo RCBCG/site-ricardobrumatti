@@ -1444,6 +1444,51 @@
             return tmp.toDataURL('image/png', 0.92);
         }
 
+        // Recria o gráfico em alta resolução, dedicado à imagem de compartilhamento —
+        // copiar o canvas pequeno da tela e só "encolher" (max-width/max-height) nunca
+        // amplia uma imagem pequena para preencher o espaço grande do cartão.
+        function renderOffscreenChart(type, width, height) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            const inputs = getInputs();
+            const res = CriaEngine.calculateEconomics(inputs);
+            const tColor = '#334155';
+            const gridColor = '#e2e8f0';
+            let config = null;
+
+            if (type === 'doughnut') {
+                config = {
+                    type: 'doughnut',
+                    data: { labels: ['Matrizes', 'Reprodução', 'Bezerros', 'Fixos'], datasets: [{ data: [res.custoAnualVacas, res.custoReprodTotal, res.custoBezTotal, res.custosFixosTotal], backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#64748b'], borderWidth: 3, borderColor: '#faf7f0' }] },
+                    options: { responsive: false, animation: false, plugins: { legend: { position: 'bottom', labels: { color: tColor, font: { size: 20 }, padding: 20, usePointStyle: true } } } }
+                };
+            } else if (type === 'bar') {
+                config = {
+                    type: 'bar',
+                    data: { labels: ['Receita', 'Custo', 'Lucro'], datasets: [{ data: [res.receita, res.custoTotal, res.lucro], backgroundColor: ['#10b981', '#ef4444', res.lucro >= 0 ? '#3b82f6' : '#b91c1c'], borderRadius: 10 }] },
+                    options: { responsive: false, animation: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: tColor, font: { size: 16 }, callback: v => (v/1000).toFixed(0)+'k' }, grid: { color: gridColor } }, x: { ticks: { color: tColor, font: { size: 20 } }, grid: { display: false } } } }
+                };
+            } else if (type === 'tornado') {
+                const sens = CriaEngine.sensitivity(inputs, getMcRanges(inputs));
+                config = {
+                    type: 'bar',
+                    data: { labels: sens.map(s => s.label), datasets: [{ data: sens.map(s => [s.low, s.high]), backgroundColor: 'rgba(37,99,235,.75)', borderColor: '#2563eb', borderWidth: 1 }] },
+                    options: { indexAxis: 'y', responsive: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: tColor, font: { size: 14 }, callback: v => (v/1000).toFixed(0)+'k' }, grid: { color: gridColor } }, y: { ticks: { color: tColor, font: { size: 16 } }, grid: { display: false } } } }
+                };
+            } else if (type === 'mcHistogram' && state.monteCarlo) {
+                const mc = state.monteCarlo;
+                config = {
+                    type: 'bar',
+                    data: { labels: mc.bins.map(b => formatBRL((b.start + b.end) / 2)), datasets: [{ data: mc.bins.map(b => b.count), backgroundColor: mc.bins.map(b => b.end <= 0 ? '#ef4444' : '#7e22ce') }] },
+                    options: { responsive: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: tColor, font: { size: 13 }, maxTicksLimit: 7 }, grid: { display: false } }, y: { ticks: { color: tColor, font: { size: 15 } }, grid: { color: gridColor } } } }
+                };
+            }
+            if (!config) return null;
+            const chart = new Chart(ctx, config);
+            return { canvas, chart };
+        }
+
         async function gerarPDF() {
             if (!window.jspdf || !window.jspdf.jsPDF) { alert('Biblioteca de PDF indisponível. Verifique a conexão e tente novamente.'); return; }
             const btn = document.getElementById('btnPDF');
@@ -1699,8 +1744,8 @@
                 </div>`;
         }
 
-        function rasterizeSocialCard(holder, filename) {
-            if (!window.html2canvas) { alert('Biblioteca de imagem indisponível.'); holder.remove(); return; }
+        function rasterizeSocialCard(holder, filename, tempChart) {
+            if (!window.html2canvas) { alert('Biblioteca de imagem indisponível.'); holder.remove(); if (tempChart) tempChart.destroy(); return; }
             html2canvas(holder, { scale: 1, width: 1080, height: 1350, backgroundColor: '#064e65', useCORS: true }).then(canvas => {
                 const dataUrl = canvas.toDataURL('image/png');
                 document.getElementById('shareImagePreview').src = dataUrl;
@@ -1708,6 +1753,7 @@
                 dl.href = dataUrl; dl.setAttribute('download', filename);
                 document.getElementById('modalShareImage').classList.remove('hidden');
                 holder.remove();
+                if (tempChart) tempChart.destroy();
             });
         }
 
@@ -1722,42 +1768,49 @@
             holder.className = 'social-card-container';
             document.body.appendChild(holder);
 
+            const kpiItems = [
+                { lbl: 'ROI', val: formatPercent(res.roi), color: '#1d4ed8' },
+                { lbl: 'Margem Líquida', val: formatPercent(res.margem), color: '#047857' },
+                { lbl: 'Custo Unitário', val: formatBRL(res.custoUnit), color: '#b45309' },
+                { lbl: 'Bezerros Desmamados', val: formatNum(res.bezDesmamados, 0), color: '#6d28d9' },
+                { lbl: 'Receita Total', val: formatBRLCompact(res.receita), color: '#0d6b83' },
+                { lbl: 'Custo Total', val: formatBRLCompact(res.custoTotal), color: '#b91c1c' }
+            ];
+
             const types = {
                 resumo: { title: 'Cria Certa', subtitle: 'Simulação de custo do bezerro desmamado', kpi: formatBRL(res.lucro), kpiCaption: 'lucro total estimado', chart: null,
-                    body: `<div class="social-kpi-grid" style="flex:1; margin-top:0;">
-                        <div class="box"><div class="lbl">ROI</div><div class="val">${formatPercent(res.roi)}</div></div>
-                        <div class="box"><div class="lbl">Custo Unitário</div><div class="val">${formatBRL(res.custoUnit)}</div></div>
-                        <div class="box"><div class="lbl">Margem</div><div class="val">${formatPercent(res.margem)}</div></div>
-                        <div class="box"><div class="lbl">Bezerros Desmamados</div><div class="val">${formatNum(res.bezDesmamados,0)}</div></div>
-                        <div class="box"><div class="lbl">Receita Total</div><div class="val">${formatBRL(res.receita)}</div></div>
-                        <div class="box"><div class="lbl">Custo Total</div><div class="val">${formatBRL(res.custoTotal)}</div></div>
+                    body: `<div class="social-kpi-grid" style="flex:1; margin-top:0; align-content:center;">
+                        ${kpiItems.map(it => `<div class="box" style="border-top:6px solid ${it.color};"><div class="lbl">${it.lbl}</div><div class="val" style="color:${it.color};">${it.val}</div></div>`).join('')}
                     </div>` },
-                custos: { title: 'Composição dos Custos', subtitle: 'Cria Certa — para onde vai cada real investido', kpi: formatBRL(res.custoTotal), kpiCaption: 'custo total da atividade', chart: 'doughnutChart' },
-                financeiro: { title: 'Análise Financeira', subtitle: 'Receita, custo e lucro da safra', kpi: formatBRL(res.lucro), kpiCaption: 'lucro total estimado', chart: 'barChart' },
-                tornado: { title: 'Sensibilidade do Lucro', subtitle: 'O que mais impacta o resultado', kpi: formatBRL(res.lucro), kpiCaption: 'lucro no cenário atual', chart: 'tornadoChart' },
+                custos: { title: 'Composição dos Custos', subtitle: 'Cria Certa — para onde vai cada real investido', kpi: formatBRL(res.custoTotal), kpiCaption: 'custo total da atividade', chart: 'doughnut' },
+                financeiro: { title: 'Análise Financeira', subtitle: 'Receita, custo e lucro da safra', kpi: formatBRL(res.lucro), kpiCaption: 'lucro total estimado', chart: 'bar' },
+                tornado: { title: 'Sensibilidade do Lucro', subtitle: 'O que mais impacta o resultado', kpi: formatBRL(res.lucro), kpiCaption: 'lucro no cenário atual', chart: 'tornado' },
                 cenarios: { title: 'Quadro de Cenários', subtitle: 'Pessimista, Base e Otimista', kpi: formatBRL(res.lucro), kpiCaption: 'lucro no cenário base', chart: null,
-                    body: `<table style="width:100%; border-collapse:collapse; font-size:22px;">
-                        <tr style="background:#064e65; color:#fff;"><th style="padding:12px;">Cenário</th><th style="padding:12px;">Lucro Total</th><th style="padding:12px;">Margem</th></tr>
-                        ${(state.scenarios || calcScenarios(inputs)).map(s => `<tr style="border-bottom:2px solid #faf7f0;"><td style="padding:12px; text-align:center; font-weight:700;">${s.name}</td><td style="padding:12px; text-align:center;">${formatBRL(s.res.lucro)}</td><td style="padding:12px; text-align:center;">${formatPercent(s.res.margem)}</td></tr>`).join('')}
+                    body: `<table style="width:100%; height:100%; border-collapse:collapse; font-size:24px; color:#1e293b;">
+                        <tr style="background:#064e65; color:#fff;"><th style="padding:16px;">Cenário</th><th style="padding:16px;">Lucro Total</th><th style="padding:16px;">Margem</th></tr>
+                        ${(state.scenarios || calcScenarios(inputs)).map((s, i) => `<tr style="background:${i % 2 === 1 ? '#f1ede2' : 'transparent'}; border-bottom:2px solid #faf7f0;"><td style="padding:16px; text-align:center; font-weight:700; color:#1e293b;">${s.name}</td><td style="padding:16px; text-align:center; color:${s.res.lucro >= 0 ? '#047857' : '#b91c1c'}; font-weight:700;">${formatBRLCompact(s.res.lucro)}</td><td style="padding:16px; text-align:center; color:#1e293b;">${formatPercent(s.res.margem)}</td></tr>`).join('')}
                     </table>` },
-                riscoDistribuicao: { title: 'Análise de Risco', subtitle: 'Distribuição do lucro — Monte Carlo', kpi: mc ? formatBRL(mc.summary.mean) : '', kpiCaption: 'lucro médio simulado', chart: 'mcHistogramChart', banner: 'SIMULAÇÃO, NÃO É PREVISÃO — os números vêm de milhares de cenários sorteados a partir das premissas informadas.' },
+                riscoDistribuicao: { title: 'Análise de Risco', subtitle: 'Distribuição do lucro — Monte Carlo', kpi: mc ? formatBRL(mc.summary.mean) : '', kpiCaption: 'lucro médio simulado', chart: 'mcHistogram', banner: 'SIMULAÇÃO, NÃO É PREVISÃO — os números vêm de milhares de cenários sorteados a partir das premissas informadas.' },
                 riscoConclusao: { title: 'Qual o Risco?', subtitle: 'Resultado provável da atividade', kpi: mc ? formatPercent(mc.summary.probabilityLoss * 100) : '', kpiCaption: 'probabilidade de prejuízo', chart: null, banner: 'SIMULAÇÃO, NÃO É PREVISÃO — os números abaixo vêm de milhares de cenários sorteados a partir das premissas informadas. Resultados reais podem ser diferentes.',
-                    body: mc ? `<div class="social-kpi-grid cols-1" style="flex:1;">
-                        <div class="box" style="padding:28px;"><div class="lbl">Cenário Pessimista (P5)</div><div class="val" style="font-size:40px;">${formatBRL(mc.summary.p5)}</div></div>
-                        <div class="box" style="padding:28px;"><div class="lbl">Cenário Mediano (P50)</div><div class="val" style="font-size:40px;">${formatBRL(mc.summary.p50)}</div></div>
-                        <div class="box" style="padding:28px;"><div class="lbl">Cenário Otimista (P95)</div><div class="val" style="font-size:40px;">${formatBRL(mc.summary.p95)}</div></div>
+                    body: mc ? `<div class="social-kpi-grid cols-1" style="flex:1; align-content:center;">
+                        <div class="box" style="padding:28px; border-top:6px solid #b91c1c;"><div class="lbl">Cenário Pessimista (P5)</div><div class="val" style="font-size:40px; color:#b91c1c;">${formatBRLCompact(mc.summary.p5)}</div></div>
+                        <div class="box" style="padding:28px; border-top:6px solid #064e65;"><div class="lbl">Cenário Mediano (P50)</div><div class="val" style="font-size:40px;">${formatBRLCompact(mc.summary.p50)}</div></div>
+                        <div class="box" style="padding:28px; border-top:6px solid #047857;"><div class="lbl">Cenário Otimista (P95)</div><div class="val" style="font-size:40px; color:#047857;">${formatBRLCompact(mc.summary.p95)}</div></div>
                     </div>` : '' }
             };
             const t = types[type];
             let bodyHtml = t.body || '';
+            let tempChart = null, tempCanvas = null;
             if (t.chart) {
-                const img = chartImageDataUrl(t.chart);
-                bodyHtml = `<div style="flex:1; display:flex; align-items:center; justify-content:center;">${img ? `<img src="${img}" style="max-width:100%; max-height:100%;">` : ''}</div>`;
+                const off = renderOffscreenChart(t.chart, 900, 640);
+                if (off) { tempChart = off.chart; tempCanvas = off.canvas; }
+                bodyHtml = `<div class="chart-holder" style="flex:1; display:flex; align-items:center; justify-content:center; width:100%; height:100%;"></div>`;
             }
             if (t.banner) bodyHtml = `<div class="social-banner"><i class="fa-solid fa-triangle-exclamation"></i> ${t.banner}</div>${bodyHtml}`;
 
             holder.innerHTML = buildSocialFrame(bodyHtml, t);
-            rasterizeSocialCard(holder, `criacerta_${type}.png`);
+            if (tempCanvas) holder.querySelector('.chart-holder').appendChild(tempCanvas);
+            rasterizeSocialCard(holder, `criacerta_${type}.png`, tempChart);
             document.getElementById('shareDropdown').classList.add('hidden');
         }
 
