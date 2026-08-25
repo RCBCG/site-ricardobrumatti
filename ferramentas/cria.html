@@ -116,11 +116,11 @@
         #tourTooltip { position: fixed; z-index: 80; background: white; padding: 20px; border-radius: 8px; max-width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transition: all 0.3s; }
 
         /* --- RISCO / MONTE CARLO --- */
-        .risk-card { background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 0.75rem; padding: 0.75rem; text-align: center; }
+        .risk-card { background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 0.75rem; padding: 0.75rem; text-align: center; overflow: hidden; min-width: 0; }
         .dark .risk-card { background: rgba(147,51,234,0.08); border-color: rgba(147,51,234,0.3); }
         .risk-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #7e22ce; letter-spacing: 0.02em; }
         .dark .risk-label { color: #d8b4fe; }
-        .risk-value { font-size: 1.15rem; font-weight: 800; color: #581c87; margin-top: 0.15rem; }
+        .risk-value { font-size: 1.15rem; font-weight: 800; color: #581c87; margin-top: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .dark .risk-value { color: #f3e8ff; }
         .scenario-badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; }
 
@@ -268,7 +268,7 @@
                             </button>
                             <div id="shareDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl p-3 z-[90] text-left">
                                 <label class="block text-xs font-medium mb-1 text-slate-600 dark:text-slate-300">Escolha o conteúdo</label>
-                                <select id="shareType" class="w-full p-2 text-sm border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white mb-3">
+                                <select id="shareType" class="w-full p-2 text-sm border rounded bg-white text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-white mb-3">
                                     <option value="resumo">Resumo (KPIs)</option>
                                     <option value="custos">Composição dos Custos</option>
                                     <option value="financeiro">Análise Financeira</option>
@@ -449,9 +449,21 @@
                         <span class="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-slate-500 dark:text-slate-300" id="download-sens-btn"><button type="button" onclick="downloadChart('sensCombinadoChart')" class="hover:text-blue-600"><i class="fa-solid fa-download mr-1"></i>PNG</button></span>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div><p class="text-xs font-semibold text-center text-emerald-600 dark:text-emerald-400 mb-1">Receita (Preço de Venda)</p><div class="relative h-48 w-full"><canvas id="sensReceitaChart"></canvas></div></div>
-                        <div><p class="text-xs font-semibold text-center text-red-500 dark:text-red-400 mb-1">Custos (Vaca + Bezerro)</p><div class="relative h-48 w-full"><canvas id="sensCustosChart"></canvas></div></div>
-                        <div><p class="text-xs font-semibold text-center text-blue-600 dark:text-blue-400 mb-1">Taxas Produtivas/Reprodutivas</p><div class="relative h-48 w-full"><canvas id="sensTaxasChart"></canvas></div></div>
+                        <div>
+                            <p class="text-xs font-semibold text-center text-emerald-600 dark:text-emerald-400 mb-1">Receita (Preço de Venda)</p>
+                            <div class="relative h-48 w-full"><canvas id="sensReceitaChart"></canvas></div>
+                            <p class="text-[10px] text-center text-slate-400 mt-1 italic">Reta esperada: só o preço varia, a produção é fixa — relação diretamente proporcional.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-center text-red-500 dark:text-red-400 mb-1">Custos (Vaca + Bezerro)</p>
+                            <div class="relative h-48 w-full"><canvas id="sensCustosChart"></canvas></div>
+                            <p class="text-[10px] text-center text-slate-400 mt-1 italic">Reta esperada: os custos escalam junto com a produção fixa — relação diretamente proporcional.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-center text-blue-600 dark:text-blue-400 mb-1">Taxas Produtivas/Reprodutivas</p>
+                            <div class="relative h-48 w-full"><canvas id="sensTaxasChart"></canvas></div>
+                            <p class="text-[10px] text-center text-slate-400 mt-1 italic">Prenhez e mortalidade variam juntas — a curva tem leve curvatura, pouco visível pois a mortalidade típica é pequena frente à prenhez.</p>
+                        </div>
                     </div>
                     <p class="text-xs font-semibold text-center text-slate-500 dark:text-slate-400 mb-1">Cenário Integrado (pessimista → otimista, todas as variáveis juntas)</p>
                     <div class="relative h-56 w-full">
@@ -518,7 +530,7 @@
                     <div id="mc-empty-state" class="bg-purple-50 dark:bg-slate-700/30 border border-dashed border-purple-300 dark:border-purple-800 rounded-xl p-6 text-center text-slate-600 dark:text-slate-300 text-sm">Análise de risco não executada. Revise as faixas acima e clique em "Executar Monte Carlo".</div>
 
                     <div id="mc-results" class="hidden">
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4" id="mc-summary-grid"></div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4" id="mc-summary-grid"></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <div class="flex justify-between items-center mb-2"><p class="text-xs font-semibold text-center text-slate-500 dark:text-slate-400 flex-1">Distribuição do Lucro</p><button type="button" onclick="downloadChart('mcHistogramChart')" class="text-xs text-slate-400 hover:text-blue-600"><i class="fa-solid fa-download"></i></button></div>
@@ -878,6 +890,13 @@
         const formatBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const formatNum = (v, d = 2) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
         const formatPercent = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+        const formatBRLCompact = (v) => {
+            const abs = Math.abs(v);
+            const sign = v < 0 ? '-' : '';
+            if (abs >= 1000000) return sign + 'R$ ' + (abs / 1000000).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' mi';
+            if (abs >= 1000) return sign + 'R$ ' + (abs / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' mil';
+            return formatBRL(v);
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             buildMcRangesTable();
@@ -995,9 +1014,9 @@
                 tornadoChart.update();
             } else {
                 tornadoChart = new Chart(tCtx, {
-                    type: 'bar', indexAxis: 'y',
+                    type: 'bar',
                     data: { labels: tLabels, datasets: [{ data: tData, backgroundColor: 'rgba(37,99,235,.65)', borderColor: '#2563eb', borderWidth: 1 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `R$ ${formatNum(ctx.raw[0],0)} a R$ ${formatNum(ctx.raw[1],0)}` } } }, scales: { x: { ticks: { color: tColor, callback: v => (v/1000).toFixed(0)+'k' } }, y: { ticks: { color: tColor } } } }
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `R$ ${formatNum(ctx.raw[0],0)} a R$ ${formatNum(ctx.raw[1],0)}` } } }, scales: { x: { ticks: { color: tColor, callback: v => (v/1000).toFixed(0)+'k' } }, y: { ticks: { color: tColor } } } }
                 });
             }
 
@@ -1143,14 +1162,15 @@
             document.getElementById('mc-results').classList.remove('hidden');
             const s = mc.summary;
             const cards = [
-                ['Probabilidade de Prejuízo', formatPercent(s.probabilityLoss * 100)],
-                ['Lucro Médio', formatBRL(s.mean)],
-                ['P5 (Pessimista)', formatBRL(s.p5)],
-                ['P50 (Mediano)', formatBRL(s.p50)],
-                ['P95 (Otimista)', formatBRL(s.p95)],
-                ['Cauda Inferior 5%', formatBRL(s.expectedShortfall5)]
+                ['Probabilidade de Prejuízo', formatPercent(s.probabilityLoss * 100), null],
+                ['Lucro Médio', formatBRLCompact(s.mean), formatBRL(s.mean)],
+                ['P5 (Pessimista)', formatBRLCompact(s.p5), formatBRL(s.p5)],
+                ['P50 (Mediano)', formatBRLCompact(s.p50), formatBRL(s.p50)],
+                ['P95 (Otimista)', formatBRLCompact(s.p95), formatBRL(s.p95)],
+                ['Cauda Inferior 5%', formatBRLCompact(s.expectedShortfall5), formatBRL(s.expectedShortfall5)]
             ];
-            document.getElementById('mc-summary-grid').innerHTML = cards.map(([l, v]) => `<div class="risk-card"><p class="risk-label">${l}</p><p class="risk-value">${v}</p></div>`).join('');
+            document.getElementById('mc-summary-grid').innerHTML = cards.map(([l, v, full], i) => `<div class="risk-card"><p class="risk-label">${l}</p><p class="risk-value" id="mc-card-${i}"${full ? ` title="${full}"` : ''}>${v}</p></div>`).join('');
+            cards.forEach((_, i) => fitText('mc-card-' + i, 18));
 
             const isDark = document.documentElement.classList.contains('dark');
             const tColor = isDark ? '#e2e8f0' : '#475569';
@@ -1377,10 +1397,11 @@
         }
 
         // Utils UI
-        function adjustAllFonts() { ['resLucroTotal','resRoi','resCustoUnit'].forEach(fitText); }
-        function fitText(id) {
+        function adjustAllFonts() { ['resLucroTotal','resRoi','resCustoUnit'].forEach(id => fitText(id)); }
+        function fitText(id, maxSize) {
             const el = document.getElementById(id);
             if(!el) return;
+            if (maxSize) { let s2 = maxSize; el.style.fontSize = s2+'px'; while(el.scrollWidth > el.offsetWidth && s2>10) { s2--; el.style.fontSize = s2+'px'; } return; }
             let s = 24; el.style.fontSize = s+'px';
             while(el.scrollWidth > el.offsetWidth && s>12) { s--; el.style.fontSize = s+'px'; }
         }
