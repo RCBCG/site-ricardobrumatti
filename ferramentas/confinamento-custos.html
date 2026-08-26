@@ -302,11 +302,6 @@
             }
         }
         
-        /* Cor customizada para o ícone do CEPEA */
-        .cepea-color {
-            color: #d43939; /* Cor aproximada do logo do CEPEA */
-        }
-
         /* Responsividade */
         @media (max-width: 768px) {
             .top-nav {
@@ -320,14 +315,6 @@
                 width: 100%;
                 margin-bottom: 0.5rem;
             }
-        }
-
-        /* CORREÇÃO: Estilização da tabela CEPEA para alternar cores */
-        #cepea-widget-container table tr:nth-child(odd) {
-            background-color: #f3f4f6 !important; /* Cinza claro */
-        }
-        #cepea-widget-container table tr:nth-child(even) {
-            background-color: #ffffff !important; /* Branco */
         }
     </style>
 
@@ -1065,26 +1052,6 @@
             </div>
         </div>
 
-        <!-- Seção de Cotações CEPEA -->
-        <div class="max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 fade-in">
-            <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8">
-                <div class="flex flex-col sm:flex-row items-center justify-between mb-4 pb-4 border-b border-gray-200">
-                    <h3 class="text-2xl font-bold text-gray-800 mb-3 sm:mb-0 text-center sm:text-left">
-                        <i class="fas fa-chart-line mr-2 cepea-color"></i>Cotações de Mercado
-                    </h3>
-                    <a href="https://www.cepea.esalq.usp.br/br/" target="_blank" rel="noopener noreferrer" class="shrink-0">
-                        <img src="https://www.cepea.esalq.usp.br/br/images/logo-cepea.png" alt="Logo CEPEA" class="h-10" onerror="this.style.display='none'">
-                    </a>
-                </div>
-                <div id="cepea-widget-container">
-                    <!-- Widget de cotação é inserido aqui -->
-                    <script type="text/javascript" src="https://www.cepea.org.br/br/widgetproduto.js.php?fonte=Inter&tamanho=12&largura=100%25&corfundo=ffffff&cortexto=334155&corlinha=f3f4f6&id_indicador%5B%5D=2&id_indicador%5B%5D=8&id_indicador%5B%5D=3&id_indicador%5B%5D=77&id_indicador%5B%5D=12&id_indicador%5B%5D=92"></script>
-                </div>
-                <p class="text-xs text-gray-500 mt-4 text-center">
-                    Fonte: CEPEA - Centro de Estudos Avançados em Economia Aplicada, ESALQ/USP. As cotações são atualizadas diretamente pela fonte.
-                </p>
-            </div>
-        </div>
     </div>
 
     <!-- Modal de ajuda -->
