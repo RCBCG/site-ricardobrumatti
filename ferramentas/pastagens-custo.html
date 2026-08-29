@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulador gratuito: Manejo de Pastagens — análise técnica e econômica de sistemas de pastejo. Desenvolvido pelo Prof. Ricardo C. Brumatti (FAMEZ/UFMS).">
+    <title>Manejo de Pastagens — Simulação Técnica e Econômica</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="alternate icon" type="image/png" href="../favicon.png">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+
+<!-- CDNs -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="mobile.css">
+<!-- Custom Tailwind Configuration -->
+    <script id="tailwind-theme-config">
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            emerald: { 50:'#f0fdfa',100:'#ccfbf1',200:'#99f6e4',300:'#5eead4',400:'#2dd4bf',500:'#0d6b83',600:'#064e65',700:'#043b4c',800:'#032c39',900:'#022029' },
+                            blue: { 50:'#f8fafc',100:'#f1f5f9',200:'#e2e8f0',300:'#cbd5e1',400:'#94a3b8',500:'#0d6b83',600:'#064e65',700:'#043b4c',800:'#032c39',900:'#022029' },
+                            teal: { 50:'#f0fdfa',100:'#ccfbf1',200:'#99f6e4',300:'#5eead4',400:'#2dd4bf',500:'#0d6b83',600:'#064e65',700:'#043b4c',800:'#032c39',900:'#022029' },
+                            green: { 50:'#f0fdfa',100:'#ccfbf1',200:'#99f6e4',300:'#5eead4',400:'#2dd4bf',500:'#0d6b83',600:'#064e65',700:'#043b4c' }
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <!-- Fontes -->
+    <link href="https://fonts.googleapis.com/css?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary:#1e3a8a; --secondary:#3b82f6; --success:#10b981; --danger:#ef4444; --warning:#f59e0b; --info:#3b82f6; --light:#f8fafc; --dark:#1e293b; }
+        body { font-family:'Inter', sans-serif; background-color:#f0f2f5; color:#334155; }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .input-focus { transition: all 0.3s cubic-bezier(0.25,0.8,0.25,1); }
+        .input-focus:focus { border-color: var(--secondary); box-shadow: 0 0 0 4px rgba(59,130,246,0.25); background-color:#ffffff; }
+        .btn-hover { transition: all 0.3s cubic-bezier(0.25,0.8,0.25,1); }
+        .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .top-nav { background-color: var(--primary); color:#fff; padding:0.75rem 2rem; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+        .indicator-card { background-image: linear-gradient(to right, var(--secondary), var(--primary)); color:#fff; border-radius:0.75rem; padding:1.5rem; box-shadow:0 6px 15px rgba(59,130,246,0.3); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; min-height:120px; transition:all .3s ease; }
+        .indicator-card:hover { transform: translateY(-5px); box-shadow:0 10px 20px rgba(59,130,246,0.4); }
+        .indicator-card .label { font-size:0.875rem; font-weight:500; opacity:0.9; margin-bottom:0.5rem; }
+        .indicator-card .value { font-size:2.25rem; font-weight:800; line-height:1; }
+        .indicator-card .value-secondary { font-size:1rem; font-weight:600; opacity:.85; margin-top:.35rem; }
+        .secondary-indicator-card { background-color:#fff; border-radius:0.75rem; padding:1rem; box-shadow:0 4px 12px rgba(0,0,0,0.08); display:flex; align-items:center; transition:all .3s ease; }
+        .secondary-indicator-card:hover { transform: translateY(-4px); box-shadow:0 8px 16px rgba(0,0,0,0.12); }
+        .high-contrast { background-color:#000 !important; color:#fff !important; }
+        .high-contrast .indicator-card, .high-contrast .secondary-indicator-card { background-color:#111 !important; border:1px solid #fff !important; }
+        .modal { position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4); display:flex; align-items:flex-start; justify-content:center; padding-top:5rem; }
+        .modal.hidden { display:none !important; }
+        .modal-content { background-color:#fefefe; margin:0; padding:20px; border:1px solid #888; width:90%; max-width:700px; border-radius:0.75rem; box-shadow:0 4px 12px rgba(0,0,0,0.15); position:relative; }
+        .tooltip { position:relative; display:inline-block; cursor:help; }
+        .tooltip .tooltiptext { visibility:hidden; width:220px; background-color:#333; color:#fff; text-align:center; border-radius:6px; padding:8px; position:absolute; z-index:1; bottom:125%; left:50%; transform:translateX(-50%); opacity:0; transition:opacity .3s; font-size:0.875rem; font-weight:normal; }
+        .tooltip:hover .tooltiptext { visibility:visible; opacity:1; }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; animation: fadeIn 0.5s ease-out; }
+        .tab-btn.active { background-color: var(--primary); color:#fff; }
+        .loader { border:4px solid #f3f3f3; border-top:4px solid var(--primary); border-radius:50%; width:30px; height:30px; animation: spin 1s linear infinite; margin:0 auto; }
+        @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
+        @media (max-width:768px) {
+            .top-nav { flex-direction:column; padding:0.5rem 1rem; }
+            .form-buttons-container { flex-direction:column; }
+            .form-buttons-container button { width:100%; margin-bottom:0.5rem; }
+        }
+    </style>
+
+    <!-- CSS Overrides for Typography & Colors — copiado literalmente de confinamento-custos.html -->
+    <style id="theme-override-styles">
+        :root {
+            --primary:#064e65 !important; --secondary:#0d6b83 !important; --success:#10b981 !important; --danger:#cf1818 !important;
+            --bg-page:#f8fafc !important; --bg-card:#ffffff !important; --text-main:#0f172a !important; --text-muted:#64748b !important;
+            --green:#064e65 !important; --green-mid:#0d6b83 !important; --green-lt:#e6f4f7 !important;
+        }
+        h1, h2, h3, h4, h5, h6, .kpi-value, .kpi-number, [class*="kpi-value"], [class*="kpi-number"],
+        .metric-value, .metric-number, .chart-title,
+        td.font-semibold, td.font-bold, span.font-semibold, span.font-bold,
+        div.font-bold, div.font-semibold, th {
+            font-family: Georgia, Cambria, "Times New Roman", Times, serif !important;
+        }
+        .bg-blue-900, .bg-blue-800, .bg-indigo-900, .bg-indigo-800 { background-color:#064e65 !important; }
+        .bg-blue-600, .bg-indigo-600, .bg-teal-600, .bg-emerald-600 { background-color:#064e65 !important; }
+        .hover\:bg-blue-700:hover, .hover\:bg-indigo-700:hover, .hover\:bg-teal-700:hover, .hover\:bg-emerald-700:hover { background-color:#0d6b83 !important; }
+        .text-blue-900, .text-blue-800, .text-indigo-900, .text-indigo-800, .text-blue-600, .text-indigo-600, .text-teal-600, .text-emerald-600 { color:#064e65 !important; }
+        .border-blue-800, .border-blue-600, .border-indigo-600, .border-teal-600, .border-emerald-600 { border-color:#064e65 !important; }
+        .btn-primary { background-color:#064e65 !important; color:#ffffff !important; }
+        .btn-primary:hover { background-color:#0d6b83 !important; }
+        .btn-outline:hover { border-color:#0d6b83 !important; color:#0d6b83 !important; }
+        .bg-red-600, .btn-danger, [id*="clearFormButton"], [id*="clearDataButton"], [onclick*="clearForm"], [onclick*="clearData"] { background-color:#cf1818 !important; color:#ffffff !important; }
+        .hover\:bg-red-700:hover, .btn-danger:hover, [id*="clearFormButton"]:hover, [id*="clearDataButton"]:hover { background-color:#b91c1c !important; }
+    </style>
+
+    <!-- Social Share Styles -->
+    <style>
+        .share-menu-wrap { position:relative; display:inline-flex; }
+        .share-dropdown { position:absolute; top:calc(100% + 8px); right:0; z-index:40; background:#ffffff; border:1px solid #e2e8f0; border-radius:0.5rem; box-shadow:0 10px 25px rgba(0,0,0,0.15); padding:0.75rem; width:240px; }
+        .social-card-container { position:absolute; top:-9999px; left:-9999px; width:1080px; height:1350px; background:#064e65; color:#ffffff; font-family:'Inter', sans-serif; box-sizing:border-box; padding:56px 64px; display:flex; flex-direction:column; }
+        .social-header { display:flex; justify-content:space-between; align-items:center; font-size:22px; font-weight:600; }
+        .social-header .site { color:#d4af37; font-weight:600; }
+        .social-title { font-family: Georgia, Cambria, 'Times New Roman', serif; font-weight:700; font-size:54px; margin:28px 0 6px; line-height:1.1; }
+        .social-subtitle { font-size:24px; color:#cfe3e9; margin:0 0 20px; }
+        .social-kpi { font-family: Georgia, Cambria, 'Times New Roman', serif; font-weight:800; font-size:96px; color:#d4af37; line-height:1.15; margin:10px 0 0; }
+        .social-kpi-caption { font-size:22px; color:#e2eef1; margin:14px 0 32px; }
+        .social-card-body { background:#faf7f0; border-radius:28px; flex:1; padding:32px; display:flex; flex-direction:column; overflow:hidden; }
+        .social-card-body img, .social-card-body canvas { max-width:100%; }
+        .social-footer { text-align:center; margin-top:28px; }
+        .social-footer .source { font-size:18px; color:#cfe3e9; margin:0 0 4px; }
+        .social-footer .author { font-size:15px; font-weight:700; color:#d4af37; margin:0 0 14px; line-height:1.4; }
+        .social-footer .disclaimer { font-size:14px; color:#9fc0c9; line-height:1.5; max-width:820px; margin:0 auto; }
+        .social-kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:auto; }
+        .social-kpi-grid .box { background:#ffffff; border:1px solid #e6e6e6; border-radius:14px; padding:18px; text-align:center; }
+        .social-kpi-grid .box .lbl { font-size:15px; color:#64748b; text-transform:uppercase; font-weight:700; letter-spacing:.02em; }
+        .social-kpi-grid .box .val { font-family: Georgia, Cambria, 'Times New Roman', serif; font-size:30px; font-weight:800; color:#064e65; margin-top:4px; }
+        .social-card-body.is-grid-only { justify-content:center; }
+        .social-card-body.is-grid-only .social-kpi-grid { margin-top:0; }
+        .social-card-body.is-grid-only .social-kpi-grid .box { padding:30px 18px; }
+        .social-card-body.is-grid-only .social-kpi-grid .box .val { font-size:36px; }
+        .social-sim-banner { background:#7a3b00; border:2px solid #d4af37; border-radius:16px; padding:18px 22px; margin-bottom:22px; display:flex; align-items:flex-start; gap:14px; }
+        .social-sim-banner .icon { font-size:30px; line-height:1; }
+        .social-sim-banner .text { font-size:17px; font-weight:700; color:#fff8e7; line-height:1.4; }
+        .social-note { font-size:15px; color:#475569; text-align:center; margin-top:16px; line-height:1.4; }
+    </style>
+
+    <style id="v2-enhancements">
+        .advanced-panel summary { cursor:pointer; list-style:none; }
+        .advanced-panel summary::-webkit-details-marker { display:none; }
+        .advanced-panel summary::after { content:'+'; float:right; font-size:1.4rem; font-weight:800; }
+        .advanced-panel[open] summary::after { content:'−'; }
+        .field-error { border-color:#dc2626 !important; box-shadow:0 0 0 3px rgba(220,38,38,.12) !important; }
+        input,select,textarea { color:#111827 !important; -webkit-text-fill-color:#111827 !important; caret-color:#111827 !important; background-color:#ffffff !important; opacity:1 !important; color-scheme:light; }
+        input,textarea { cursor:text; }
+        select { cursor:pointer; }
+        input::placeholder,textarea::placeholder { color:#6b7280 !important; -webkit-text-fill-color:#6b7280 !important; opacity:1; }
+        input::selection,textarea::selection { color:#ffffff; background:#075f78; }
+        .input-focus { transition:border-color .2s ease,box-shadow .2s ease,background-color .2s ease !important; }
+        .input-focus:focus { color:#111827 !important; -webkit-text-fill-color:#111827 !important; caret-color:#111827 !important; background:#ffffff !important; opacity:1 !important; }
+        .dark-mode input,.dark-mode select,.dark-mode textarea,.high-contrast input,.high-contrast select,.high-contrast textarea { color:#111827 !important; -webkit-text-fill-color:#111827 !important; caret-color:#111827 !important; background:#ffffff !important; }
+        .validation-summary { border-left:4px solid #dc2626; }
+        .metric-positive { color:#047857 !important; }
+        .metric-negative { color:#b91c1c !important; }
+        #mc-results canvas,#results-section canvas { display:block; width:100% !important; max-height:460px; }
+        .dark-mode .risk-card,.dark-mode .advanced-panel,.dark-mode #mc-results .bg-white { background:#1f2937 !important; border-color:#475569 !important; }
+        .dark-mode .risk-value,.dark-mode .advanced-panel label,.dark-mode #mc-results h3,.dark-mode #mc-results td { color:#f8fafc !important; }
+        @media(max-width:640px){
+            .result-actions { display:grid !important; grid-template-columns:1fr 1fr; width:100%; gap:.5rem !important; }
+            .result-actions>* { width:100%; }
+        }
+        @media print { .advanced-panel,#monte-carlo-config,#runMonteCarloBtn,.download-chart-btn,.result-actions { display:none !important; } }
+    </style>
+
+    <!-- Estilos exclusivos desta ferramenta — não vão para mobile.css -->
+    <style id="pastagens-enhancements">
+        .risk-card { background:#fff; border:1px solid #dbe3ec; border-radius:14px; padding:1rem; box-shadow:0 5px 18px rgba(15,23,42,.06); }
+        .risk-label { color:#64748b; font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+        .risk-value { color:#0f172a; font-size:1.35rem; font-weight:800; margin-top:.25rem; }
+
+        .subtab-btn { padding:0.6rem 1rem; background:#e2e8f0; color:#334155; border-radius:0.6rem 0.6rem 0 0; font-weight:600; font-size:0.9rem; white-space:nowrap; }
+        .subtab-btn.active { background-color:#0d6b83; color:#fff; }
+        .subtab-content { display:none; }
+        .subtab-content.active { display:block; animation: fadeIn 0.4s ease-out; }
+
+        .verdict-card { border-radius:1rem; padding:1.25rem 1.5rem; display:flex; gap:1rem; align-items:flex-start; margin-bottom:1.5rem; border:2px solid; }
+        .verdict-card .verdict-icon { font-size:2rem; line-height:1; }
+        .verdict-card .verdict-title { font-weight:800; font-size:1.15rem; margin-bottom:0.25rem; }
+        .verdict-card .verdict-text { font-size:0.92rem; line-height:1.5; }
+        .verdict-viavel { background:#ecfdf5; border-color:#10b981; color:#065f46; }
+        .verdict-ressalvas { background:#fffbeb; border-color:#f59e0b; color:#92400e; }
+        .verdict-inviavel { background:#fef2f2; border-color:#cf1818; color:#991b1b; }
+
+        .of-ruler { margin-top:0.6rem; }
+        .of-ruler-track { display:flex; height:14px; border-radius:7px; overflow:hidden; position:relative; }
+        .of-ruler-seg { height:100%; }
+        .of-ruler-marker { position:absolute; top:-4px; width:2px; height:22px; background:#0f172a; transform:translateX(-1px); }
+        .of-ruler-labels { display:flex; justify-content:space-between; font-size:0.7rem; color:#64748b; margin-top:0.2rem; }
+        .of-ruler-status { font-size:0.85rem; font-weight:700; margin-top:0.3rem; }
+        .of-ruler-status.ok { color:#047857; }
+        .of-ruler-status.warn { color:#b45309; }
+
+        .matrix3x3 { border-collapse:collapse; width:100%; }
+        .matrix3x3 th, .matrix3x3 td { border:1px solid #dbe3ec; padding:0.6rem; text-align:center; font-size:0.85rem; }
+        .matrix3x3 th { background:#f1f5f9; font-weight:700; }
+        .matrix-cell-ok { background:#ecfdf5; color:#065f46; font-weight:700; }
+        .matrix-cell-warn { background:#fffbeb; color:#92400e; font-weight:700; }
+        .matrix-cell-bad { background:#fef2f2; color:#991b1b; font-weight:700; }
+
+        .scenario-card { background:#fff; border-top:4px solid #0d6b83; border-radius:0.75rem; padding:1rem; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+        .scenario-card .scenario-title { font-weight:700; color:#0f172a; }
+        .scenario-card .scenario-date { font-size:0.72rem; color:#94a3b8; margin-bottom:0.4rem; }
+        .scenario-card .scenario-value { font-family: Georgia, Cambria, 'Times New Roman', serif; font-size:1.4rem; font-weight:800; color:#064e65; }
+        .scenario-card .scenario-detail { font-size:0.82rem; color:#475569; margin-top:0.4rem; line-height:1.5; }
+        .scenario-card .scenario-delete { background:none; border:none; color:#cf1818; cursor:pointer; font-size:1rem; }
+
+        @media (max-width:768px) {
+            .subtab-btn { font-size:0.8rem; padding:0.5rem 0.7rem; min-height:44px; }
+        }
+    </style>
+
+</head>
+
+<body class="min-h-screen" data-charts-self-sized="true">
+    <script>
+        if (window.self !== window.top) {
+            document.write('<style>.back-btn-container { display: none !important; }</style>');
+        }
+    </script>
+    <div class="back-btn-container no-print" style="padding: 12px 24px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box; width: 100%;">
+        <a href="../index.html" style="display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s;" onmouseover="this.style.color='#0d9488'" onmouseout="this.style.color='#64748b'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Voltar ao site
+        </a>
+        <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">ricardobrumatti.pro.br</span>
+    </div>
+
+    <nav class="top-nav">
+        <div class="logo font-bold text-xl">Manejo de Pastagens</div>
+        <div class="flex items-center space-x-4">
+            <button id="helpBtn" class="text-white hover:text-blue-200"><i class="fas fa-question-circle"></i> Ajuda</button>
+            <button id="themeToggle" class="text-white hover:text-blue-200"><i class="fas fa-adjust"></i> Tema</button>
+            <button id="contrastToggle" class="text-white hover:text-blue-200"><i class="fas fa-eye"></i> Alto Contraste</button>
+        </div>
+    </nav>
+
+    <div id="rotateHint" class="rotate-hint">
+        <i class="fas fa-mobile-alt"></i>
+        <span>Gire a tela para melhor visualização dos gráficos</span>
+        <button id="rotateHintClose" aria-label="Fechar aviso">&times;</button>
+    </div>
+    <script>
+        (function () {
+            var hint = document.getElementById('rotateHint');
+            if (!hint) return;
+            if (sessionStorage.getItem('rotateHintDismissedPastagens') === '1') hint.classList.add('dismissed');
+            document.getElementById('rotateHintClose').addEventListener('click', function () {
+                hint.classList.add('dismissed');
+                sessionStorage.setItem('rotateHintDismissedPastagens', '1');
+            });
+        })();
+    </script>
+
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 fade-in">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Manejo de Pastagens — Simulação Técnica e Econômica</h1>
+                <p class="text-gray-600 italic">*Aplicação desenvolvida por Prof. Ricardo C. Brumatti - FAMEZ/UFMS - Campo Grande, MS, uso gratuito, sem fins comerciais.*</p>
+                <div class="flex justify-center mt-4 space-x-4">
+                    <button id="exampleBtn" class="btn-hover px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-medium"><i class="fas fa-lightbulb mr-2"></i>Ver Exemplo</button>
+                </div>
+            </div>
+
+            <!-- Abas de nível 1 -->
+            <div class="mb-6">
+                <div class="flex overflow-x-auto">
+                    <button class="tab-btn active px-4 py-2 bg-blue-600 text-white rounded-t-lg font-medium" data-tab="simulation"><i class="fas fa-calculator mr-2"></i>Simulação</button>
+                    <button class="tab-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-t-lg font-medium" data-tab="scenarios"><i class="fas fa-layer-group mr-2"></i>Cenários</button>
+                </div>
+            </div>
+
+            <div id="simulation" class="tab-content active">
+                <div class="form-section mb-12">
+                    <h3 class="text-2xl font-bold text-center mb-6 text-gray-800"><i class="fas fa-edit mr-2"></i>Parâmetros de Simulação</h3>
+
+                    <!-- Abas de nível 2 -->
+                    <div id="subtab-group-inputs">
+                        <div class="flex overflow-x-auto mb-4">
+                            <button class="subtab-btn active" data-subtab="solo">Solo, Correção e Implantação</button>
+                            <button class="subtab-btn" data-subtab="sistema">Sistema e Manejo</button>
+                            <button class="subtab-btn" data-subtab="rebanho">Rebanho e Desempenho</button>
+                            <button class="subtab-btn" data-subtab="custos">Custos e Vendas</button>
+                            <button class="subtab-btn" data-subtab="carbono">Carbono (opcional)</button>
+                        </div>
+
+                        <form id="simulacaoForm" class="space-y-6" novalidate>
+                            <!-- Sub-aba 1: Solo, Correção e Implantação -->
+                            <div id="subtab-solo" class="subtab-content active">
+                                <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                                    <h4 class="font-bold text-blue-800 mb-3 flex items-center"><i class="fas fa-tractor mr-2"></i>Área e cultivar</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        <div>
+                                            <label for="area" class="block text-sm font-semibold text-gray-800 mb-2">Área total (ha) <span class="text-red-500">*</span></label>
+                                            <input type="number" id="area" required min="0.1" step="0.1" value="100" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none">
+                                        </div>
+                                        <div>
+                                            <label for="cultivar" class="block text-sm font-semibold text-gray-800 mb-2">Cultivar</label>
+                                            <select id="cultivar" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none">
+                                                <option value="">Selecione...</option>
+                                                <option value="Marandu">Brachiaria brizantha cv. Marandu</option>
+                                                <option value="Piata">Brachiaria brizantha cv. Piatã</option>
+                                                <option value="Xaraes">Brachiaria brizantha cv. Xaraés</option>
+                                                <option value="Mombaca">Panicum maximum cv. Mombaça</option>
+                                                <option value="Tanzania">Panicum maximum cv. Tanzânia</option>
+                                                <option value="Outra">Outra</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-teal-50 p-4 rounded-lg mb-4">
+                                    <h4 class="font-bold text-teal-800 mb-3 flex items-center"><i class="fas fa-seedling mr-2"></i>Situação da pastagem</h4>
+                                    <label for="situacao-pastagem" class="block text-sm font-semibold text-gray-800 mb-2">
+                                        Situação <span class="tooltip ml-1"><i class="fas fa-info-circle text-blue-500"></i><span class="tooltiptext">"Nova" inclui o custo de implantação (calagem, sementes, preparo etc.) no cálculo. "Já existente" considera apenas os custos de manejo, sem novo investimento.</span></span>
+                                    </label>
+                                    <select id="situacao-pastagem" onchange="App.toggleImplantacaoPastagem(this)" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none">
+                                        <option value="nova" selected>Pastagem nova (considerar custo de implantação)</option>
+                                        <option value="existente">Pastagem já existente (somente manejo, sem novo investimento)</option>
+                                    </select>
+                                </div>
+
+                                <div id="implantacao-fields" class="bg-purple-50 p-4 rounded-lg mb-4">
+                                    <h4 class="font-bold text-purple-800 mb-3 flex items-center"><i class="fas fa-hammer mr-2"></i>Custo de implantação (R$/ha)</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div><label for="custo-calagem-gessagem" class="block text-sm font-semibold mb-1">Calagem e gessagem</label><input type="number" id="custo-calagem-gessagem" required step="0.01" value="450" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-preparo-mecanizado" class="block text-sm font-semibold mb-1">Preparo mecanizado</label><input type="number" id="custo-preparo-mecanizado" required step="0.01" value="700" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-sementes-mudas" class="block text-sm font-semibold mb-1">Sementes/mudas</label><input type="number" id="custo-sementes-mudas" required step="0.01" value="350" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-fertilizantes-implantacao" class="block text-sm font-semibold mb-1">Fertilizantes</label><input type="number" id="custo-fertilizantes-implantacao" required step="0.01" value="900" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-herbicidas" class="block text-sm font-semibold mb-1">Herbicidas</label><input type="number" id="custo-herbicidas" required step="0.01" value="250" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-inoculantes" class="block text-sm font-semibold mb-1">Inoculantes</label><input type="number" id="custo-inoculantes" required step="0.01" value="60" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-mao-obra-implantacao" class="block text-sm font-semibold mb-1">Mão de obra</label><input type="number" id="custo-mao-obra-implantacao" required step="0.01" value="220" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-combustivel-implantacao" class="block text-sm font-semibold mb-1">Combustível</label><input type="number" id="custo-combustivel-implantacao" required step="0.01" value="250" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-outros-implantacao" class="block text-sm font-semibold mb-1">Outros</label><input type="number" id="custo-outros-implantacao" required step="0.01" value="220" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                                        <div><label for="vida-util" class="block text-sm font-semibold mb-1">Vida útil (anos)</label><input type="number" id="vida-util" required min="1" step="1" value="10" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="taxa-juros" class="block text-sm font-semibold mb-1">Taxa de juros (% a.a.)</label><input type="number" id="taxa-juros" required step="0.01" value="8.0" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                    </div>
+                                    <p class="text-xs text-purple-800 mt-3">O custo total de implantação é convertido em custo anual equivalente (CAE) pela vida útil e taxa de juros informadas.</p>
+                                </div>
+                            </div>
+
+                            <!-- Sub-aba 2: Sistema e Manejo -->
+                            <div id="subtab-sistema" class="subtab-content">
+                                <div class="bg-green-50 p-4 rounded-lg mb-4">
+                                    <h4 class="font-bold text-green-800 mb-3 flex items-center"><i class="fas fa-layer-group mr-2"></i>Sistema de pastejo</h4>
+                                    <select id="sistema" onchange="App.updateSystemRuler()" class="input-focus w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 focus:outline-none">
+                                        <option value="continuo">Contínuo</option>
+                                        <option value="rotacionado">Rotacionado</option>
+                                        <option value="rip">RIP (Rotação Intensiva de Pastagem)</option>
+                                        <option value="tip">TIP (Taxa Intensiva de Pastejo)</option>
+                                        <option value="ilp">ILP (Integração Lavoura-Pecuária)</option>
+                                        <option value="ilpf">ILPF (Integração Lavoura-Pecuária-Floresta)</option>
+                                        <option value="feno">Conservação — Feno</option>
+                                        <option value="silagem">Conservação — Silagem</option>
+                                    </select>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
+                                        <div><label for="altura-entrada" class="block text-sm font-semibold mb-1">Altura de entrada (cm)</label><input type="number" id="altura-entrada" step="0.1" value="0" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="altura-saida" class="block text-sm font-semibold mb-1">Altura de saída (cm)</label><input type="number" id="altura-saida" step="0.1" value="0" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="periodo-ocupacao" class="block text-sm font-semibold mb-1">Período de ocupação (dias)</label><input type="number" id="periodo-ocupacao" step="1" value="0" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="periodo-descanso" class="block text-sm font-semibold mb-1">Período de descanso (dias)</label><input type="number" id="periodo-descanso" step="1" value="0" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-50 p-4 rounded-lg mb-4">
+                                    <h4 class="font-bold text-yellow-800 mb-3 flex items-center"><i class="fas fa-weight-hanging mr-2"></i>Oferta de forragem</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        <div><label for="massa-ms-disponivel" class="block text-sm font-semibold mb-1">Massa de MS disponível (kg MS/ha)</label><input type="number" id="massa-ms-disponivel" required step="1" value="2500" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="perdas-pastejo" class="block text-sm font-semibold mb-1">Perdas de pastejo (%)</label><input type="number" id="perdas-pastejo" step="0.1" value="15" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                    </div>
+                                    <div id="of-ruler-input-wrap" class="mt-3"><p class="text-sm font-semibold text-gray-700 mb-1">Régua de interpretação (calculada a partir do rebanho informado):</p><div id="of-ruler-input"></div></div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-aba 3: Rebanho e Desempenho -->
+                            <div id="subtab-rebanho" class="subtab-content">
+                                <div class="bg-purple-50 p-4 rounded-lg mb-4">
+                                    <h4 class="font-bold text-purple-800 mb-3 flex items-center"><i class="fas fa-cow mr-2"></i>Rebanho e desempenho</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                        <div>
+                                            <label for="categoria" class="block text-sm font-semibold mb-1">Categoria <span class="text-red-500">*</span></label>
+                                            <select id="categoria" required class="input-focus w-full p-3 border rounded-lg bg-white">
+                                                <option value="bezerro">Bezerro</option>
+                                                <option value="garrote">Garrote</option>
+                                                <option value="novilho" selected>Novilho</option>
+                                                <option value="novilha">Novilha</option>
+                                                <option value="touro">Touro</option>
+                                                <option value="matriz">Matriz</option>
+                                            </select>
+                                        </div>
+                                        <div><label for="cabecas" class="block text-sm font-semibold mb-1">Cabeças <span class="text-red-500">*</span></label><input type="number" id="cabecas" required min="1" step="1" value="200" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="peso-inicial" class="block text-sm font-semibold mb-1">Peso inicial (kg)</label><input type="number" id="peso-inicial" required step="0.1" value="300" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="permanencia" class="block text-sm font-semibold mb-1">Permanência (dias)</label><input type="number" id="permanencia" required min="1" step="1" value="180" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div>
+                                            <label for="gmd" class="block text-sm font-semibold mb-1">GMD (kg/dia) <span class="tooltip ml-1"><i class="fas fa-info-circle text-blue-500"></i><span class="tooltiptext">Ganho Médio Diário esperado a pasto</span></span></label>
+                                            <input type="number" id="gmd" required step="0.001" value="0.750" class="input-focus w-full p-3 border rounded-lg bg-white">
+                                        </div>
+                                        <div><label for="consumo-ms" class="block text-sm font-semibold mb-1">Consumo de MS (% PV/dia)</label><input type="number" id="consumo-ms" step="0.01" value="2.3" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                    </div>
+                                    <p class="text-xs text-purple-800 mt-3">O campo "Consumo de MS" só é usado na régua de interpretação quando o sistema selecionado é Feno ou Silagem (conservação).</p>
+                                </div>
+                            </div>
+
+                            <!-- Sub-aba 4: Custos e Vendas -->
+                            <div id="subtab-custos" class="subtab-content">
+                                <div class="bg-yellow-50 p-4 rounded-lg mb-4">
+                                    <h4 class="font-bold text-yellow-800 mb-3 flex items-center"><i class="fas fa-money-bill-wave mr-2"></i>Venda</h4>
+                                    <label for="preco-arroba" class="block text-sm font-semibold mb-2">Preço da arroba (R$/@) <span class="text-red-500">*</span></label>
+                                    <input type="number" id="preco-arroba" required step="0.01" value="240.00" class="input-focus w-full sm:w-1/3 p-3 border rounded-lg bg-white">
+                                </div>
+                                <div class="bg-red-50 p-4 rounded-lg mb-4">
+                                    <h4 class="font-bold text-red-800 mb-3 flex items-center"><i class="fas fa-receipt mr-2"></i>Custo Operacional Efetivo (COE, R$/ha)</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div><label for="custo-adubacao-manutencao" class="block text-sm font-semibold mb-1">Adubação de manutenção</label><input type="number" id="custo-adubacao-manutencao" step="0.01" value="180" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-suplementacao" class="block text-sm font-semibold mb-1">Suplementação</label><input type="number" id="custo-suplementacao" step="0.01" value="120" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-sanidade" class="block text-sm font-semibold mb-1">Sanidade</label><input type="number" id="custo-sanidade" step="0.01" value="60" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-mao-de-obra" class="block text-sm font-semibold mb-1">Mão de obra</label><input type="number" id="custo-mao-de-obra" step="0.01" value="150" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-combustivel" class="block text-sm font-semibold mb-1">Combustível</label><input type="number" id="custo-combustivel" step="0.01" value="50" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-cercas-agua" class="block text-sm font-semibold mb-1">Cercas e água</label><input type="number" id="custo-cercas-agua" step="0.01" value="40" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-100 p-4 rounded-lg mb-4">
+                                    <h4 class="font-bold text-gray-800 mb-3 flex items-center"><i class="fas fa-file-invoice-dollar mr-2"></i>Custo Operacional Total — itens adicionais (R$/ha)</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div><label for="custo-depreciacao" class="block text-sm font-semibold mb-1">Depreciação de benfeitorias</label><input type="number" id="custo-depreciacao" step="0.01" value="80" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="custo-pro-labore" class="block text-sm font-semibold mb-1">Pró-labore</label><input type="number" id="custo-pro-labore" step="0.01" value="100" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-aba 5: Carbono -->
+                            <div id="subtab-carbono" class="subtab-content">
+                                <div class="bg-emerald-50 p-4 rounded-lg mb-4">
+                                    <h4 class="font-bold text-emerald-800 mb-3 flex items-center"><i class="fas fa-leaf mr-2"></i>Carbono (opcional)</h4>
+                                    <label for="incluir-carbono" class="block text-sm font-semibold mb-2">Incluir receita de sequestro de carbono?</label>
+                                    <select id="incluir-carbono" onchange="App.toggleCarbonoFields(this)" class="input-focus w-full sm:w-1/3 p-3 border rounded-lg bg-white mb-4">
+                                        <option value="sim" selected>Sim</option>
+                                        <option value="nao">Não</option>
+                                    </select>
+                                    <div id="carbono-fields" class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                        <div><label for="estoque-inicial-c" class="block text-sm font-semibold mb-1">Estoque inicial (t C/ha)</label><input type="number" id="estoque-inicial-c" step="0.01" value="40.0" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="estoque-final-c" class="block text-sm font-semibold mb-1">Estoque final (t C/ha)</label><input type="number" id="estoque-final-c" step="0.01" value="44.0" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                        <div><label for="preco-credito" class="block text-sm font-semibold mb-1">Preço do crédito (R$/t CO2eq)</label><input type="number" id="preco-credito" step="0.01" value="50.00" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                    </div>
+                                    <p class="text-xs text-emerald-800 mt-3">Modelo simplificado v1: receita = (estoque final − estoque inicial) × 3,67 × preço do crédito. Não substitui certificação de crédito de carbono.</p>
+                                </div>
+                            </div>
+
+                            <div id="validation-summary" class="validation-summary hidden bg-red-50 text-red-800 rounded-lg p-4 mb-4" role="alert" aria-live="polite"></div>
+                            <details id="monte-carlo-config" class="advanced-panel bg-indigo-50 border border-indigo-200 rounded-xl mb-6">
+                                <summary class="p-4 font-bold text-indigo-900"><i class="fas fa-dice mr-2"></i>Análise de risco — Monte Carlo</summary>
+                                <div class="p-4 pt-0">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div><label for="mc-iterations" class="block text-sm font-semibold mb-2">Iterações</label><select id="mc-iterations" class="input-focus w-full p-3 border rounded-lg bg-white"><option>1000</option><option>5000</option><option selected>10000</option><option>25000</option><option>50000</option></select></div>
+                                        <div><label for="mc-seed" class="block text-sm font-semibold mb-2">Semente reproduzível</label><input id="mc-seed" type="number" step="1" value="12345" class="input-focus w-full p-3 border rounded-lg bg-white"></div>
+                                    </div>
+                                    <p class="text-xs text-indigo-800 mt-3">Preço da arroba, suplementação, cabeças (proxy de lotação) e GMD variam ±20% por distribuição triangular; com pastagem nova, custo de implantação e taxa de juros também variam.</p>
+                                </div>
+                            </details>
+
+                            <div class="flex flex-wrap gap-4 form-buttons-container">
+                                <button type="submit" class="calculate-btn btn-hover flex-1 py-3 px-6 bg-blue-700 text-white rounded-lg font-bold text-lg shadow-md hover:bg-blue-800 tracking-wide"><i class="fas fa-calculator mr-2"></i>Calcular</button>
+                                <button type="button" onclick="App.limparFormulario()" class="clear-btn btn-hover flex-1 py-3 px-6 bg-gray-300 text-gray-800 rounded-lg font-bold text-lg shadow-md hover:bg-gray-400 tracking-wide"><i class="fas fa-broom mr-2"></i>Limpar Formulário</button>
+                                <button type="button" id="saveScenarioBtn" class="btn-hover flex-1 py-3 px-6 bg-green-600 text-white rounded-lg font-bold text-lg shadow-md hover:bg-green-700 tracking-wide"><i class="fas fa-save mr-2"></i>Salvar Cenário</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Resultados -->
+                <div id="results-section" class="hidden">
+                    <div id="verdict-card" class="verdict-card">
+                        <div class="verdict-icon"><i class="fas fa-circle-check"></i></div>
+                        <div>
+                            <div id="verdict-title" class="verdict-title">—</div>
+                            <div id="verdict-text" class="verdict-text">—</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <div class="indicator-card"><div class="label">Lotação (UA/ha)</div><div id="kpi-lotacao" class="value">0</div></div>
+                        <div class="indicator-card"><div class="label">Produção (@/ha)</div><div id="kpi-producao" class="value">0</div></div>
+                        <div class="indicator-card"><div class="label">Receita Bruta</div><div id="kpi-receita" class="value">R$ 0</div><div id="kpi-receita-sec" class="value-secondary">R$ 0/@</div></div>
+                        <div class="indicator-card"><div class="label">Custo por @</div><div id="kpi-custo-arroba" class="value">R$ 0</div><div id="kpi-custo-arroba-sec" class="value-secondary">R$ 0/ha</div></div>
+                        <div class="indicator-card"><div class="label">Margem Líquida</div><div id="kpi-margem" class="value">R$ 0</div><div id="kpi-margem-sec" class="value-secondary">R$ 0/@</div></div>
+                        <div class="indicator-card"><div class="label" id="kpi-roi-label">ROI</div><div id="kpi-roi" class="value">0%</div></div>
+                    </div>
+
+                    <div class="mb-8 bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                        <h3 class="text-xl font-bold mb-2">Oferta de Forragem / Consumo — resultado</h3>
+                        <div id="of-ruler-result"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="chart-container bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                            <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold">Composição de Custos</h3><div class="chart-actions"><button class="download-chart-btn p-1 text-gray-500 hover:text-blue-600" data-chart="costDonutChart"><i class="fas fa-download"></i></button></div></div>
+                            <canvas id="costDonutChart"></canvas>
+                        </div>
+                        <div class="chart-container bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                            <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold">Receita × COE × COT × Margem</h3><div class="chart-actions"><button class="download-chart-btn p-1 text-gray-500 hover:text-blue-600" data-chart="economicChart"><i class="fas fa-download"></i></button></div></div>
+                            <canvas id="economicChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="mt-12">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-2xl font-bold text-gray-800">Resultados Detalhados</h3>
+                            <div class="flex space-x-2 result-actions">
+                                <button id="exportPdfBtn" class="btn-hover px-4 py-2 bg-red-600 text-white rounded-lg font-medium"><i class="fas fa-file-pdf mr-2"></i>PDF</button>
+                                <button id="exportExcelBtn" class="btn-hover px-4 py-2 bg-green-600 text-white rounded-lg font-medium"><i class="fas fa-file-excel mr-2"></i>Excel</button>
+                                <div class="share-menu-wrap">
+                                    <button id="btnShare" onclick="App.toggleShareMenu()" class="btn-hover px-4 py-2 bg-purple-600 text-white rounded-lg font-medium" title="Imagem para redes sociais"><i class="fas fa-share-nodes mr-2"></i>Imagem</button>
+                                    <div id="shareDropdown" class="share-dropdown hidden">
+                                        <label class="block text-xs font-medium mb-1 text-gray-600">Escolha o conteúdo</label>
+                                        <select id="shareType" class="input-focus w-full p-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 text-left text-sm mb-3">
+                                            <option value="resumo">Resumo (KPIs)</option>
+                                            <option value="veredito">Veredito de viabilidade</option>
+                                            <option value="sistemaOF">Sistema e Oferta de Forragem</option>
+                                            <option value="matriz3x3">Matriz de Sensibilidade 3×3</option>
+                                            <option value="tornado">Tornado de Sensibilidade</option>
+                                            <option value="risco">Monte Carlo — Risco (gráfico)</option>
+                                            <option value="riscoConclusao">Monte Carlo — Resultado provável</option>
+                                        </select>
+                                        <button onclick="App.generateSocialImage()" class="btn-hover w-full py-2 px-4 bg-purple-600 text-white rounded-lg font-medium text-sm"><i class="fas fa-image mr-2"></i>Gerar Imagem</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                        <table class="w-full border-collapse bg-white rounded-xl shadow-lg overflow-hidden result-table">
+                            <thead><tr><th class="p-4 text-left text-base font-semibold">Indicador</th><th class="p-4 text-left text-base font-semibold">R$/ha (ou unidade)</th><th class="p-4 text-left text-base font-semibold">R$/@</th></tr></thead>
+                            <tbody id="results-body" class="text-gray-800"></tbody>
+                        </table>
+                        </div>
+                    </div>
+
+                    <div id="breakEvenCard" class="mt-12 bg-gradient-to-r from-emerald-50 to-teal-100 p-6 rounded-2xl shadow-lg border border-emerald-200 flex-wrap items-center justify-center text-center sm:flex sm:text-left sm:justify-start" style="display:none;">
+                        <div class="flex-shrink-0 mb-4 sm:mb-0 sm:mr-6"><i class="fas fa-scale-balanced text-5xl text-emerald-600"></i></div>
+                        <div>
+                            <h3 class="text-xl font-bold text-emerald-800">Ponto de Equilíbrio (Arrobas Totais)</h3>
+                            <p id="break-even-value" class="text-4xl font-extrabold text-emerald-700 mt-1">0,00 @</p>
+                            <p class="text-sm text-emerald-600 mt-2">Arrobas que precisam ser vendidas, ao preço informado, para cobrir o custo operacional total.</p>
+                            <p class="text-sm text-emerald-700 mt-3">Margem de segurança: <strong id="break-even-margin">0,00 @</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="mt-12 chart-container bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                        <h3 class="text-xl font-bold mb-4">Matriz de Sensibilidade 3×3 — Preço da Arroba × GMD</h3>
+                        <p class="text-sm text-gray-500 mb-3">Linhas: GMD (−20% / base / +20%). Colunas: Preço da arroba (−20% / base / +20%). Cor conforme o mesmo critério do veredito de viabilidade.</p>
+                        <div id="matrix3x3-container" class="overflow-x-auto"></div>
+                    </div>
+
+                    <div class="mt-12 charts-section">
+                        <div id="tornadoContainer" class="chart-container bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+                            <div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold">Diagrama de Tornado — Sensibilidade da Margem Líquida</h3><div class="chart-actions"><button class="download-chart-btn p-1 text-gray-500 hover:text-blue-600" data-chart="tornadoChart"><i class="fas fa-download"></i></button></div></div>
+                            <canvas id="tornadoChart"></canvas>
+                        </div>
+                    </div>
+
+                    <section id="monte-carlo-results" class="mt-12 bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 rounded-2xl p-6 sm:p-8 shadow-lg">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+                            <div><h3 class="text-2xl font-bold text-gray-800"><i class="fas fa-dice mr-2 text-purple-600"></i>Monte Carlo</h3><p class="text-sm text-gray-600 mt-1">Risco da margem líquida por hectare com distribuições triangulares.</p></div>
+                            <button type="button" id="runMonteCarloBtn" class="btn-hover py-3 px-5 bg-purple-700 text-white rounded-lg font-bold shadow"><i class="fas fa-dice mr-2"></i>Executar Monte Carlo</button>
+                        </div>
+                        <div id="mc-empty-state" class="bg-white border border-dashed border-purple-300 rounded-xl p-6 text-center text-gray-600">Análise de risco não executada. Clique em "Executar Monte Carlo".</div>
+                        <div id="mc-results" class="hidden">
+                            <div id="mc-summary-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-7"></div>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-7">
+                                <div class="bg-white rounded-xl p-4 shadow"><h4 class="font-bold mb-3">Distribuição da margem líquida</h4><div class="h-80"><canvas id="mcHistogramChart"></canvas></div></div>
+                                <div class="bg-white rounded-xl p-4 shadow"><h4 class="font-bold mb-1">Curva de excedência</h4><p class="text-xs text-gray-500 mb-3">Chance de atingir ou superar cada meta de margem líquida.</p><div class="h-80"><canvas id="mcCdfChart"></canvas></div></div>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 shadow"><h4 class="font-bold mb-3">Influência das premissas — Spearman</h4><div class="overflow-x-auto"><table class="w-full"><thead><tr><th class="text-left p-3">Variável</th><th class="text-left p-3">Correlação com o resultado</th></tr></thead><tbody id="mc-correlation-body"></tbody></table></div></div>
+                            <p id="mc-method-note" class="text-xs text-gray-600 mt-4"></p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Aba de cenários -->
+            <div id="scenarios" class="tab-content">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2"><i class="fas fa-layer-group mr-2"></i>Cenários Salvos</h3>
+                    <p class="text-sm text-gray-500 mb-6">Salve diferentes sistemas de pastejo, categorias animais ou situações (nova/existente) e compare o desempenho técnico e econômico entre eles.</p>
+                    <div id="comparison-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"></div>
+                    <div id="comparison-chart-container" class="bg-gray-50 rounded-xl p-4" style="display:none;">
+                        <h4 class="font-bold mb-3">Comparação — Margem Líquida × ROI</h4>
+                        <div style="height:360px;"><canvas id="comparisonChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de ajuda -->
+    <div id="helpModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fas fa-question-circle mr-2"></i>Ajuda — Manejo de Pastagens</h2>
+            <div class="text-gray-700 text-base leading-relaxed space-y-4">
+                <div>
+                    <h3 class="font-bold text-lg">Como usar:</h3>
+                    <ol class="list-decimal pl-5 space-y-2">
+                        <li>Preencha as 5 abas de entrada (Solo, Sistema, Rebanho, Custos, Carbono).</li>
+                        <li>Clique em "Calcular" para ver o veredito de viabilidade e os resultados.</li>
+                        <li>Salve o cenário e repita com outro sistema/categoria para comparar na aba "Cenários".</li>
+                        <li>Exporte PDF, Excel ou Imagem para compartilhar.</li>
+                    </ol>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg">Termos técnicos:</h3>
+                    <dl class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div class="bg-gray-50 p-2 rounded"><dt class="font-semibold">OF</dt><dd class="text-sm">Oferta de Forragem — relação entre massa de forragem disponível e peso vivo dos animais</dd></div>
+                        <div class="bg-gray-50 p-2 rounded"><dt class="font-semibold">UA</dt><dd class="text-sm">Unidade Animal — equivalente a 450 kg de peso vivo</dd></div>
+                        <div class="bg-gray-50 p-2 rounded"><dt class="font-semibold">CAE</dt><dd class="text-sm">Custo Anual Equivalente do investimento em implantação</dd></div>
+                        <div class="bg-gray-50 p-2 rounded"><dt class="font-semibold">@</dt><dd class="text-sm">Arroba — unidade equivalente a 15 kg</dd></div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="llmModal" class="modal hidden">
+        <div class="modal-content"><span class="close-button">&times;</span><h2 id="modalTitle" class="text-xl font-bold text-gray-800 mb-4"></h2><div id="modalContent" class="text-gray-700 text-base leading-relaxed"></div></div>
+    </div>
+
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal-content max-w-md">
+            <h2 id="confirmTitle" class="text-xl font-bold text-gray-800 mb-4"></h2>
+            <div id="confirmContent" class="text-gray-700 mb-6"></div>
+            <div class="flex justify-end space-x-4">
+                <button id="confirmCancel" class="px-4 py-2 bg-gray-300 rounded-lg">Cancelar</button>
+                <button id="confirmOk" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalShareImage" class="fixed inset-0 bg-black bg-opacity-70 hidden z-[110] flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-sm w-full p-5 shadow-2xl text-center">
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Imagem pronta!</h3>
+            <p class="text-xs text-gray-500 mb-3">No celular, toque e segure para salvar. No PC, clique com o botão direito e escolha "Salvar imagem".</p>
+            <div class="max-h-[55vh] overflow-auto border border-gray-200 rounded-lg mb-4 bg-gray-100"><img id="shareImagePreview" class="w-full block" alt="Imagem para compartilhar"></div>
+            <a id="shareImageDownload" href="#" download="imagem.png" class="btn-hover w-full inline-flex items-center justify-center py-2 px-4 bg-blue-700 text-white rounded-lg font-bold mb-2"><i class="fas fa-download mr-2"></i>Baixar Imagem</a>
+            <button onclick="document.getElementById('modalShareImage').classList.add('hidden')" class="w-full py-2 px-4 bg-gray-300 text-gray-800 rounded-lg font-medium">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-gray-600">Manejo de Pastagens — Simulação Técnica e Econômica</p>
+                    <p class="text-sm text-gray-500">Desenvolvido por Prof. Ricardo C. Brumatti - FAMEZ/UFMS</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="mailto:ricardo.brumatti@ufms.br" class="text-gray-500 hover:text-blue-600" title="Contato por e-mail"><i class="fas fa-envelope"></i></a>
+                    <a href="../index.html" class="text-gray-500 hover:text-blue-600" title="Visitar o site"><i class="fas fa-globe"></i></a>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200 text-center text-sm text-gray-500">
+                <p>Esta ferramenta oferece análise técnica e econômica com base nos dados informados pelo usuário. Os resultados são apenas uma referência, sendo o uso das informações de inteira responsabilidade do usuário.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Motor técnico-econômico: PastagensEngine -->
+    <script>
+(function (root) {
+  'use strict';
+
+  const VERSION = '1.0.0';
+  const finite = (v) => Number.isFinite(Number(v));
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+  const num = (v, fallback = 0) => finite(v) ? Number(v) : fallback;
+
+  function normalizeInputs(raw = {}) {
+    return {
+      situacaoPastagem: raw.situacaoPastagem === 'existente' ? 'existente' : 'nova',
+      area: num(raw.area, 100),
+      cultivar: String(raw.cultivar || ''),
+      custoCalagemGessagem_ha: num(raw.custoCalagemGessagem_ha, 450),
+      custoPreparoMecanizado_ha: num(raw.custoPreparoMecanizado_ha, 700),
+      custoSementesMudas_ha: num(raw.custoSementesMudas_ha, 350),
+      custoFertilizantesImplantacao_ha: num(raw.custoFertilizantesImplantacao_ha, 900),
+      custoHerbicidas_ha: num(raw.custoHerbicidas_ha, 250),
+      custoInoculantes_ha: num(raw.custoInoculantes_ha, 60),
+      custoMaoObraImplantacao_ha: num(raw.custoMaoObraImplantacao_ha, 220),
+      custoCombustivelImplantacao_ha: num(raw.custoCombustivelImplantacao_ha, 250),
+      custoOutrosImplantacao_ha: num(raw.custoOutrosImplantacao_ha, 220),
+      vidaUtil: num(raw.vidaUtil, 10),
+      taxaJuros: num(raw.taxaJuros, 8.0),
+
+      sistema: String(raw.sistema || 'continuo'),
+      alturaEntrada: num(raw.alturaEntrada, 0),
+      alturaSaida: num(raw.alturaSaida, 0),
+      periodoOcupacao: num(raw.periodoOcupacao, 0),
+      periodoDescanso: num(raw.periodoDescanso, 0),
+      massaMSDisponivel: num(raw.massaMSDisponivel, 2500),
+      perdasPastejo: num(raw.perdasPastejo, 15),
+
+      categoria: String(raw.categoria || 'novilho'),
+      cabecas: num(raw.cabecas, 200),
+      pesoInicial: num(raw.pesoInicial, 300),
+      permanencia: num(raw.permanencia, 180),
+      gmd: num(raw.gmd, 0.750),
+      consumoMS: num(raw.consumoMS, 2.3),
+
+      precoArroba: num(raw.precoArroba, 240.0),
+      custoAdubacaoManutencao_ha: num(raw.custoAdubacaoManutencao_ha, 180),
+      custoSuplementacao_ha: num(raw.custoSuplementacao_ha, 120),
+      custoSanidade_ha: num(raw.custoSanidade_ha, 60),
+      custoMaoDeObra_ha: num(raw.custoMaoDeObra_ha, 150),
+      custoCombustivel_ha: num(raw.custoCombustivel_ha, 50),
+      custoCercasAgua_ha: num(raw.custoCercasAgua_ha, 40),
+      custoDepreciacao_ha: num(raw.custoDepreciacao_ha, 80),
+      custoProLabore_ha: num(raw.custoProLabore_ha, 100),
+
+      incluirCarbono: raw.incluirCarbono === 'nao' ? 'nao' : 'sim',
+      estoqueInicialC: num(raw.estoqueInicialC, 40.0),
+      estoqueFinalC: num(raw.estoqueFinalC, 44.0),
+      precoCredito: num(raw.precoCredito, 50.0),
+
+      custoImplantacaoTotalOverride_ha: raw.custoImplantacaoTotalOverride_ha
+    };
+  }
+
+  const RULES = {
+    area: [0.1, 1000000, 'Área'],
+    vidaUtil: [1, 60, 'Vida útil'],
+    taxaJuros: [0, 100, 'Taxa de juros'],
+    cabecas: [1, 1000000, 'Cabeças'],
+    pesoInicial: [1, 1200, 'Peso inicial'],
+    permanencia: [1, 3650, 'Permanência'],
+    gmd: [-2, 3, 'GMD'],
+    massaMSDisponivel: [0, 1000000, 'Massa MS disponível'],
+    precoArroba: [0.01, 10000, 'Preço da arroba'],
+    precoCredito: [0, 100000, 'Preço do crédito de carbono']
+  };
+
+  function validateInputs(raw) {
+    const inputs = normalizeInputs(raw);
+    const errors = [];
+    for (const [field, [min, max, label]] of Object.entries(RULES)) {
+      const v = inputs[field];
+      if (!finite(v) || v < min || v > max) errors.push({ field, message: `${label} deve estar entre ${min} e ${max}.` });
+    }
+    return { valid: errors.length === 0, errors, inputs };
+  }
+
+  function crf(iPct, n) {
+    const i = iPct / 100;
+    if (n <= 0) return 1;
+    if (Math.abs(i) < 1e-9) return 1 / n;
+    const f = Math.pow(1 + i, n);
+    return (i * f) / (f - 1);
+  }
+
+  const OF_RULES = {
+    continuo:    { type: 'faixa', baixa: 4, alta: 10 },
+    rotacionado: { type: 'faixa', baixa: 4, alta: 10 },
+    rip:         { type: 'alvo', min: 8, max: 12 },
+    tip:         { type: 'alvo', min: 8, max: 12 },
+    ilp:         { type: 'alvo', min: 8, max: 12 },
+    ilpf:        { type: 'alvo', min: 8, max: 12 },
+    feno:        { type: 'consumo', porCategoria: { bezerro: [2.0, 2.5], novilha: [1.5, 2.0], garrote: [1.5, 2.0], novilho: [1.5, 2.0], touro: [2.0, 2.5], matriz: [1.5, 2.0] } },
+    silagem:     { type: 'consumo', min: 2.0, max: 3.0 }
+  };
+
+  function ofInterpretation(inputs, ofPct) {
+    const rule = OF_RULES[inputs.sistema] || OF_RULES.continuo;
+    if (rule.type === 'faixa') {
+      let status, label;
+      if (ofPct < rule.baixa) { status = 'baixo'; label = `Baixa (<${rule.baixa}%)`; }
+      else if (ofPct > rule.alta) { status = 'alto'; label = `Alta (>${rule.alta}%)`; }
+      else { status = 'adequado'; label = `Adequada (${rule.baixa}–${rule.alta}%)`; }
+      return { type: 'faixa', metric: 'OF', value: ofPct, status, label, adequado: status === 'adequado', min: rule.baixa, max: rule.alta };
+    }
+    if (rule.type === 'alvo') {
+      let status, label;
+      if (ofPct < rule.min) { status = 'abaixoAlvo'; label = `Abaixo do alvo (<${rule.min}%)`; }
+      else if (ofPct > rule.max) { status = 'acimaAlvo'; label = `Acima do alvo (>${rule.max}%)`; }
+      else { status = 'dentroAlvo'; label = `Dentro do alvo (${rule.min}–${rule.max}%)`; }
+      return { type: 'alvo', metric: 'OF', value: ofPct, status, label, adequado: status === 'dentroAlvo', min: rule.min, max: rule.max };
+    }
+    const consumo = inputs.consumoMS;
+    const range = rule.min != null ? [rule.min, rule.max] : (rule.porCategoria[inputs.categoria] || [1.5, 2.5]);
+    const [min, max] = range;
+    let status, label;
+    if (consumo < min) { status = 'baixo'; label = `Abaixo da faixa (<${min}%PV)`; }
+    else if (consumo > max) { status = 'alto'; label = `Acima da faixa (>${max}%PV)`; }
+    else { status = 'adequado'; label = `Adequado (${min}–${max}%PV)`; }
+    return { type: 'consumo', metric: 'Consumo', value: consumo, status, label, adequado: status === 'adequado', min, max };
+  }
+
+  function calculateEconomics(raw) {
+    const inputs = normalizeInputs(raw);
+    const isNova = inputs.situacaoPastagem === 'nova';
+
+    const ganhoTotal = inputs.gmd * inputs.permanencia;
+    const pesoFinal = inputs.pesoInicial + ganhoTotal;
+    const pesoMedio = (inputs.pesoInicial + pesoFinal) / 2;
+    const ua = (pesoMedio * inputs.cabecas) / 450;
+    const lotacao = inputs.area > 0 ? ua / inputs.area : NaN;
+    const producaoTotal_at = (ganhoTotal * inputs.cabecas) / 15;
+    const producaoTotal_at_ha = inputs.area > 0 ? producaoTotal_at / inputs.area : NaN;
+    const pesoVivoTotal_ha = inputs.area > 0 ? (pesoMedio * inputs.cabecas) / inputs.area : NaN;
+    const ofPct = pesoVivoTotal_ha > 0 ? (inputs.massaMSDisponivel / pesoVivoTotal_ha) * 100 : NaN;
+    const of = ofInterpretation(inputs, ofPct);
+
+    const custoTotalImplantacaoCalc_ha = inputs.custoCalagemGessagem_ha + inputs.custoPreparoMecanizado_ha +
+      inputs.custoSementesMudas_ha + inputs.custoFertilizantesImplantacao_ha + inputs.custoHerbicidas_ha +
+      inputs.custoInoculantes_ha + inputs.custoMaoObraImplantacao_ha + inputs.custoCombustivelImplantacao_ha +
+      inputs.custoOutrosImplantacao_ha;
+    const custoTotalImplantacao_ha = finite(inputs.custoImplantacaoTotalOverride_ha)
+      ? Number(inputs.custoImplantacaoTotalOverride_ha)
+      : custoTotalImplantacaoCalc_ha;
+    const cae_ha = isNova ? custoTotalImplantacao_ha * crf(inputs.taxaJuros, inputs.vidaUtil) : 0;
+    const capitalInvestido_total = isNova ? custoTotalImplantacao_ha * inputs.area : 0;
+
+    const deltaC = inputs.estoqueFinalC - inputs.estoqueInicialC;
+    const sequestro_ha = deltaC * 3.67;
+    const receitaCarbono_ha = inputs.incluirCarbono === 'sim' ? sequestro_ha * inputs.precoCredito : 0;
+    const receitaCarbono_total = receitaCarbono_ha * inputs.area;
+
+    const coe_ha = inputs.custoAdubacaoManutencao_ha + inputs.custoSuplementacao_ha + inputs.custoSanidade_ha +
+      inputs.custoMaoDeObra_ha + inputs.custoCombustivel_ha + inputs.custoCercasAgua_ha;
+    const depreciacoesProLabore_ha = inputs.custoDepreciacao_ha + inputs.custoProLabore_ha;
+    const cot_ha = coe_ha + cae_ha + depreciacoesProLabore_ha;
+    const cot_total = cot_ha * inputs.area;
+
+    const receitaBruta_total = producaoTotal_at * inputs.precoArroba + receitaCarbono_total;
+    const receitaBruta_ha = inputs.area > 0 ? receitaBruta_total / inputs.area : NaN;
+
+    const margemLiquida_ha = receitaBruta_ha - cot_ha;
+    const margemLiquida_total = receitaBruta_total - cot_total;
+
+    const custoPorArroba = producaoTotal_at > 0 ? cot_total / producaoTotal_at : NaN;
+    const margemPorArroba = producaoTotal_at > 0 ? margemLiquida_total / producaoTotal_at : NaN;
+    const receitaPorArroba = producaoTotal_at > 0 ? receitaBruta_total / producaoTotal_at : NaN;
+
+    const roiSobreInvestimento = capitalInvestido_total > 0 ? (margemLiquida_total / capitalInvestido_total) * 100 : null;
+    const retornoSobreCusto = cot_total > 0 ? (margemLiquida_total / cot_total) * 100 : NaN;
+    const roiBase = roiSobreInvestimento != null ? roiSobreInvestimento : retornoSobreCusto;
+    const roiBaseLabel = roiSobreInvestimento != null ? 'ROI sobre investimento' : 'Retorno sobre custo operacional';
+
+    const payback_anos = (capitalInvestido_total > 0 && margemLiquida_total > 0) ? capitalInvestido_total / margemLiquida_total : null;
+
+    const breakEven_at = inputs.precoArroba > 0 ? cot_total / inputs.precoArroba : NaN;
+    const margemSegurancaArrobas = producaoTotal_at - breakEven_at;
+    const margemSegurancaPercentual = producaoTotal_at > 0 ? (margemSegurancaArrobas / producaoTotal_at) * 100 : NaN;
+
+    return {
+      version: VERSION, isNova,
+      ganhoTotal, pesoFinal, pesoMedio, ua, lotacao,
+      producaoTotal_at, producaoTotal_at_ha, pesoVivoTotal_ha, ofPct, of,
+      custoTotalImplantacao_ha, cae_ha, capitalInvestido_total,
+      deltaC, sequestro_ha, receitaCarbono_ha, receitaCarbono_total,
+      coe_ha, depreciacoesProLabore_ha, cot_ha, cot_total,
+      receitaBruta_total, receitaBruta_ha,
+      margemLiquida_ha, margemLiquida_total,
+      custoPorArroba, margemPorArroba, receitaPorArroba,
+      roiSobreInvestimento, retornoSobreCusto, roiBase, roiBaseLabel,
+      payback_anos,
+      breakEven_at, margemSegurancaArrobas, margemSegurancaPercentual
+    };
+  }
+
+  function assessViability(inputs, economics) {
+    const reasons = [];
+    let status;
+    if (!(economics.margemLiquida_ha > 0)) {
+      status = 'inviavel';
+      reasons.push(`a margem líquida é negativa ou nula (R$ ${economics.margemLiquida_ha.toFixed(2)}/ha)`);
+    } else {
+      const ressalvas = [];
+      if (economics.roiBase < inputs.taxaJuros) {
+        ressalvas.push(`${economics.roiBaseLabel} (${economics.roiBase.toFixed(2)}%) está abaixo da taxa de juros informada (${inputs.taxaJuros.toFixed(2)}%)`);
+      }
+      if (economics.payback_anos != null && economics.payback_anos > inputs.vidaUtil) {
+        ressalvas.push(`o payback (${economics.payback_anos.toFixed(1)} anos) é maior que a vida útil da pastagem (${inputs.vidaUtil} anos)`);
+      }
+      if (!economics.of.adequado) {
+        ressalvas.push(`a ${economics.of.metric} está ${economics.of.label.toLowerCase()} para o sistema selecionado`);
+      }
+      if (ressalvas.length) { status = 'ressalvas'; reasons.push(...ressalvas); }
+      else status = 'viavel';
+    }
+    return { status, reasons };
+  }
+
+  function activeSensitivityKeys(inputs) {
+    const keys = [
+      { key: 'precoArroba', label: 'Preço da arroba' },
+      { key: 'custoSuplementacao_ha', label: 'Preço do insumo/suplemento' },
+      { key: 'cabecas', label: 'Taxa de lotação (via cabeças)' },
+      { key: 'gmd', label: 'GMD' }
+    ];
+    if (inputs.situacaoPastagem === 'nova') {
+      keys.push({ key: 'custoImplantacaoTotalOverride_ha', label: 'Custo de implantação', base: 'custoTotalImplantacaoBase' });
+      keys.push({ key: 'taxaJuros', label: 'Taxa de juros' });
+    }
+    return keys;
+  }
+
+  function sensitivity(rawInputs) {
+    const inputs = normalizeInputs(rawInputs);
+    const base = calculateEconomics(inputs);
+    const keys = activeSensitivityKeys(inputs);
+    return keys.map(({ key, label, base: baseField }) => {
+      const baseValue = baseField ? base.custoTotalImplantacao_ha : inputs[key];
+      const low = calculateEconomics({ ...inputs, [key]: baseValue * 0.8 }).margemLiquida_ha;
+      const high = calculateEconomics({ ...inputs, [key]: baseValue * 1.2 }).margemLiquida_ha;
+      return { key, label, low: Math.min(low, high), high: Math.max(low, high), impact: Math.abs(high - low) };
+    }).sort((a, b) => b.impact - a.impact);
+  }
+
+  function sensitivityMatrix3x3(rawInputs) {
+    const inputs = normalizeInputs(rawInputs);
+    const priceSteps = [inputs.precoArroba * 0.8, inputs.precoArroba, inputs.precoArroba * 1.2];
+    const gmdSteps = [inputs.gmd * 0.8, inputs.gmd, inputs.gmd * 1.2];
+    return gmdSteps.map((gmd) => priceSteps.map((precoArroba) => {
+      const r = calculateEconomics({ ...inputs, precoArroba, gmd });
+      return { gmd, precoArroba, margemLiquida_ha: r.margemLiquida_ha, roiBase: r.roiBase };
+    }));
+  }
+
+  function mulberry32(seed) {
+    let a = (Number(seed) || 0) >>> 0;
+    return function random() {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function triangular(random, min, mode, max) {
+    const a = Number(min), b = Number(mode), c = Number(max);
+    if (a === c) return a;
+    const u = random();
+    const f = (b - a) / (c - a);
+    return u < f ? a + Math.sqrt(u * (c - a) * (b - a)) : c - Math.sqrt((1 - u) * (c - a) * (c - b));
+  }
+
+  function percentile(sorted, p) {
+    if (!sorted.length) return NaN;
+    const index = (sorted.length - 1) * p;
+    const lo = Math.floor(index), hi = Math.ceil(index);
+    return lo === hi ? sorted[lo] : sorted[lo] + (sorted[hi] - sorted[lo]) * (index - lo);
+  }
+
+  function ranks(values) {
+    const indexed = values.map((value, index) => ({ value, index })).sort((a, b) => a.value - b.value);
+    const out = new Array(values.length);
+    for (let i = 0; i < indexed.length;) {
+      let j = i + 1;
+      while (j < indexed.length && indexed[j].value === indexed[i].value) j += 1;
+      const rank = (i + j - 1) / 2 + 1;
+      for (let k = i; k < j; k += 1) out[indexed[k].index] = rank;
+      i = j;
+    }
+    return out;
+  }
+
+  function correlation(a, b) {
+    if (!a.length || a.length !== b.length) return NaN;
+    const meanA = a.reduce((s, v) => s + v, 0) / a.length;
+    const meanB = b.reduce((s, v) => s + v, 0) / b.length;
+    let numerator = 0, denomA = 0, denomB = 0;
+    for (let i = 0; i < a.length; i += 1) {
+      const da = a[i] - meanA, db = b[i] - meanB;
+      numerator += da * db; denomA += da * da; denomB += db * db;
+    }
+    return denomA && denomB ? numerator / Math.sqrt(denomA * denomB) : 0;
+  }
+
+  function defaultMcRanges(inputs) {
+    const base = calculateEconomics(inputs);
+    const ranges = {
+      precoArroba: { min: inputs.precoArroba * 0.8, mode: inputs.precoArroba, max: inputs.precoArroba * 1.2 },
+      custoSuplementacao_ha: { min: inputs.custoSuplementacao_ha * 0.8, mode: inputs.custoSuplementacao_ha, max: inputs.custoSuplementacao_ha * 1.2 },
+      cabecas: { min: inputs.cabecas * 0.8, mode: inputs.cabecas, max: inputs.cabecas * 1.2 },
+      gmd: { min: Math.max(-1.99, inputs.gmd * 0.8), mode: inputs.gmd, max: inputs.gmd * 1.2 }
+    };
+    if (inputs.situacaoPastagem === 'nova') {
+      ranges.custoImplantacaoTotalOverride_ha = { min: base.custoTotalImplantacao_ha * 0.8, mode: base.custoTotalImplantacao_ha, max: base.custoTotalImplantacao_ha * 1.2 };
+      ranges.taxaJuros = { min: inputs.taxaJuros * 0.8, mode: inputs.taxaJuros, max: inputs.taxaJuros * 1.2 };
+    }
+    return ranges;
+  }
+
+  function runMonteCarlo(rawInputs, config = {}) {
+    const inputs = normalizeInputs(rawInputs);
+    const iterations = clamp(Math.round(num(config.iterations, 10000)), 1000, 50000);
+    const seed = Math.round(num(config.seed, 12345));
+    const ranges = { ...defaultMcRanges(inputs), ...(config.ranges || {}) };
+    const random = mulberry32(seed);
+    const keys = Object.keys(ranges);
+    const columns = Object.fromEntries(keys.map((k) => [k, []]));
+    const results = new Array(iterations);
+    for (let idx = 0; idx < iterations; idx += 1) {
+      const sampled = {};
+      for (const key of keys) {
+        const r = ranges[key];
+        sampled[key] = triangular(random, r.min, r.mode, r.max);
+        columns[key].push(sampled[key]);
+      }
+      const economics = calculateEconomics({ ...inputs, ...sampled });
+      results[idx] = economics.margemLiquida_ha;
+    }
+    const sorted = [...results].sort((a, b) => a - b);
+    const mean = results.reduce((s, v) => s + v, 0) / results.length;
+    const variance = results.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / Math.max(1, results.length - 1);
+    const p5 = percentile(sorted, 0.05);
+    const tail = sorted.filter((v) => v <= p5);
+    const correlations = keys.map((key) => ({ variable: key, value: correlation(ranks(columns[key]), ranks(results)) }))
+      .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+    const min = sorted[0], max = sorted[sorted.length - 1];
+    const binsCount = 30;
+    const width = max === min ? 1 : (max - min) / binsCount;
+    const bins = Array.from({ length: binsCount }, (_, i) => ({ start: min + i * width, end: min + (i + 1) * width, count: 0 }));
+    for (const value of results) {
+      const idx = max === min ? 0 : Math.min(binsCount - 1, Math.floor((value - min) / width));
+      bins[idx].count += 1;
+    }
+    const cdf = Array.from({ length: 21 }, (_, i) => ({ probability: i / 20, value: percentile(sorted, i / 20) }));
+    const exceedance = cdf.map((p) => ({ value: p.value, probability: (1 - p.probability) * 100 }));
+    return {
+      version: VERSION, iterations, seed, ranges,
+      summary: {
+        mean, median: percentile(sorted, 0.5), stdDev: Math.sqrt(variance),
+        probabilityLoss: results.filter((v) => v < 0).length / results.length * 100,
+        p5, p10: percentile(sorted, 0.1), p50: percentile(sorted, 0.5), p90: percentile(sorted, 0.9), p95: percentile(sorted, 0.95),
+        expectedShortfall5: tail.reduce((s, v) => s + v, 0) / Math.max(1, tail.length),
+        min, max
+      },
+      correlations, bins, cdf, exceedance
+    };
+  }
+
+  root.PastagensEngine = Object.freeze({
+    VERSION, RULES, OF_RULES,
+    normalizeInputs, validateInputs, calculateEconomics, assessViability, ofInterpretation,
+    defaultMcRanges, sensitivity, sensitivityMatrix3x3, runMonteCarlo,
+    percentile, mulberry32, triangular, crf
+  });
+})(typeof window !== 'undefined' ? window : globalThis);
+    </script>
+
+    <!-- Aplicação (interface) -->
+    <script>
+(function () {
+  'use strict';
+
+  const Engine = window.PastagensEngine;
+  const SCENARIOS_KEY = 'pastagens_scenarios';
+  const LEGAL_DISCLAIMER = 'Simulador Técnico-Econômico de Manejo de Pastagens - Prof. Ricardo Brumatti - Ferramenta gratuita, sem fins lucrativos, não substitui orientação técnica individualizada.';
+  const state = { current: null, charts: {}, theme: 'light', highContrast: false };
+
+  const $ = (id) => document.getElementById(id);
+  const formatBRL = (v) => Number.isFinite(v) ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v) : 'N/A';
+  const formatNumber = (v, digits = 2) => Number.isFinite(v) ? new Intl.NumberFormat('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(v) : 'N/A';
+  const formatPercent = (v, digits = 2) => Number.isFinite(v) ? `${formatNumber(v, digits)}%` : 'N/A';
+  const safeFilename = (v) => String(v || 'pastagens').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'pastagens';
+
+  const CATEGORIA_LABEL = { bezerro: 'Bezerro', garrote: 'Garrote', novilho: 'Novilho', novilha: 'Novilha', touro: 'Touro', matriz: 'Matriz' };
+  const SISTEMA_LABEL = { continuo: 'Contínuo', rotacionado: 'Rotacionado', rip: 'RIP', tip: 'TIP', ilp: 'ILP', ilpf: 'ILPF', feno: 'Feno', silagem: 'Silagem' };
+
+  const FIELD_MAP = {
+    situacaoPastagem: 'situacao-pastagem', area: 'area', cultivar: 'cultivar',
+    custoCalagemGessagem_ha: 'custo-calagem-gessagem', custoPreparoMecanizado_ha: 'custo-preparo-mecanizado',
+    custoSementesMudas_ha: 'custo-sementes-mudas', custoFertilizantesImplantacao_ha: 'custo-fertilizantes-implantacao',
+    custoHerbicidas_ha: 'custo-herbicidas', custoInoculantes_ha: 'custo-inoculantes',
+    custoMaoObraImplantacao_ha: 'custo-mao-obra-implantacao', custoCombustivelImplantacao_ha: 'custo-combustivel-implantacao',
+    custoOutrosImplantacao_ha: 'custo-outros-implantacao', vidaUtil: 'vida-util', taxaJuros: 'taxa-juros',
+    sistema: 'sistema', alturaEntrada: 'altura-entrada', alturaSaida: 'altura-saida',
+    periodoOcupacao: 'periodo-ocupacao', periodoDescanso: 'periodo-descanso',
+    massaMSDisponivel: 'massa-ms-disponivel', perdasPastejo: 'perdas-pastejo',
+    categoria: 'categoria', cabecas: 'cabecas', pesoInicial: 'peso-inicial', permanencia: 'permanencia',
+    gmd: 'gmd', consumoMS: 'consumo-ms', precoArroba: 'preco-arroba',
+    custoAdubacaoManutencao_ha: 'custo-adubacao-manutencao', custoSuplementacao_ha: 'custo-suplementacao',
+    custoSanidade_ha: 'custo-sanidade', custoMaoDeObra_ha: 'custo-mao-de-obra', custoCombustivel_ha: 'custo-combustivel',
+    custoCercasAgua_ha: 'custo-cercas-agua', custoDepreciacao_ha: 'custo-depreciacao', custoProLabore_ha: 'custo-pro-labore',
+    incluirCarbono: 'incluir-carbono', estoqueInicialC: 'estoque-inicial-c', estoqueFinalC: 'estoque-final-c', precoCredito: 'preco-credito'
+  };
+
+  function showModal(title, message) { $('modalTitle').textContent = title; $('modalContent').textContent = message; $('llmModal').classList.remove('hidden'); }
+  function showConfirmModal(title, message, onConfirm) {
+    $('confirmTitle').textContent = title; $('confirmContent').textContent = message; $('confirmModal').classList.remove('hidden');
+    const button = $('confirmOk'); const fresh = button.cloneNode(true); button.replaceWith(fresh);
+    fresh.addEventListener('click', () => { $('confirmModal').classList.add('hidden'); onConfirm(); }, { once: true });
+  }
+  function value(id) { return $(id) ? $(id).value : ''; }
+
+  function readInputs() {
+    const raw = {};
+    for (const [key, id] of Object.entries(FIELD_MAP)) raw[key] = value(id);
+    return Engine.normalizeInputs(raw);
+  }
+
+  function clearValidation() {
+    document.querySelectorAll('.field-error').forEach((n) => n.classList.remove('field-error'));
+    const summary = $('validation-summary'); if (summary) { summary.textContent = ''; summary.classList.add('hidden'); }
+  }
+
+  function validateAndRead() {
+    clearValidation();
+    const checked = Engine.validateInputs(readInputs());
+    if (!checked.valid) {
+      checked.errors.forEach((error) => { const node = $(FIELD_MAP[error.field] || error.field); if (node) node.classList.add('field-error'); });
+      const summary = $('validation-summary');
+      if (summary) { summary.textContent = checked.errors.map((e) => e.message).join(' '); summary.classList.remove('hidden'); }
+      showModal('Revise os dados', checked.errors.map((e) => e.message).join('\n'));
+      return null;
+    }
+    return checked.inputs;
+  }
+
+  function toggleImplantacaoPastagem(sel) {
+    const wrap = $('implantacao-fields');
+    const isNova = sel.value === 'nova';
+    wrap.style.display = isNova ? 'block' : 'none';
+    wrap.querySelectorAll('input,select').forEach((el) => { el.required = isNova; });
+  }
+
+  function toggleCarbonoFields(sel) {
+    const wrap = $('carbono-fields');
+    wrap.style.display = sel.value === 'sim' ? 'grid' : 'none';
+  }
+
+  function ofRulerHTML(of, idSuffix) {
+    const domainMax = of.max != null ? of.max * 1.6 : Math.max(of.value * 1.4, 10);
+    const lowEnd = of.type === 'faixa' ? of.min : of.min;
+    const highStart = of.max;
+    const pLow = clampPct((lowEnd / domainMax) * 100);
+    const pHigh = clampPct((highStart / domainMax) * 100);
+    const markerPct = clampPct((of.value / domainMax) * 100);
+    const colorLow = of.type === 'faixa' ? '#cf1818' : '#f59e0b';
+    const colorHigh = of.type === 'faixa' ? '#cf1818' : '#f59e0b';
+    return `
+      <div class="of-ruler" id="of-ruler-${idSuffix}">
+        <div class="of-ruler-track">
+          <div class="of-ruler-seg" style="width:${pLow}%; background:${colorLow};"></div>
+          <div class="of-ruler-seg" style="width:${pHigh - pLow}%; background:#10b981;"></div>
+          <div class="of-ruler-seg" style="width:${100 - pHigh}%; background:${colorHigh};"></div>
+          <div class="of-ruler-marker" style="left:${markerPct}%;"></div>
+        </div>
+        <div class="of-ruler-labels"><span>0</span><span>${formatNumber(of.min, 1)}</span><span>${formatNumber(of.max, 1)}</span><span>${formatNumber(domainMax, 1)}</span></div>
+        <div class="of-ruler-status ${of.adequado ? 'ok' : 'warn'}">${of.metric}: ${formatNumber(of.value, 1)}${of.type === 'consumo' ? '%PV' : '%'} — ${of.label}</div>
+      </div>`;
+  }
+  function clampPct(v) { return Math.max(0, Math.min(100, v)); }
+
+  function updateSystemRuler() {
+    const inputs = readInputs();
+    const preview = Engine.calculateEconomics(inputs);
+    $('of-ruler-input').innerHTML = ofRulerHTML(preview.of, 'input');
+    const isConsumo = preview.of.type === 'consumo';
+    $('massa-ms-disponivel').closest('div.grid').style.display = isConsumo ? 'none' : 'grid';
+  }
+
+  function calculate() {
+    const inputs = validateAndRead();
+    if (!inputs) return;
+    const results = Engine.calculateEconomics(inputs);
+    const verdict = Engine.assessViability(inputs, results);
+    state.current = { inputs, results, verdict, monteCarlo: null, timestamp: Date.now() };
+    renderCurrent();
+    $('results-section').classList.remove('hidden');
+    $('mc-empty-state').classList.remove('hidden');
+    $('mc-results').classList.add('hidden');
+    setTimeout(() => $('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+
+  function renderVerdict(verdict) {
+    const card = $('verdict-card');
+    card.classList.remove('verdict-viavel', 'verdict-ressalvas', 'verdict-inviavel');
+    const map = {
+      viavel: { cls: 'verdict-viavel', icon: 'fa-circle-check', title: 'Viável' },
+      ressalvas: { cls: 'verdict-ressalvas', icon: 'fa-triangle-exclamation', title: 'Viável com ressalvas' },
+      inviavel: { cls: 'verdict-inviavel', icon: 'fa-circle-xmark', title: 'Inviável' }
+    };
+    const cfg = map[verdict.status];
+    card.classList.add(cfg.cls);
+    card.querySelector('.verdict-icon').innerHTML = `<i class="fas ${cfg.icon}"></i>`;
+    $('verdict-title').textContent = cfg.title;
+    $('verdict-text').textContent = verdict.reasons.length
+      ? `${verdict.status === 'inviavel' ? 'Motivo' : 'Pontos de atenção'}: ${verdict.reasons.join('; ')}.`
+      : 'Margem líquida positiva, retorno acima da taxa de juros, payback dentro da vida útil e Oferta de Forragem dentro da faixa recomendada para o sistema.';
+  }
+
+  function row3(label, valorHa, valorArroba, unidade) {
+    const tr = document.createElement('tr'); tr.className = 'border-b border-gray-200 last:border-0';
+    const c1 = document.createElement('td'); c1.className = 'p-4 text-sm sm:text-base'; c1.textContent = label;
+    const c2 = document.createElement('td'); c2.className = 'p-4 text-sm sm:text-base font-medium'; c2.textContent = valorHa;
+    const c3 = document.createElement('td'); c3.className = 'p-4 text-sm sm:text-base font-medium'; c3.textContent = valorArroba || '—';
+    tr.append(c1, c2, c3); return tr;
+  }
+
+  function renderCurrent() {
+    const { inputs: i, results: r, verdict } = state.current;
+    renderVerdict(verdict);
+    $('kpi-lotacao').textContent = formatNumber(r.lotacao, 2);
+    $('kpi-producao').textContent = formatNumber(r.producaoTotal_at_ha, 2);
+    $('kpi-receita').textContent = `${formatBRL(r.receitaBruta_ha)}/ha`;
+    $('kpi-receita-sec').textContent = `${formatBRL(r.receitaPorArroba)}/@`;
+    $('kpi-custo-arroba').textContent = `${formatBRL(r.custoPorArroba)}/@`;
+    $('kpi-custo-arroba-sec').textContent = `${formatBRL(r.cot_ha)}/ha`;
+    $('kpi-margem').textContent = `${formatBRL(r.margemLiquida_ha)}/ha`;
+    $('kpi-margem-sec').textContent = `${formatBRL(r.margemPorArroba)}/@`;
+    $('kpi-roi-label').textContent = r.roiBaseLabel;
+    $('kpi-roi').textContent = formatPercent(r.roiBase);
+
+    $('of-ruler-result').innerHTML = ofRulerHTML(r.of, 'result');
+
+    const body = $('results-body');
+    body.replaceChildren(
+      row3('Sistema', SISTEMA_LABEL[i.sistema] || i.sistema, '', ''),
+      row3('Categoria', CATEGORIA_LABEL[i.categoria] || i.categoria, '', ''),
+      row3('Lotação (UA/ha)', formatNumber(r.lotacao, 2), '', ''),
+      row3('Produção total (@)', formatNumber(r.producaoTotal_at, 2), '', ''),
+      row3('Produção (@/ha)', formatNumber(r.producaoTotal_at_ha, 2), '', ''),
+      row3('Receita bruta', formatBRL(r.receitaBruta_ha), formatBRL(r.receitaPorArroba)),
+      row3('Custo Operacional Efetivo (COE)', formatBRL(r.coe_ha), ''),
+      row3('Custo Anual Equivalente (CAE, implantação)', formatBRL(r.cae_ha), ''),
+      row3('Depreciação + pró-labore', formatBRL(r.depreciacoesProLabore_ha), ''),
+      row3('Custo Operacional Total (COT)', formatBRL(r.cot_ha), formatBRL(r.custoPorArroba)),
+      row3('Receita de carbono', formatBRL(r.receitaCarbono_ha), ''),
+      row3('Margem líquida', formatBRL(r.margemLiquida_ha), formatBRL(r.margemPorArroba)),
+      row3(r.roiBaseLabel, formatPercent(r.roiBase), ''),
+      row3('Payback (anos)', r.payback_anos != null ? formatNumber(r.payback_anos, 1) : 'Não aplicável', ''),
+      row3('Ponto de equilíbrio (@/ano)', formatNumber(r.breakEven_at, 2), '')
+    );
+
+    $('breakEvenCard').style.display = 'flex';
+    $('break-even-value').textContent = `${formatNumber(r.breakEven_at, 2)} @`;
+    $('break-even-margin').textContent = `${formatNumber(r.margemSegurancaArrobas, 2)} @ (${formatPercent(r.margemSegurancaPercentual)})`;
+
+    renderCharts();
+    renderMatrix3x3();
+  }
+
+  function chart(id, config) {
+    if (!window.Chart || !$(id)) return null;
+    if (state.charts[id]) state.charts[id].destroy();
+    config.options = config.options || {};
+    config.options.responsive = true;
+    config.options.maintainAspectRatio = true;
+    config.options.aspectRatio = config.options.aspectRatio || (id === 'tornadoChart' ? 1.6 : 1.8);
+    state.charts[id] = new Chart($(id).getContext('2d'), config);
+    return state.charts[id];
+  }
+  const moneyTick = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
+
+  function renderCharts() {
+    if (!state.current || !window.Chart) return;
+    const { inputs: i, results: r } = state.current;
+    chart('costDonutChart', {
+      type: 'doughnut',
+      data: { labels: ['COE', 'CAE (implantação)', 'Depreciação/pró-labore'], datasets: [{ data: [r.coe_ha, r.cae_ha, r.depreciacoesProLabore_ha], backgroundColor: ['#0d6b83', '#f59e0b', '#64748b'] }] },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+    chart('economicChart', {
+      type: 'bar',
+      data: { labels: ['Receita Bruta', 'COE', 'COT', 'Margem Líquida'], datasets: [{ label: 'R$/ha', data: [r.receitaBruta_ha, r.coe_ha, r.cot_ha, r.margemLiquida_ha], backgroundColor: ['#10b981', '#f59e0b', '#ef4444', r.margemLiquida_ha >= 0 ? '#2563eb' : '#b91c1c'] }] },
+      options: { scales: { y: { ticks: { callback: moneyTick } } } }
+    });
+    const sens = Engine.sensitivity(i);
+    $('tornadoContainer').style.display = 'block';
+    chart('tornadoChart', {
+      type: 'bar',
+      data: { labels: sens.map((s) => s.label), datasets: [{ label: 'Faixa da margem líquida (R$/ha)', data: sens.map((s) => [s.low, s.high]), backgroundColor: 'rgba(13,107,131,.65)', borderColor: '#0d6b83', borderWidth: 1 }] },
+      options: { indexAxis: 'y', scales: { x: { ticks: { callback: moneyTick } } } }
+    });
+  }
+
+  function matrixCellClass(cell, inputs) {
+    if (cell.margemLiquida_ha <= 0) return 'matrix-cell-bad';
+    if (cell.roiBase < inputs.taxaJuros) return 'matrix-cell-warn';
+    return 'matrix-cell-ok';
+  }
+
+  function renderMatrix3x3() {
+    const { inputs } = state.current;
+    const matrix = Engine.sensitivityMatrix3x3(inputs);
+    const priceCols = matrix[0].map((c) => c.precoArroba);
+    let html = '<table class="matrix3x3"><thead><tr><th>GMD \\ Preço @</th>' + priceCols.map((p) => `<th>${formatBRL(p)}</th>`).join('') + '</tr></thead><tbody>';
+    matrix.forEach((row) => {
+      html += `<tr><th>${formatNumber(row[0].gmd, 3)} kg/dia</th>`;
+      row.forEach((cell) => {
+        html += `<td class="${matrixCellClass(cell, inputs)}">${formatBRL(cell.margemLiquida_ha)}/ha<br><span style="font-weight:400; font-size:0.75rem;">ROI ${formatPercent(cell.roiBase)}</span></td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    $('matrix3x3-container').innerHTML = html;
+  }
+
+  function runMonteCarloAction() {
+    const inputs = validateAndRead();
+    if (!inputs) return;
+    if (!state.current || JSON.stringify(state.current.inputs) !== JSON.stringify(inputs)) calculate();
+    const button = $('runMonteCarloBtn');
+    const requestedIterations = Number(value('mc-iterations') || 10000);
+    button.disabled = true;
+    button.textContent = `Executando ${requestedIterations.toLocaleString('pt-BR')} cenários…`;
+    setTimeout(() => {
+      try {
+        const mc = Engine.runMonteCarlo(inputs, { iterations: requestedIterations, seed: Number(value('mc-seed') || 12345) });
+        state.current.monteCarlo = mc;
+        renderMonteCarlo(mc);
+      } catch (error) {
+        showModal('Erro no Monte Carlo', error.message);
+      } finally {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-dice mr-2"></i>Executar Monte Carlo';
+      }
+    }, 20);
+  }
+
+  function variableLabel(key) {
+    return ({ precoArroba: 'Preço da arroba', custoSuplementacao_ha: 'Preço do insumo/suplemento', cabecas: 'Taxa de lotação (via cabeças)', gmd: 'GMD', custoImplantacaoTotalOverride_ha: 'Custo de implantação', taxaJuros: 'Taxa de juros' }[key] || key);
+  }
+
+  function rowSimple(label, value) {
+    const tr = document.createElement('tr'); const c1 = document.createElement('td'); c1.className = 'p-3'; c1.textContent = label;
+    const c2 = document.createElement('td'); c2.className = 'p-3'; c2.textContent = value; tr.append(c1, c2); return tr;
+  }
+
+  function renderMonteCarlo(mc) {
+    $('mc-empty-state').classList.add('hidden');
+    $('mc-results').classList.remove('hidden');
+    const s = mc.summary;
+    const metrics = [
+      ['Probabilidade de prejuízo', formatPercent(s.probabilityLoss)], ['Margem média (R$/ha)', formatBRL(s.mean)],
+      ['P10', formatBRL(s.p10)], ['P50 (mediana)', formatBRL(s.p50)], ['P90', formatBRL(s.p90)], ['Cauda inferior esperada (P5)', formatBRL(s.expectedShortfall5)]
+    ];
+    $('mc-summary-grid').replaceChildren(...metrics.map(([label, display]) => {
+      const card = document.createElement('div'); card.className = 'risk-card';
+      const l = document.createElement('div'); l.className = 'risk-label'; l.textContent = label;
+      const v = document.createElement('div'); v.className = 'risk-value'; v.textContent = display;
+      card.append(l, v); return card;
+    }));
+    $('mc-correlation-body').replaceChildren(...mc.correlations.map((item) => rowSimple(variableLabel(item.variable), formatNumber(item.value, 3))));
+    chart('mcHistogramChart', {
+      type: 'bar', data: { labels: mc.bins.map((b) => formatBRL((b.start + b.end) / 2)), datasets: [{ label: 'Frequência', data: mc.bins.map((b) => b.count), backgroundColor: 'rgba(13,107,131,.7)' }] },
+      options: { scales: { x: { ticks: { maxTicksLimit: 8 } } } }
+    });
+    chart('mcCdfChart', {
+      type: 'line',
+      data: { datasets: [{ label: 'Chance de atingir ou superar', data: mc.exceedance.map((p) => ({ x: p.value, y: p.probability })), borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,.10)', fill: true, tension: .2, pointRadius: 3 }] },
+      options: { parsing: false, scales: { x: { type: 'linear', ticks: { callback: moneyTick } }, y: { min: 0, max: 100, ticks: { callback: (v) => `${v}%` } } } }
+    });
+    $('mc-method-note').textContent = `${mc.iterations.toLocaleString('pt-BR')} iterações • semente ${mc.seed} • distribuições triangulares independentes ±20%. ${LEGAL_DISCLAIMER}`;
+  }
+
+  // ===== Cenários (padrão ilimitado, estilo BioEcon) =====
+  function saveScenario() {
+    const inputs = validateAndRead();
+    if (!inputs) return;
+    if (!state.current || JSON.stringify(state.current.inputs) !== JSON.stringify(inputs)) calculate();
+    const { results: r, verdict } = state.current;
+    const scenarios = JSON.parse(localStorage.getItem(SCENARIOS_KEY) || '[]');
+    scenarios.push({
+      scenarioId: `${SISTEMA_LABEL[inputs.sistema] || inputs.sistema} — ${CATEGORIA_LABEL[inputs.categoria] || inputs.categoria} — ${new Date().toLocaleTimeString('pt-BR')}`,
+      savedAt: new Date().toISOString(),
+      sistema: inputs.sistema, categoria: inputs.categoria, situacaoPastagem: inputs.situacaoPastagem,
+      margemLiquida_ha: r.margemLiquida_ha, roiBase: r.roiBase, roiBaseLabel: r.roiBaseLabel,
+      lotacao: r.lotacao, producaoTotal_at_ha: r.producaoTotal_at_ha, verdictStatus: verdict.status
+    });
+    localStorage.setItem(SCENARIOS_KEY, JSON.stringify(scenarios));
+    showModal('Cenário salvo', 'O cenário foi salvo neste navegador. Veja a aba "Cenários" para comparar.');
+    renderComparison();
+  }
+
+  function renderComparison() {
+    const container = $('comparison-cards');
+    const scenarios = JSON.parse(localStorage.getItem(SCENARIOS_KEY) || '[]');
+    container.replaceChildren();
+    if (!scenarios.length) {
+      const empty = document.createElement('div'); empty.className = 'text-gray-500 italic text-center col-span-full';
+      empty.textContent = 'Nenhum cenário salvo ainda. Calcule uma simulação e clique em "Salvar Cenário".';
+      container.append(empty);
+      $('comparison-chart-container').style.display = 'none';
+      return;
+    }
+    scenarios.map((s, i) => ({ ...s, originalIndex: i })).reverse().forEach((s) => {
+      const card = document.createElement('div'); card.className = 'scenario-card';
+      const date = new Date(s.savedAt);
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div class="scenario-title">${s.scenarioId}</div>
+          <button class="scenario-delete" data-index="${s.originalIndex}" title="Excluir"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
+        <div class="scenario-date">${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR').slice(0,5)}</div>
+        <div class="scenario-value">${formatBRL(s.margemLiquida_ha)}/ha</div>
+        <div class="scenario-detail"><strong>${s.roiBaseLabel}:</strong> ${formatPercent(s.roiBase)}<br><strong>Lotação:</strong> ${formatNumber(s.lotacao, 2)} UA/ha<br><strong>Produção:</strong> ${formatNumber(s.producaoTotal_at_ha, 2)} @/ha<br><strong>Situação:</strong> ${s.situacaoPastagem === 'nova' ? 'Nova' : 'Já existente'}</div>`;
+      container.append(card);
+    });
+    container.querySelectorAll('.scenario-delete').forEach((btn) => btn.addEventListener('click', () => deleteScenario(Number(btn.dataset.index))));
+    renderComparisonChart(scenarios);
+  }
+
+  function renderComparisonChart(scenarios) {
+    const containerEl = $('comparison-chart-container');
+    if (scenarios.length < 2) { containerEl.style.display = 'none'; return; }
+    containerEl.style.display = 'block';
+    chart('comparisonChart', {
+      type: 'bar',
+      data: {
+        labels: scenarios.map((s, i) => `${SISTEMA_LABEL[s.sistema] || s.sistema} (#${i + 1})`),
+        datasets: [
+          { label: 'Margem Líquida (R$/ha)', data: scenarios.map((s) => s.margemLiquida_ha), backgroundColor: 'rgba(13,107,131,.65)', yAxisID: 'y', order: 2 },
+          { label: 'ROI/Retorno (%)', data: scenarios.map((s) => s.roiBase), type: 'line', borderColor: '#ef4444', backgroundColor: '#ef4444', tension: .3, yAxisID: 'y1', order: 1 }
+        ]
+      },
+      options: { interaction: { mode: 'index', intersect: false }, scales: { y: { type: 'linear', position: 'left', ticks: { callback: moneyTick } }, y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: (v) => `${v}%` } } } }
+    });
+  }
+
+  function deleteScenario(index) {
+    showConfirmModal('Excluir cenário', 'Deseja excluir este cenário salvo?', () => {
+      const scenarios = JSON.parse(localStorage.getItem(SCENARIOS_KEY) || '[]');
+      scenarios.splice(index, 1);
+      localStorage.setItem(SCENARIOS_KEY, JSON.stringify(scenarios));
+      renderComparison();
+    });
+  }
+
+  function switchTab(tabId) {
+    document.querySelectorAll('#simulation, #scenarios').forEach((n) => n.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach((n) => n.classList.remove('active'));
+    if ($(tabId)) $(tabId).classList.add('active');
+    const button = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    if (button) button.classList.add('active');
+    if (tabId === 'scenarios') renderComparison();
+  }
+
+  function switchSubTab(subtabId) {
+    document.querySelectorAll('#subtab-group-inputs .subtab-content').forEach((n) => n.classList.remove('active'));
+    document.querySelectorAll('#subtab-group-inputs .subtab-btn').forEach((n) => n.classList.remove('active'));
+    const target = $(`subtab-${subtabId}`); if (target) target.classList.add('active');
+    const btn = document.querySelector(`.subtab-btn[data-subtab="${subtabId}"]`); if (btn) btn.classList.add('active');
+  }
+
+  // ===== Exportação =====
+  function inputRows(i, r) {
+    return [
+      ['Sistema', SISTEMA_LABEL[i.sistema] || i.sistema, ''], ['Categoria', CATEGORIA_LABEL[i.categoria] || i.categoria, ''],
+      ['Situação da pastagem', i.situacaoPastagem === 'nova' ? 'Nova' : 'Já existente', ''],
+      ['Área', i.area, 'ha'], ['Cabeças', i.cabecas, ''], ['Peso inicial', i.pesoInicial, 'kg'], ['Permanência', i.permanencia, 'dias'],
+      ['GMD', i.gmd, 'kg/dia'], ['Massa MS disponível', i.massaMSDisponivel, 'kg MS/ha'], ['Preço da arroba', i.precoArroba, 'R$/@'],
+      ['Custo total de implantação', i.situacaoPastagem === 'nova' ? formatBRL(r.custoTotalImplantacao_ha) : 'Não aplicável — pastagem já existente', 'R$/ha'],
+      ['Vida útil', i.vidaUtil, 'anos'], ['Taxa de juros', i.taxaJuros, '% a.a.'],
+      ['Preço do crédito de carbono', i.incluirCarbono === 'sim' ? i.precoCredito : 'Não incluído', 'R$/tCO2eq']
+    ];
+  }
+  function resultRows(r) {
+    return [
+      ['Lotação', r.lotacao, 'UA/ha'], ['Produção total', r.producaoTotal_at, '@'], ['Produção por hectare', r.producaoTotal_at_ha, '@/ha'],
+      [r.of.metric, r.of.value, r.of.type === 'consumo' ? '%PV' : '%'],
+      ['Receita bruta', r.receitaBruta_ha, 'R$/ha'], ['Receita bruta por arroba', r.receitaPorArroba, 'R$/@'],
+      ['COE', r.coe_ha, 'R$/ha'], ['CAE (implantação)', r.cae_ha, 'R$/ha'], ['COT', r.cot_ha, 'R$/ha'], ['Custo por arroba', r.custoPorArroba, 'R$/@'],
+      ['Margem líquida', r.margemLiquida_ha, 'R$/ha'], ['Margem líquida por arroba', r.margemPorArroba, 'R$/@'],
+      [r.roiBaseLabel, r.roiBase, '%'], ['Payback', r.payback_anos, 'anos'], ['Ponto de equilíbrio', r.breakEven_at, '@/ano']
+    ];
+  }
+
+  const EXCEL_COLORS = { primary: 'FF064E65', secondary: 'FF0D6B83', gold: 'FFD4AF37', cream: 'FFFAF7F0', white: 'FFFFFFFF', text: 'FF0F172A', red: 'FFCF1818' };
+
+  function excelCard(sheet, range, label, val, format, positive) {
+    sheet.mergeCells(range);
+    const cell = sheet.getCell(range.split(':')[0]);
+    const display = val == null ? 'N/A' : format === 'currency' ? formatBRL(val) : formatPercent(val);
+    cell.value = `${label}\n${display}`;
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    cell.font = { name: 'Georgia', size: 15, bold: true, color: { argb: positive ? EXCEL_COLORS.primary : EXCEL_COLORS.red } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_COLORS.cream } };
+    cell.border = { top: { style: 'medium', color: { argb: EXCEL_COLORS.gold } }, left: { style: 'thin', color: { argb: EXCEL_COLORS.gold } }, bottom: { style: 'thin', color: { argb: EXCEL_COLORS.gold } }, right: { style: 'thin', color: { argb: EXCEL_COLORS.gold } } };
+  }
+
+  function addExcelTable(workbook, name, headers, rows) {
+    const sheet = workbook.addWorksheet(name, { views: [{ state: 'frozen', ySplit: 1 }] });
+    sheet.addRow(headers); sheet.addRows(rows);
+    const header = sheet.getRow(1); header.height = 24;
+    header.eachCell((cell) => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_COLORS.primary } }; cell.font = { bold: true, color: { argb: EXCEL_COLORS.white } }; cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }; });
+    sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: headers.length } };
+    sheet.columns.forEach((column, index) => {
+      let width = String(headers[index] || '').length + 2;
+      for (let rowIndex = 2; rowIndex <= Math.min(sheet.rowCount, 250); rowIndex += 1) width = Math.max(width, String(sheet.getCell(rowIndex, index + 1).value ?? '').length + 2);
+      column.width = Math.min(42, Math.max(12, width));
+    });
+    sheet.eachRow((row, rowNumber) => { if (rowNumber > 1 && rowNumber % 2 === 0) row.eachCell((cell) => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F8FA' } }; }); });
+  }
+
+  function addExcelCharts(workbook, definitions) {
+    const sheet = workbook.addWorksheet('Gráficos', { views: [{ showGridLines: false }] });
+    sheet.columns = Array.from({ length: 12 }, () => ({ width: 11 }));
+    let row = 1, added = 0;
+    definitions.forEach((definition) => {
+      const canvas = $(definition.id);
+      if (!canvas || !state.charts[definition.id] || !canvas.width || !canvas.height) return;
+      const dataUrl = canvas.toDataURL('image/png', 0.92);
+      const imageId = workbook.addImage({ base64: dataUrl, extension: 'png' });
+      sheet.mergeCells(row, 1, row, 12);
+      const heading = sheet.getCell(row, 1); heading.value = definition.title; heading.font = { name: 'Georgia', size: 14, bold: true, color: { argb: EXCEL_COLORS.primary } }; heading.alignment = { horizontal: 'center' };
+      sheet.addImage(imageId, { tl: { col: 0.25, row }, ext: { width: 900, height: 410 } });
+      row += 24; added += 1;
+    });
+    if (!added) sheet.getCell('A1').value = 'Nenhum gráfico disponível. Calcule a simulação antes de exportar.';
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a'); link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function chartDefs(mc) {
+    const defs = [{ id: 'costDonutChart', title: 'Composição de custos' }, { id: 'economicChart', title: 'Receita × COE × COT × Margem' }, { id: 'tornadoChart', title: 'Diagrama de tornado' }];
+    if (mc) defs.push({ id: 'mcHistogramChart', title: 'Monte Carlo — distribuição', risk: true }, { id: 'mcCdfChart', title: 'Monte Carlo — curva de excedência', risk: true });
+    return defs;
+  }
+
+  async function exportToExcel() {
+    if (!state.current) return showModal('Nada para exportar', 'Calcule a simulação antes de exportar.');
+    if (!window.ExcelJS) return showModal('Biblioteca indisponível', 'Não foi possível carregar o gerador de Excel.');
+    const { inputs: i, results: r, monteCarlo: mc, verdict } = state.current;
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Simulador de Manejo de Pastagens'; workbook.title = 'Manejo de Pastagens'; workbook.created = new Date();
+    const sheet = workbook.addWorksheet('Resumo Executivo', { views: [{ showGridLines: false }] });
+    sheet.columns = Array.from({ length: 8 }, () => ({ width: 15 }));
+    sheet.mergeCells('A1:H2');
+    const title = sheet.getCell('A1'); title.value = 'MANEJO DE PASTAGENS — RESUMO EXECUTIVO';
+    title.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_COLORS.primary } };
+    title.font = { name: 'Georgia', size: 18, bold: true, color: { argb: EXCEL_COLORS.white } };
+    title.alignment = { vertical: 'middle', horizontal: 'center' };
+    sheet.mergeCells('A4:H5'); const verdictCell = sheet.getCell('A4');
+    verdictCell.value = `Veredito: ${verdict.status.toUpperCase()}${verdict.reasons.length ? ' — ' + verdict.reasons.join('; ') : ''}`;
+    verdictCell.font = { bold: true, size: 12 }; verdictCell.alignment = { wrapText: true, vertical: 'middle' };
+    excelCard(sheet, 'A7:D9', 'Margem líquida (R$/ha)', r.margemLiquida_ha, 'currency', r.margemLiquida_ha >= 0);
+    excelCard(sheet, 'E7:H9', r.roiBaseLabel, r.roiBase, 'percent', r.roiBase >= i.taxaJuros);
+    excelCard(sheet, 'A11:D13', 'Receita bruta (R$/ha)', r.receitaBruta_ha, 'currency', true);
+    excelCard(sheet, 'E11:H13', 'Produção (@/ha)', r.producaoTotal_at_ha, 'currency', true);
+    addExcelTable(workbook, 'Premissas', ['Campo', 'Valor', 'Unidade'], inputRows(i, r));
+    addExcelTable(workbook, 'Resultados', ['Indicador', 'Valor', 'Unidade'], resultRows(r).map(([label, v, unit]) => [label, Number.isFinite(v) ? v : String(v ?? 'N/A'), unit]));
+    const matrix = Engine.sensitivityMatrix3x3(i);
+    const matrixRows = [];
+    matrix.forEach((rowArr) => rowArr.forEach((cell) => matrixRows.push([formatNumber(cell.gmd, 3), formatBRL(cell.precoArroba), cell.margemLiquida_ha, cell.roiBase])));
+    addExcelTable(workbook, 'Matriz 3x3', ['GMD (kg/dia)', 'Preço @', 'Margem Líquida (R$/ha)', 'ROI/Retorno (%)'], matrixRows);
+    const sens = Engine.sensitivity(i);
+    addExcelTable(workbook, 'Sensibilidade', ['Variável', 'Margem no mínimo', 'Margem no máximo', 'Impacto'], sens.map((x) => [x.label, x.low, x.high, x.impact]));
+    if (mc) {
+      addExcelTable(workbook, 'Monte Carlo - Resumo', ['Indicador', 'Valor'], [['Iterações', mc.iterations], ['Semente', mc.seed], ['Probabilidade de prejuízo (%)', mc.summary.probabilityLoss], ['Média (R$/ha)', mc.summary.mean], ['P10', mc.summary.p10], ['P50', mc.summary.p50], ['P90', mc.summary.p90], ['Cauda inferior esperada (P5)', mc.summary.expectedShortfall5]]);
+    } else {
+      addExcelTable(workbook, 'Monte Carlo - Resumo', ['Status'], [['Análise de risco não executada']]);
+    }
+    addExcelCharts(workbook, chartDefs(mc));
+    try {
+      const buffer = await workbook.xlsx.writeBuffer();
+      downloadBlob(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `pastagens_${safeFilename(i.sistema)}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    } catch (error) { showModal('Erro ao gerar Excel', error.message); }
+  }
+
+  function pdfTable(doc, startY, head, body) {
+    if (typeof doc.autoTable === 'function') {
+      doc.autoTable({ startY, head: [head], body, styles: { fontSize: 8, cellPadding: 2, lineColor: [229,231,235], lineWidth: 0.1 }, headStyles: { fillColor: [249,250,251], textColor: [55,65,81], fontStyle: 'bold' }, alternateRowStyles: { fillColor: [249,250,251] }, margin: { left: 14, right: 14 } });
+    } else {
+      let y = startY; doc.setFontSize(8);
+      [head, ...body].forEach((r) => { if (y > 282) { doc.addPage(); y = 16; } doc.text(r.map(String).join(' | ').slice(0,135), 14, y); y += 5; });
+    }
+  }
+  function pdfKpiCard(doc, x, y, w, h, label, display, tone) {
+    const bg = tone === true ? [230,249,242] : tone === false ? [254,226,226] : [243,244,246];
+    const fg = tone === true ? [5,150,105] : tone === false ? [220,38,38] : [6,78,101];
+    doc.setFillColor(...bg); doc.setDrawColor(229,231,235); doc.setLineWidth(0.2); doc.roundedRect(x, y, w, h, 2.5, 2.5, 'FD');
+    doc.setTextColor(100,116,139); doc.setFontSize(7.5); doc.text(label.toUpperCase(), x + w/2, y + 7, { align: 'center' });
+    doc.setTextColor(...fg); doc.setFontSize(display.length > 20 ? 10 : 13); doc.setFont('times','bold'); doc.text(display, x + w/2, y + 17, { align: 'center', maxWidth: w - 5 }); doc.setFont('helvetica','normal'); doc.setTextColor(30);
+  }
+  function addPdfChartPages(doc, addHeader, definitions) {
+    const available = definitions.filter((d) => $(d.id) && state.charts[d.id] && $(d.id).width && $(d.id).height);
+    for (let idx = 0; idx < available.length; idx += 2) {
+      doc.addPage(); addHeader(idx === 0 && available[0].risk ? 'Gráficos de risco' : 'Análise gráfica');
+      addChartToPdf(doc, available[idx].id, 14, 35, 182, 100, available[idx].title);
+      if (available[idx + 1]) addChartToPdf(doc, available[idx + 1].id, 14, 166, 182, 100, available[idx + 1].title);
+    }
+  }
+  function addChartToPdf(doc, id, x, y, w, h, title) {
+    const canvas = $(id); if (!canvas || !canvas.width) return;
+    doc.setFontSize(9); doc.text(title, x, y - 3);
+    try { const ratio = canvas.width / canvas.height; const fittedHeight = Math.min(h, w / ratio); doc.addImage(canvas.toDataURL('image/png', 0.92), 'PNG', x, y, w, fittedHeight, undefined, 'FAST'); } catch (_) {}
+  }
+  function addPdfFooters(doc) {
+    const pages = doc.getNumberOfPages();
+    for (let p = 1; p <= pages; p += 1) {
+      doc.setPage(p); doc.setFontSize(6.5); doc.setTextColor(140); doc.text(LEGAL_DISCLAIMER, 105, 286, { align: 'center', maxWidth: 182 });
+      doc.setFontSize(8); doc.setTextColor(100); doc.text(`Ricardo Brumatti | FAMEZ/UFMS | ricardobrumatti.pro.br | © 2026 • Página ${p}/${pages}`, 105, 292, { align: 'center' });
+    }
+  }
+
+  function exportToPDF() {
+    if (!state.current) return showModal('Nada para exportar', 'Calcule a simulação antes de exportar.');
+    if (!window.jspdf || !window.jspdf.jsPDF) return showModal('Biblioteca indisponível', 'Não foi possível carregar a biblioteca de PDF.');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const { inputs: i, results: r, monteCarlo: mc, verdict } = state.current;
+    const addHeader = (title) => {
+      doc.setFont('times','bold'); doc.setTextColor(6,78,101); doc.setFontSize(16); doc.text(title, 14, 16);
+      doc.setDrawColor(226,232,240); doc.setLineWidth(0.35); doc.line(14, 20, 196, 20);
+      doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(30);
+    };
+    addHeader('Relatório — Manejo de Pastagens');
+    doc.setFontSize(11); doc.text(`Sistema: ${SISTEMA_LABEL[i.sistema] || i.sistema} | Categoria: ${CATEGORIA_LABEL[i.categoria] || i.categoria}`, 14, 30);
+    doc.text(`Situação: ${i.situacaoPastagem === 'nova' ? 'Pastagem nova' : 'Pastagem já existente'}`, 14, 37);
+    const verdictColor = verdict.status === 'viavel' ? [16,150,89] : verdict.status === 'ressalvas' ? [217,119,6] : [207,24,24];
+    doc.setFillColor(...verdictColor); doc.roundedRect(14, 42, 182, 12, 1.5, 1.5, 'F');
+    doc.setTextColor(255); doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.text(`Veredito: ${verdict.status === 'viavel' ? 'VIÁVEL' : verdict.status === 'ressalvas' ? 'VIÁVEL COM RESSALVAS' : 'INVIÁVEL'}`, 105, 49.5, { align: 'center' });
+    doc.setFont('helvetica','normal'); doc.setTextColor(30);
+    doc.setFillColor(255,247,230); doc.setDrawColor(212,175,55); doc.setLineWidth(0.3); doc.roundedRect(14, 56, 182, 9, 1.5, 1.5, 'FD');
+    doc.setFontSize(6.6); doc.setTextColor(122,92,0); doc.text(LEGAL_DISCLAIMER, 105, 61.5, { align: 'center', maxWidth: 176 }); doc.setTextColor(30);
+    pdfKpiCard(doc, 14, 72, 56, 24, 'Margem líquida (R$/ha)', formatBRL(r.margemLiquida_ha), r.margemLiquida_ha >= 0);
+    pdfKpiCard(doc, 77, 72, 56, 24, r.roiBaseLabel, formatPercent(r.roiBase), r.roiBase >= i.taxaJuros);
+    pdfKpiCard(doc, 140, 72, 56, 24, 'Produção (@/ha)', formatNumber(r.producaoTotal_at_ha, 2), null);
+    pdfKpiCard(doc, 14, 100, 56, 24, 'Receita bruta (R$/ha)', formatBRL(r.receitaBruta_ha), true);
+    pdfKpiCard(doc, 77, 100, 56, 24, 'Custo por @', formatBRL(r.custoPorArroba), null);
+    pdfKpiCard(doc, 140, 100, 56, 24, 'Risco de prejuízo', mc ? formatPercent(mc.summary.probabilityLoss) : 'Não executado', mc ? mc.summary.probabilityLoss < 50 : null);
+    pdfTable(doc, 132, ['Premissa', 'Valor', 'Unidade'], inputRows(i, r));
+    doc.addPage(); addHeader('Resultados determinísticos');
+    pdfTable(doc, 32, ['Indicador', 'Valor', 'Unidade'], resultRows(r).map(([a, b, c]) => [a, Number.isFinite(b) ? formatNumber(b, 4) : String(b ?? 'N/A'), c]));
+    doc.addPage(); addHeader('Matriz de sensibilidade 3×3 — Preço × GMD');
+    const matrix = Engine.sensitivityMatrix3x3(i);
+    const matrixHead = ['GMD \\ Preço @', ...matrix[0].map((c) => formatBRL(c.precoArroba))];
+    const matrixBody = matrix.map((rowArr) => [`${formatNumber(rowArr[0].gmd, 3)} kg/dia`, ...rowArr.map((c) => `${formatBRL(c.margemLiquida_ha)}/ha`)]);
+    pdfTable(doc, 32, matrixHead, matrixBody);
+    addPdfChartPages(doc, addHeader, chartDefs(null));
+    if (mc) {
+      doc.addPage(); addHeader('Análise de risco — Monte Carlo');
+      pdfTable(doc, 32, ['Indicador', 'Valor'], [['Iterações', mc.iterations], ['Semente', mc.seed], ['Probabilidade de prejuízo', formatPercent(mc.summary.probabilityLoss)], ['Média (R$/ha)', formatBRL(mc.summary.mean)], ['P10', formatBRL(mc.summary.p10)], ['P50', formatBRL(mc.summary.p50)], ['P90', formatBRL(mc.summary.p90)], ['Cauda inferior esperada', formatBRL(mc.summary.expectedShortfall5)]]);
+      addPdfChartPages(doc, addHeader, chartDefs(mc).filter((d) => d.risk));
+    } else { doc.addPage(); addHeader('Análise de risco — Monte Carlo'); doc.setFontSize(12); doc.text('Análise de risco não executada.', 14, 36); }
+    doc.addPage(); addHeader('Metodologia e limitações');
+    const methodology = 'Modelo técnico-econômico por hectare. Custos de manejo (COE), depreciação e pró-labore são informados em R$/ha; o custo de implantação, quando aplicável, é convertido em Custo Anual Equivalente (CAE) pela vida útil e taxa de juros informadas. A Oferta de Forragem é interpretada por faixa/alvo conforme o sistema de pastejo selecionado. Carbono usa modelo v1 simplificado (receita = ΔC × 3,67 × preço do crédito), sem certificação. Quando executado, o Monte Carlo usa distribuições triangulares independentes; correlações amostrais de Spearman medem influência, não dependência causal. Resultados são projeções e não substituem orientação técnica individualizada.';
+    doc.setFontSize(11); doc.text(doc.splitTextToSize(methodology, 180), 14, 36);
+    addPdfFooters(doc);
+    doc.save(`relatorio_pastagens_${safeFilename(i.sistema)}_${new Date().toISOString().slice(0,10)}.pdf`);
+  }
+
+  function toggleShareMenu() { $('shareDropdown').classList.toggle('hidden'); }
+
+  function generateSocialImage() {
+    if (!state.current) return showModal('Nada para compartilhar', 'Calcule a simulação antes de gerar a imagem.');
+    if (!window.html2canvas) return showModal('Biblioteca indisponível', 'Não foi possível carregar a biblioteca de imagens.');
+    const { inputs: i, results: r, monteCarlo: mc, verdict } = state.current;
+    const selected = $('shareType') ? $('shareType').value : 'resumo';
+    const types = {
+      resumo: { title: 'Resumo Técnico-Econômico', chart: null },
+      veredito: { title: 'Veredito de Viabilidade', chart: null },
+      sistemaOF: { title: 'Sistema e Oferta de Forragem', chart: null },
+      matriz3x3: { title: 'Matriz de Sensibilidade 3×3', chart: null },
+      tornado: { title: 'Tornado de Sensibilidade', chart: 'tornadoChart' },
+      risco: { title: 'Monte Carlo — Risco', chart: 'mcCdfChart' },
+      riscoConclusao: { title: 'Resultado Provável (Simulação)', chart: null }
+    };
+    const type = types[selected] || types.resumo;
+    if (selected === 'riscoConclusao' && !mc) return showModal('Análise não executada', 'Execute o Monte Carlo antes de gerar esta imagem.');
+    if (selected === 'risco' && !mc) return showModal('Análise não executada', 'Execute o Monte Carlo antes de gerar esta imagem.');
+
+    const card = document.createElement('div'); card.className = 'social-card-container';
+    const header = document.createElement('div'); header.className = 'social-header';
+    const author = document.createElement('span'); author.textContent = 'Prof. Ricardo Brumatti';
+    const site = document.createElement('span'); site.className = 'site'; site.textContent = 'Manejo de Pastagens';
+    header.append(author, site);
+    const title = document.createElement('h2'); title.className = 'social-title'; title.textContent = type.title;
+    const subtitle = document.createElement('p'); subtitle.className = 'social-subtitle'; subtitle.textContent = `${SISTEMA_LABEL[i.sistema] || i.sistema} • ${CATEGORIA_LABEL[i.categoria] || i.categoria}`;
+    const main = document.createElement('div'); main.className = 'social-kpi';
+    const caption = document.createElement('p'); caption.className = 'social-kpi-caption';
+    if (selected === 'veredito') {
+      main.textContent = verdict.status === 'viavel' ? 'VIÁVEL' : verdict.status === 'ressalvas' ? 'RESSALVAS' : 'INVIÁVEL';
+      caption.textContent = verdict.reasons[0] || 'Margem líquida positiva e indicadores dentro do esperado.';
+    } else if (selected === 'riscoConclusao') {
+      main.textContent = formatPercent(100 - mc.summary.probabilityLoss);
+      caption.textContent = `chance estimada de a margem líquida NÃO ser negativa, entre ${mc.iterations.toLocaleString('pt-BR')} simulações`;
+    } else {
+      main.textContent = `${formatBRL(r.margemLiquida_ha)}/ha`;
+      caption.textContent = `Margem líquida • ${SISTEMA_LABEL[i.sistema] || i.sistema}`;
+    }
+    const body = document.createElement('div'); body.className = 'social-card-body';
+    const appendGrid = (items) => {
+      const grid = document.createElement('div'); grid.className = 'social-kpi-grid';
+      items.forEach(([label, val]) => { const box = document.createElement('div'); box.className = 'box'; box.innerHTML = `<div class="lbl">${label}</div><div class="val">${val}</div>`; grid.append(box); });
+      body.append(grid);
+    };
+    if (selected === 'sistemaOF') {
+      body.classList.add('is-grid-only');
+      appendGrid([['Sistema', SISTEMA_LABEL[i.sistema] || i.sistema], [r.of.metric, `${formatNumber(r.of.value,1)}${r.of.type==='consumo'?'%PV':'%'}`], ['Interpretação', r.of.label], ['Lotação', `${formatNumber(r.lotacao,2)} UA/ha`], ['Produção', `${formatNumber(r.producaoTotal_at_ha,2)} @/ha`], ['Categoria', CATEGORIA_LABEL[i.categoria] || i.categoria]]);
+    } else if (selected === 'matriz3x3') {
+      body.classList.add('is-grid-only');
+      const matrix = Engine.sensitivityMatrix3x3(i);
+      appendGrid(matrix.flat().slice(0,6).map((c) => [`GMD ${formatNumber(c.gmd,2)} • @ ${formatBRL(c.precoArroba)}`, `${formatBRL(c.margemLiquida_ha)}/ha`]));
+    } else if (type.chart) {
+      const source = $(type.chart);
+      if (!source || !source.width || !source.height) return showModal('Gráfico indisponível', 'Recalcule/execute o gráfico antes de gerar a imagem.');
+      const img = document.createElement('img'); img.alt = type.title; img.src = source.toDataURL('image/png', 1);
+      img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'contain'; body.append(img);
+    } else {
+      body.classList.add('is-grid-only');
+      appendGrid([['Margem líquida', `${formatBRL(r.margemLiquida_ha)}/ha`], ['Receita bruta', `${formatBRL(r.receitaBruta_ha)}/ha`], [r.roiBaseLabel, formatPercent(r.roiBase)], ['Produção', `${formatNumber(r.producaoTotal_at_ha,2)} @/ha`], ['Custo por @', formatBRL(r.custoPorArroba)], ['Risco de prejuízo', mc ? formatPercent(mc.summary.probabilityLoss) : 'Não executado']]);
+    }
+    const footer = document.createElement('div'); footer.className = 'social-footer';
+    footer.innerHTML = `<p class="source">Simulação técnica e econômica — valores informados pelo usuário</p><p class="author">${LEGAL_DISCLAIMER}</p><p class="disclaimer">Resultados são estimativas condicionadas às premissas e não substituem orientação técnica individualizada.</p>`;
+    card.append(header, title, subtitle, main, caption, body, footer); document.body.append(card);
+    html2canvas(card, { scale: 1, width: 1080, height: 1350, backgroundColor: '#064e65', useCORS: true }).then((canvas) => {
+      const url = canvas.toDataURL('image/png'); $('shareImagePreview').src = url; $('shareImageDownload').href = url; $('shareImageDownload').download = `${selected}_${safeFilename(i.sistema)}.png`; $('modalShareImage').classList.remove('hidden'); card.remove();
+    }).catch(() => { card.remove(); showModal('Erro', 'Não foi possível gerar a imagem.'); });
+    $('shareDropdown').classList.add('hidden');
+  }
+
+  function loadExample() {
+    const example = { area: 100, cultivar: 'Marandu', situacaoPastagem: 'nova', sistema: 'rip', cabecas: 300, pesoInicial: 220, permanencia: 240, gmd: 0.9, categoria: 'novilho', precoArroba: 240, massaMSDisponivel: 1800, perdasPastejo: 15, consumoMS: 2.3 };
+    for (const [key, v] of Object.entries(example)) { const node = $(FIELD_MAP[key]); if (node) node.value = v; }
+    toggleImplantacaoPastagem($('situacao-pastagem'));
+    updateSystemRuler();
+    showModal('Exemplo carregado', 'Premissas de um sistema RIP com 300 novilhos preenchidas. Ajuste custos e demais campos conforme sua realidade.');
+  }
+
+  function clearForm() {
+    $('simulacaoForm').reset(); clearValidation(); state.current = null; $('results-section').classList.add('hidden');
+    toggleImplantacaoPastagem($('situacao-pastagem')); $('carbono-fields').style.display = 'grid'; updateSystemRuler();
+  }
+
+  function toggleTheme() {
+    state.theme = state.theme === 'dark' ? 'light' : 'dark'; document.body.classList.toggle('dark-mode', state.theme === 'dark'); localStorage.setItem('themePastagens', state.theme);
+    if (state.current) { renderCharts(); renderMatrix3x3(); if (state.current.monteCarlo) renderMonteCarlo(state.current.monteCarlo); }
+  }
+  function toggleContrast() { state.highContrast = !state.highContrast; document.body.classList.toggle('high-contrast', state.highContrast); localStorage.setItem('highContrastPastagens', String(state.highContrast)); }
+
+  function downloadChart(chartId) { const canvas = $(chartId); if (!canvas) return; const link = document.createElement('a'); link.download = `${chartId}.png`; link.href = canvas.toDataURL('image/png'); link.click(); }
+
+  function bindEvents() {
+    $('simulacaoForm').addEventListener('submit', (e) => { e.preventDefault(); calculate(); });
+    $('saveScenarioBtn').addEventListener('click', saveScenario);
+    $('exportExcelBtn').addEventListener('click', exportToExcel);
+    $('exportPdfBtn').addEventListener('click', exportToPDF);
+    $('runMonteCarloBtn').addEventListener('click', runMonteCarloAction);
+    $('themeToggle').addEventListener('click', toggleTheme);
+    $('contrastToggle').addEventListener('click', toggleContrast);
+    $('helpBtn').addEventListener('click', () => $('helpModal').classList.remove('hidden'));
+    $('exampleBtn').addEventListener('click', loadExample);
+    $('confirmCancel').addEventListener('click', () => $('confirmModal').classList.add('hidden'));
+    document.querySelectorAll('.close-button').forEach((b) => b.addEventListener('click', () => b.closest('.modal').classList.add('hidden')));
+    document.querySelectorAll('.tab-btn').forEach((b) => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+    document.querySelectorAll('.subtab-btn').forEach((b) => b.addEventListener('click', () => switchSubTab(b.dataset.subtab)));
+    document.querySelectorAll('.download-chart-btn').forEach((b) => b.addEventListener('click', () => downloadChart(b.dataset.chart)));
+    document.querySelectorAll('#massa-ms-disponivel,#cabecas,#peso-inicial,#permanencia,#gmd,#area,#sistema,#categoria').forEach((n) => n.addEventListener('input', updateSystemRuler));
+    window.addEventListener('click', (e) => { if (e.target.classList.contains('modal')) e.target.classList.add('hidden'); });
+  }
+
+  function init() {
+    if (!Engine) return;
+    state.theme = localStorage.getItem('themePastagens') === 'dark' ? 'dark' : 'light';
+    state.highContrast = localStorage.getItem('highContrastPastagens') === 'true';
+    document.body.classList.toggle('dark-mode', state.theme === 'dark');
+    document.body.classList.toggle('high-contrast', state.highContrast);
+    bindEvents();
+    updateSystemRuler();
+    renderComparison();
+  }
+
+  window.App = {
+    init, limparFormulario: clearForm, saveScenario, deleteScenario,
+    exportToExcel, exportToPDF, toggleShareMenu, generateSocialImage,
+    toggleImplantacaoPastagem, toggleCarbonoFields, updateSystemRuler
+  };
+  document.addEventListener('DOMContentLoaded', init);
+})();
+    </script>
+    <script src="mobile-charts.js"></script>
+
+</body>
+
+</html>
