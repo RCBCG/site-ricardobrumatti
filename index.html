@@ -960,87 +960,48 @@ footer {
   }
 }
 
-/* ─── MERCADO (phone mockup carousel) ─────────────────── */
+/* ─── MERCADO (coverflow carousel) ────────────────────── */
 #mercado { background: var(--bg2); border-top: 1px solid var(--border); }
 
 .market-carousel-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-}
-
-.market-carousel-inner {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 1.75rem;
   width: 100%;
 }
 
-.market-carousel-stage {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  justify-content: center;
-}
-
-.market-peek {
-  display: none;
-}
-
-.phone-mockup {
-  position: relative;
-  width: min(78vw, 320px);
-  background: #1a1a1a;
-  border-radius: 34px;
-  padding: 12px 10px;
-  box-shadow:
-    0 1px 0 #555 inset,
-    0 28px 56px rgba(0,0,0,0.30),
-    0 8px 24px rgba(0,0,0,0.18),
-    0 0 0 1px rgba(0,0,0,0.12);
-}
-
-.phone-topbar {
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.phone-camera-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #333;
-  box-shadow: inset 0 0 0 1.5px #4a4a4a;
-}
-
-.phone-screen {
+.coverflow-stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 5;
-  border-radius: 20px;
-  overflow: hidden;
-  background: #0d2b2b;
-  touch-action: pan-y;
+  max-width: 1120px;
+  height: 230px;
+  perspective: 1500px;
 }
 
 .market-carousel-track {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
 }
 
 .market-slide {
-  position: relative;
-  flex: 0 0 100%;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150px;
+  aspect-ratio: 4 / 5;
+  border-radius: 16px;
   overflow: hidden;
+  cursor: pointer;
+  background: #0d2b2b;
+  box-shadow: 0 16px 36px oklch(0% 0 0 / 0.22), 0 4px 12px oklch(0% 0 0 / 0.12);
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.55s ease, box-shadow 0.4s ease;
+}
+
+.market-slide.is-active {
   cursor: zoom-in;
+  box-shadow: 0 26px 56px oklch(0% 0 0 / 0.30), 0 8px 20px oklch(0% 0 0 / 0.16);
 }
 
 .market-slide img {
@@ -1070,52 +1031,43 @@ footer {
   z-index: 5;
 }
 
-.phone-home-indicator {
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.phone-home-bar {
-  width: 64px;
-  height: 4px;
-  border-radius: 2px;
-  background: #4a4a4a;
-}
-
 .market-nav-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255,255,255,0.88);
-  border: none;
+  background: var(--white);
+  border: 1px solid var(--border2);
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  font-size: 12px;
+  width: 38px;
+  height: 38px;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
-  color: #0d3030;
-  transition: background 0.2s, transform 0.2s;
+  z-index: 20;
+  color: var(--green);
+  box-shadow: var(--shadow);
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .market-nav-btn:hover {
-  background: rgba(255,255,255,1);
+  background: var(--green-lt);
   transform: translateY(-50%) scale(1.08);
+  box-shadow: var(--shadow-lg);
 }
 
-.market-prev { left: 2px; }
-.market-next { right: 2px; }
+.market-prev { left: 0; }
+.market-next { right: 0; }
 
 .market-dots {
   position: static;
   transform: none;
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 300px;
 }
 
 .market-dots .dot {
@@ -1125,12 +1077,6 @@ footer {
 .market-dots .dot.active {
   background: var(--green);
   transform: scale(1.35);
-}
-
-.market-caption {
-  font-size: 0.78rem;
-  color: var(--light);
-  text-align: center;
 }
 
 .market-lightbox {
@@ -1172,53 +1118,22 @@ footer {
 .market-lightbox-close:hover { background: rgba(255,255,255,0.24); }
 
 @media (min-width: 600px) {
-  .phone-mockup { width: 320px; }
-  .market-prev { left: -14px; }
-  .market-next { right: -14px; }
+  .coverflow-stage { height: 290px; }
+  .market-slide { width: 190px; }
+  .market-prev { left: -10px; }
+  .market-next { right: -10px; }
 }
 
 @media (min-width: 1024px) {
-  .phone-mockup { width: 360px; }
-
-  .market-peek {
-    display: block;
-    position: relative;
-    z-index: 1;
-    width: 200px;
-    aspect-ratio: 4 / 5;
-    flex-shrink: 0;
-    padding: 0;
-    border: none;
-    border-radius: 18px;
-    overflow: hidden;
-    cursor: pointer;
-    background: none;
-    opacity: 0.55;
-    filter: grayscale(15%) brightness(0.85);
-    transform: scale(0.94);
-    transition: opacity 0.35s ease, transform 0.35s ease, filter 0.35s ease;
-  }
-
-  .market-peek:hover {
-    opacity: 0.85;
-    transform: scale(1);
-    filter: grayscale(0%) brightness(1);
-  }
-
-  .market-peek img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top center;
-    display: block;
-  }
-
-  .market-peek-prev { margin-right: -28px; }
-  .market-peek-next { margin-left: -28px; }
+  .coverflow-stage { height: 350px; }
+  .market-slide { width: 230px; }
+  .market-prev { left: -24px; }
+  .market-next { right: -24px; }
 }
 
 @media (min-width: 1200px) {
-  .market-peek { width: 230px; }
+  .coverflow-stage { height: 390px; }
+  .market-slide { width: 260px; }
 }
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
@@ -1458,18 +1373,8 @@ footer {
     </div>
 
     <div class="market-carousel-wrapper reveal">
-      <div class="market-carousel-inner">
-        <button class="market-peek market-peek-prev" id="mercadoPeekPrev" aria-label="Slide anterior">
-          <img id="mercadoPeekPrevImg" src="" alt="">
-        </button>
-
-        <div class="market-carousel-stage">
-        <div class="phone-mockup">
-          <div class="phone-topbar">
-            <div class="phone-camera-dot"></div>
-          </div>
-          <div class="phone-screen">
-            <div class="market-carousel-track" id="mercadoTrack">
+      <div class="coverflow-stage">
+        <div class="market-carousel-track" id="mercadoTrack">
               <div class="market-slide" onclick="openMarketLightbox('img/boletim/01.png','Capa')">
                 <img src="img/boletim/01.png" alt="Capa" loading="lazy">
               </div>
@@ -1627,21 +1532,8 @@ footer {
                 <img src="img/boletim/52.png" alt="fechamento" loading="lazy">
               </div>
             </div>
-            <div class="market-zoom-hint" aria-hidden="true">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-            </div>
-          </div>
-          <div class="phone-home-indicator">
-            <div class="phone-home-bar"></div>
-          </div>
-        </div>
         <button class="market-nav-btn market-prev" id="mercadoPrev" aria-label="Anterior">&#8592;</button>
         <button class="market-nav-btn market-next" id="mercadoNext" aria-label="Próximo">&#8594;</button>
-        </div>
-
-        <button class="market-peek market-peek-next" id="mercadoPeekNext" aria-label="Próximo slide">
-          <img id="mercadoPeekNextImg" src="" alt="">
-        </button>
       </div>
 
       <div class="carousel-dots market-dots" id="mercadoDots"></div>
@@ -2182,32 +2074,45 @@ function submitForm(e) {
     dotsContainer.appendChild(dotBtn);
   }
   var dots = document.querySelectorAll('#mercadoDots .dot');
+  var slides = Array.from(track.querySelectorAll('.market-slide'));
   var current = 0;
   var timer;
 
-  var slideImgs = Array.from(track.querySelectorAll('.market-slide img'));
-  var peekPrevBtn = document.getElementById('mercadoPeekPrev');
-  var peekNextBtn = document.getElementById('mercadoPeekNext');
-  var peekPrevImg = document.getElementById('mercadoPeekPrevImg');
-  var peekNextImg = document.getElementById('mercadoPeekNextImg');
+  var zoomHint = document.createElement('div');
+  zoomHint.className = 'market-zoom-hint';
+  zoomHint.setAttribute('aria-hidden', 'true');
+  zoomHint.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>';
 
-  function updatePeeks() {
-    if (!peekPrevImg || !peekNextImg) return;
-    var prevIdx = (current - 1 + total) % total;
-    var nextIdx = (current + 1) % total;
-    peekPrevImg.src = slideImgs[prevIdx].src;
-    peekPrevImg.alt = slideImgs[prevIdx].alt;
-    peekNextImg.src = slideImgs[nextIdx].src;
-    peekNextImg.alt = slideImgs[nextIdx].alt;
+  function offsetOf(index) {
+    var diff = index - current;
+    if (diff > total / 2) diff -= total;
+    if (diff < -total / 2) diff += total;
+    return diff;
+  }
+
+  function render() {
+    slides.forEach(function(slide, i) {
+      var diff = offsetOf(i);
+      var abs = Math.abs(diff);
+      var sign = diff === 0 ? 0 : (diff > 0 ? 1 : -1);
+      var shift = abs === 0 ? 0 : abs === 1 ? 78 : abs === 2 ? 142 : 195;
+      var scale = abs === 0 ? 1 : abs === 1 ? 0.82 : abs === 2 ? 0.66 : 0.52;
+      var rotate = diff === 0 ? 0 : (sign > 0 ? -28 : 28);
+      var opacity = abs === 0 ? 1 : abs === 1 ? 0.92 : abs === 2 ? 0.5 : 0;
+      var x = sign === 0 ? '-50%' : (sign > 0 ? '-50% + ' + shift + '%' : '-50% - ' + shift + '%');
+      slide.style.transform = 'translate(calc(' + x + '), -50%) rotateY(' + rotate + 'deg) scale(' + scale + ')';
+      slide.style.zIndex = 10 - abs;
+      slide.style.opacity = opacity;
+      slide.style.pointerEvents = abs <= 2 ? 'auto' : 'none';
+      slide.classList.toggle('is-active', diff === 0);
+    });
+    slides[current].appendChild(zoomHint);
+    dots.forEach(function(d, i) { d.classList.toggle('active', i === current); });
   }
 
   function goTo(index) {
     current = (index + total) % total;
-    track.style.transform = 'translateX(-' + (current * 100) + '%)';
-    dots.forEach(function(d, i) {
-      d.classList.toggle('active', i === current);
-    });
-    updatePeeks();
+    render();
   }
 
   function next() { goTo(current + 1); }
@@ -2224,8 +2129,17 @@ function submitForm(e) {
   document.getElementById('mercadoNext').addEventListener('click', function(e) { e.stopPropagation(); stopAuto(); next(); startAuto(); });
   document.getElementById('mercadoPrev').addEventListener('click', function(e) { e.stopPropagation(); stopAuto(); prev(); startAuto(); });
 
-  if (peekPrevBtn) peekPrevBtn.addEventListener('click', function(e) { e.stopPropagation(); stopAuto(); prev(); startAuto(); });
-  if (peekNextBtn) peekNextBtn.addEventListener('click', function(e) { e.stopPropagation(); stopAuto(); next(); startAuto(); });
+  track.addEventListener('click', function(e) {
+    var slide = e.target.closest('.market-slide');
+    if (!slide) return;
+    var idx = slides.indexOf(slide);
+    if (offsetOf(idx) !== 0) {
+      e.stopImmediatePropagation();
+      stopAuto();
+      goTo(idx);
+      startAuto();
+    }
+  }, true);
 
   dots.forEach(function(dot, i) {
     dot.addEventListener('click', function() { stopAuto(); goTo(i); startAuto(); });
@@ -2243,13 +2157,13 @@ function submitForm(e) {
 
   var touchStartX = 0;
   var touchActive = false;
-  var screenEl = document.querySelector('.phone-screen');
-  if (screenEl) {
-    screenEl.addEventListener('touchstart', function(e) {
+  var stageEl = document.querySelector('.coverflow-stage');
+  if (stageEl) {
+    stageEl.addEventListener('touchstart', function(e) {
       touchStartX = e.changedTouches[0].screenX;
       touchActive = true;
     }, { passive: true });
-    screenEl.addEventListener('touchend', function(e) {
+    stageEl.addEventListener('touchend', function(e) {
       if (!touchActive) return;
       touchActive = false;
       var delta = e.changedTouches[0].screenX - touchStartX;
@@ -2261,7 +2175,7 @@ function submitForm(e) {
     }, { passive: true });
   }
 
-  updatePeeks();
+  render();
   startAuto();
 })();
 
