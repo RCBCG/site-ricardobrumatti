@@ -413,17 +413,42 @@
                         <!-- Seção de Dados do Leilão -->
                         <fieldset class="form-section space-y-4">
                             <legend class="text-xl font-bold text-gray-800 dark:text-white -mt-2 mb-4">Dados do Leilão</legend>
-                             <div class="flex flex-col sm:flex-row sm:items-center">
-                                <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="totalParcelas">Total de Parcelas:</label>
-                                <input type="number" id="totalParcelas" min="0" required class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+
+                            <div class="flex flex-col gap-2 mb-2">
+                                <span class="font-medium text-gray-700 dark:text-slate-300">Modelo de Parcelamento:</span>
+                                <div class="flex flex-wrap gap-4 text-sm">
+                                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="modeloParcelamento" id="modeloParcelamentoClassico" value="classico" checked>
+                                        Clássico (duplas/triplas)
+                                    </label>
+                                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="modeloParcelamento" id="modeloParcelamentoPersonalizado" value="personalizado">
+                                        Curva personalizada
+                                    </label>
+                                </div>
                             </div>
-                            <div class="flex flex-col sm:flex-row sm:items-center">
-                                <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="parcelasDuplas">Parcelas Duplas:</label>
-                                <input type="number" id="parcelasDuplas" value="0" min="0" required class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+
+                            <div id="parcelamentoClassico">
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="totalParcelas">Total de Parcelas:</label>
+                                    <input type="number" id="totalParcelas" min="0" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:items-center mt-3">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="parcelasDuplas">Parcelas Duplas:</label>
+                                    <input type="number" id="parcelasDuplas" value="0" min="0" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:items-center mt-3">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="parcelasTriplas">Parcelas Triplas:</label>
+                                    <input type="number" id="parcelasTriplas" value="0" min="0" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
                             </div>
-                            <div class="flex flex-col sm:flex-row sm:items-center">
-                                <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="parcelasTriplas">Parcelas Triplas:</label>
-                                <input type="number" id="parcelasTriplas" value="0" min="0" required class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+
+                            <div id="parcelamentoPersonalizado" class="hidden space-y-2">
+                                <label class="font-medium text-gray-700 dark:text-slate-300" for="curvaTexto">Curva (pesos por mês, separados por "+" ou vírgula):</label>
+                                <input type="text" id="curvaTexto" placeholder='Ex.: 2+2+2+2+2+20  (ou  1+29)' class="input-focus w-full p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Cada número é um mês, na ordem em que aparece; o valor dele mostra quantas "parcelas-base" aquele mês carrega (2 = parcela dupla, 20 = uma parcela grande no fim). Some quantos meses quiser, sem limite.</p>
+                                <div class="chart-sm" style="height:140px;"><canvas id="curvaPreviewChart"></canvas></div>
+                                <p id="curvaPreviewResumo" class="text-xs font-semibold text-center text-slate-600 dark:text-slate-300"></p>
                             </div>
 
                             <hr class="border-gray-300 dark:border-slate-600 my-4">
@@ -474,6 +499,80 @@
                             </div>
                         </fieldset>
                     </div>
+
+                    <!-- Política Comercial: custos adicionais, comissões/incentivos e descontos empilháveis -->
+                    <fieldset class="form-section space-y-4">
+                        <legend class="text-xl font-bold text-gray-800 dark:text-white -mt-2 mb-1">Política Comercial</legend>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 -mt-2 mb-2">Tudo aqui é opcional e vem zerado por padrão: preencha só o que fizer parte do seu negócio.</p>
+
+                        <details class="border border-slate-200 dark:border-slate-600 rounded-lg">
+                            <summary class="p-3 cursor-pointer text-sm font-bold text-blue-800 dark:text-sky-300"><i class="fas fa-truck mr-2"></i>Custos diretos adicionais (frete e seguro)</summary>
+                            <div class="p-3 pt-0 space-y-3">
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="despesaFrete">Despesa com Frete (R$):</label>
+                                    <input type="text" id="despesaFrete" value="0" data-type="monetario" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="seguroPct">Seguro dos Animais (% do valor da venda):</label>
+                                    <input type="text" id="seguroPct" value="0" data-type="percentual" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="border border-slate-200 dark:border-slate-600 rounded-lg">
+                            <summary class="p-3 cursor-pointer text-sm font-bold text-blue-800 dark:text-sky-300"><i class="fas fa-handshake mr-2"></i>Comissões e incentivos comerciais</summary>
+                            <div class="p-3 pt-0 space-y-3">
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="comissaoLeiloeiroPct">Comissão Leiloeiro/Corretora (%):</label>
+                                    <input type="text" id="comissaoLeiloeiroPct" value="0" data-type="percentual" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="comissaoAssessoriaPct">Comissão de Assessoria (%):</label>
+                                    <input type="text" id="comissaoAssessoriaPct" value="0" data-type="percentual" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Some aqui a assessoria oficial e/ou parceira; se cobrarem percentuais diferentes, use a soma dos dois.</p>
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="incentivoMesaPorLote">Incentivo de Venda (R$ por lote):</label>
+                                    <input type="text" id="incentivoMesaPorLote" value="0" data-type="monetario" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="numeroLotes">Número de Lotes desta Simulação:</label>
+                                    <input type="number" id="numeroLotes" value="1" min="1" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="nIndicacoes">Nº de Indicações:</label>
+                                    <input type="number" id="nIndicacoes" value="0" min="0" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="valorPorIndicacao">Valor por Indicação (R$):</label>
+                                    <input type="text" id="valorPorIndicacao" value="0" data-type="monetario" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="border border-slate-200 dark:border-slate-600 rounded-lg">
+                            <summary class="p-3 cursor-pointer text-sm font-bold text-blue-800 dark:text-sky-300"><i class="fas fa-percent mr-2"></i>Descontos comerciais empilháveis</summary>
+                            <div class="p-3 pt-0 space-y-3">
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Estes descontos são só informativos: eles não alteram o "Valor Total da Venda" digitado acima, e sim documentam a política aplicada e recalculam o preço de tabela implícito no relatório.</p>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="compradorRecorrente" class="h-4 w-4">
+                                    <label for="compradorRecorrente" class="font-medium text-gray-700 dark:text-slate-300">Comprador recorrente (recompra)</label>
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="descontoRecompraPct">Desconto de Recompra (%):</label>
+                                    <input type="text" id="descontoRecompraPct" value="0" data-type="percentual" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="compradorVolume" class="h-4 w-4">
+                                    <label for="compradorVolume" class="font-medium text-gray-700 dark:text-slate-300">Comprador de mais de 1 lote (volume)</label>
+                                </div>
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <label class="w-full sm:w-64 font-medium text-gray-700 dark:text-slate-300" for="descontoVolumePct">Desconto de Volume (%):</label>
+                                    <input type="text" id="descontoVolumePct" value="0" data-type="percentual" class="input-focus w-full sm:flex-1 p-2 border border-gray-300 rounded-lg bg-gray-50 shadow-sm dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                                </div>
+                            </div>
+                        </details>
+                    </fieldset>
 
                     <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
                         <button type="submit" id="calcularBtn" class="btn-hover flex-1 py-3 px-6 bg-blue-700 text-white rounded-lg font-bold shadow-md hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]">
@@ -548,6 +647,27 @@
                             </tbody>
                         </table>
                         <p id="fonte-tabela" class="text-right text-xs text-gray-500 dark:text-slate-400 p-2"></p>
+                    </div>
+
+                    <!-- Indicadores Comerciais -->
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-3">Indicadores Comerciais</h3>
+                    <div id="indicatorGridComercial" class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8"></div>
+
+                    <!-- Comissões, Incentivos e Descontos Comerciais -->
+                    <div class="result-card mt-8">
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-1 border-b border-slate-200 dark:border-slate-600 pb-2">Comissões, Incentivos e Descontos Comerciais</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Detalhamento de tudo que sai do bolso do vendedor para leiloeiro/corretora, assessoria, incentivo de venda e indicação, mais a política de desconto aplicada ao comprador.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left dark:text-slate-300">
+                                <thead>
+                                    <tr class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+                                        <th class="p-2">Item</th>
+                                        <th class="p-2 text-right">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="comercialTableBody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <!-- Cards de Análise -->
@@ -786,18 +906,20 @@
             <span class="close-button">&times;</span>
             <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4"><i class="fas fa-question-circle mr-2"></i>Guia do Simulador</h2>
             <div class="text-sm space-y-3 max-h-[70vh] overflow-y-auto dark:text-slate-300">
-                <p><strong>O que informar:</strong> valor total da venda, custo de produção, despesa comercial, desconto à vista, custo de oportunidade (% a.a.) e a estrutura de parcelas (total, duplas e triplas).</p>
+                <p><strong>O que informar:</strong> valor total da venda, custo de produção, despesa comercial, desconto à vista, custo de oportunidade (% a.a.) e a estrutura de parcelas (clássica ou curva personalizada).</p>
+                <p><strong>Política Comercial (opcional):</strong> frete, seguro dos animais, comissão de leiloeiro/corretora, comissão de assessoria, incentivo de venda por lote, bônus de indicação e descontos de recompra/volume.</p>
                 <p><strong>Premissas avançadas:</strong> inflação mensal (para a série real/deflacionada), taxa de antecipação (deságio do factoring) e o teto do otimizador de parcelas.</p>
                 <p><strong>O que o simulador calcula:</strong></p>
                 <ul class="list-disc pl-5 space-y-1">
                     <li>Receita, custo, lucro e margem em quatro bases: nominal, à vista, corrigida por juros e real (deflacionada).</li>
+                    <li>Custo comercial de intermediação (comissões + incentivos), margem bruta antes da comissão e preço mínimo de arremate (break-even) por lote.</li>
                     <li>TIR mensal (Newton-Raphson), custo de oportunidade mensal equivalente e payback do saldo corrigido.</li>
                     <li>Sensibilidade a receita, custos e taxa de desconto; diagrama de tornado.</li>
-                    <li>Quadro de cenários (Pessimista/Base/Otimista) cruzado com duas estruturas de parcelamento.</li>
-                    <li>Otimizador da quantidade de parcelas (VPL x nº de parcelas) e decisão de antecipar cada parcela.</li>
+                    <li>Quadro de cenários (Pessimista/Base/Otimista) e otimizador de parcelas, sempre pelo modelo clássico de duplas/triplas.</li>
+                    <li>Otimizador da quantidade de parcelas (VPL x nº de parcelas) e decisão de antecipar cada parcela — a antecipação por parcela já funciona com a curva personalizada.</li>
                     <li>Monte Carlo com distribuições triangulares, percentis, cauda inferior e correlações de Spearman.</li>
                 </ul>
-                <p><strong>Exportações:</strong> PDF completo (jsPDF), planilha Excel multi-abas (ExcelJS) e imagem vertical para redes sociais.</p>
+                <p><strong>Exportações:</strong> PDF completo (jsPDF), planilha Excel multi-abas (ExcelJS, incluindo a aba "Comissões e Descontos") e imagem vertical para redes sociais.</p>
                 <p class="italic text-slate-500 dark:text-slate-400">Ferramenta de apoio à decisão. Os resultados dependem inteiramente das premissas informadas pelo usuário e não constituem garantia de resultado futuro.</p>
             </div>
         </div>
@@ -849,7 +971,7 @@
     window.VendaLeilaoEngine = (function () {
         'use strict';
 
-        const VERSION = '2.0.0';
+        const VERSION = '3.0.0';
         const MAX_ITERATIONS = 100;
         const TOLERANCE = 1e-6;
 
@@ -858,12 +980,23 @@
             return Number.isFinite(n) ? n : 0;
         };
 
+        // Divide um texto de curva ("2+2+2+2+2+20" ou "2,2,2,2,2,20") em pesos numéricos.
+        // Cada posição da lista é um mês; o peso é quantas "parcelas-base" aquele mês carrega
+        // (equivalente a duplas/triplas, mas livre em qualquer posição e sem limite de meses).
+        function parseCurvaPesos(texto) {
+            return String(texto || '')
+                .split(/[+,;]/)
+                .map((s) => parseFloat(String(s).trim().replace(',', '.')))
+                .filter((n) => Number.isFinite(n) && n > 0);
+        }
+
         function normalizeInputs(raw) {
             const i = Object.assign({}, raw || {});
             i.valorTotal = Math.max(0, num(i.valorTotal));
             i.custoProducao = Math.max(0, num(i.custoProducao));
             i.despesaComercial = Math.max(0, num(i.despesaComercial));
-            i.custoTotal = i.custoProducao + i.despesaComercial;
+            i.despesaFrete = Math.max(0, num(i.despesaFrete));
+            i.seguroPct = Math.max(0, num(i.seguroPct));
             i.descontoVista = num(i.descontoVista);
             i.custoOportunidade = num(i.custoOportunidade);
             i.custoOportunidadeAnual = num(i.custoOportunidadeAnual);
@@ -872,12 +1005,60 @@
             i.totalParcelas = Math.max(0, Math.round(num(i.totalParcelas)));
             i.parcelasDuplas = Math.max(0, Math.round(num(i.parcelasDuplas)));
             i.parcelasTriplas = Math.max(0, Math.round(num(i.parcelasTriplas)));
+
+            // ---- Módulo comercial (Fase 1): comissões, incentivos, descontos empilháveis ----
+            i.numeroLotes = Math.max(1, Math.round(num(i.numeroLotes)) || 1);
+            i.comissaoLeiloeiroPct = Math.max(0, num(i.comissaoLeiloeiroPct));
+            i.comissaoAssessoriaPct = Math.max(0, num(i.comissaoAssessoriaPct));
+            i.incentivoMesaPorLote = Math.max(0, num(i.incentivoMesaPorLote));
+            i.nIndicacoes = Math.max(0, Math.round(num(i.nIndicacoes)));
+            i.valorPorIndicacao = Math.max(0, num(i.valorPorIndicacao));
+            i.compradorRecorrente = !!i.compradorRecorrente;
+            i.compradorVolume = !!i.compradorVolume;
+            i.descontoRecompraPct = Math.max(0, num(i.descontoRecompraPct));
+            i.descontoVolumePct = Math.max(0, num(i.descontoVolumePct));
+
+            i.seguroRS = i.valorTotal * i.seguroPct;
+            i.comissaoLeiloeiroRS = i.valorTotal * i.comissaoLeiloeiroPct;
+            i.comissaoAssessoriaRS = i.valorTotal * i.comissaoAssessoriaPct;
+            i.incentivoMesaRS = i.incentivoMesaPorLote * i.numeroLotes;
+            i.bonusIndicacaoRS = i.nIndicacoes * i.valorPorIndicacao;
+            i.custoComercialIntermediacao = i.comissaoLeiloeiroRS + i.comissaoAssessoriaRS + i.incentivoMesaRS + i.bonusIndicacaoRS;
+
+            // Desconto comercial efetivo (recompra x volume, composição multiplicativa).
+            // Informativo: documenta a política aplicada e reconstrói o preço de tabela implícito.
+            // Não altera o Valor Total da Venda, que continua sendo o valor final já negociado.
+            let fatorDesconto = 1;
+            if (i.compradorRecorrente) fatorDesconto *= (1 - Math.min(0.95, i.descontoRecompraPct));
+            if (i.compradorVolume) fatorDesconto *= (1 - Math.min(0.95, i.descontoVolumePct));
+            i.descontoComercialEfetivoPct = 1 - fatorDesconto;
+            i.precoTabelaImplicito = fatorDesconto > 0 ? i.valorTotal / fatorDesconto : i.valorTotal;
+
+            i.custoDireto = i.custoProducao + i.despesaFrete + i.despesaComercial + i.seguroRS;
+            i.custoTotal = i.custoDireto + i.custoComercialIntermediacao;
+
+            // ---- Parcelamento: modelo clássico (duplas/triplas) ou curva personalizada ----
+            i.modeloParcelamento = i.modeloParcelamento === 'personalizado' ? 'personalizado' : 'classico';
+            i.curvaPesos = Array.isArray(i.curvaPesos) ? i.curvaPesos.filter((n) => Number.isFinite(n) && n > 0) : parseCurvaPesos(i.curvaTexto);
+
             return i;
         }
 
         // Cronograma de recebimentos: elemento k é pago no mês k (mês 0 = ato).
         function cronograma(inputs) {
             const valorTotal = num(inputs.valorTotal);
+
+            // Modelo de curva personalizada: qualquer peso, em qualquer mês, sem limite de meses.
+            // Mantém o modelo clássico 100% intacto quando não estiver ativo (nenhuma regressão).
+            if (inputs.modeloParcelamento === 'personalizado' && Array.isArray(inputs.curvaPesos) && inputs.curvaPesos.length) {
+                const pesos = inputs.curvaPesos.map((p) => Math.max(0, num(p)));
+                const totalPesos = pesos.reduce((a, b) => a + b, 0);
+                if (totalPesos <= 0) throw new Error('A curva de parcelamento personalizada precisa somar mais que zero.');
+                const valorBaseParcela = valorTotal / totalPesos;
+                const lista = pesos.map((peso, k) => ({ ordem: k + 1, mes: k, multiplicador: peso, valor: valorBaseParcela * peso }));
+                return { lista: lista, prazoMeses: lista.length, parcelasUnicas: null, valorBaseParcela: valorBaseParcela, totalPartes: totalPesos };
+            }
+
             const totalParcelas = Math.round(num(inputs.totalParcelas));
             const parcelasDuplas = Math.round(num(inputs.parcelasDuplas));
             const parcelasTriplas = Math.round(num(inputs.parcelasTriplas));
@@ -891,7 +1072,7 @@
                 const multiplicador = k < parcelasTriplas ? 3 : (k < parcelasTriplas + parcelasDuplas ? 2 : 1);
                 lista.push({ ordem: k + 1, mes: k, multiplicador: multiplicador, valor: valorBaseParcela * multiplicador });
             }
-            return { lista: lista, prazoMeses: prazoMeses, parcelasUnicas: parcelasUnicas, valorBaseParcela: valorBaseParcela };
+            return { lista: lista, prazoMeses: prazoMeses, parcelasUnicas: parcelasUnicas, valorBaseParcela: valorBaseParcela, totalPartes: totalParcelas };
         }
 
         const calcularVPL = (fluxoCaixa, taxa) => fluxoCaixa.reduce((vpl, valor, t) => vpl + valor / Math.pow(1 + taxa, t), 0);
@@ -931,9 +1112,11 @@
             receitaCorrigidaTotal += receitaT0;
             receitaRealTotal += receitaT0;
 
-            fluxoCaixa.push({ mes: -1, receita: receitaT0, custo: custoTotal, saldo: saldoAcumulado });
-            fluxoCaixaCorrigido.push({ mes: -1, receita: receitaT0, custo: custoTotal, saldo: saldoAcumuladoCorrigido });
-            fluxoCaixaReal.push({ mes: -1, receita: receitaT0, custo: custoTotal, saldo: saldoAcumuladoReal });
+            // Convenção: "mes" é sempre o mês real do cronograma (0 = recebido no ato),
+            // igual ao "mes" retornado por cronograma() — sem deslocamento.
+            fluxoCaixa.push({ mes: 0, receita: receitaT0, custo: custoTotal, saldo: saldoAcumulado });
+            fluxoCaixaCorrigido.push({ mes: 0, receita: receitaT0, custo: custoTotal, saldo: saldoAcumuladoCorrigido });
+            fluxoCaixaReal.push({ mes: 0, receita: receitaT0, custo: custoTotal, saldo: saldoAcumuladoReal });
 
             for (let idx = 1; idx < crono.lista.length; idx++) {
                 const t = idx;
@@ -945,9 +1128,9 @@
                 saldoAcumulado += receitaNominal;
                 saldoAcumuladoCorrigido += receitaCorrigidaMes;
                 saldoAcumuladoReal += receitaRealMes;
-                fluxoCaixa.push({ mes: t - 1, receita: receitaNominal, custo: 0, saldo: saldoAcumulado });
-                fluxoCaixaCorrigido.push({ mes: t - 1, receita: receitaCorrigidaMes, custo: 0, saldo: saldoAcumuladoCorrigido });
-                fluxoCaixaReal.push({ mes: t - 1, receita: receitaRealMes, custo: 0, saldo: saldoAcumuladoReal });
+                fluxoCaixa.push({ mes: t, receita: receitaNominal, custo: 0, saldo: saldoAcumulado });
+                fluxoCaixaCorrigido.push({ mes: t, receita: receitaCorrigidaMes, custo: 0, saldo: saldoAcumuladoCorrigido });
+                fluxoCaixaReal.push({ mes: t, receita: receitaRealMes, custo: 0, saldo: saldoAcumuladoReal });
             }
 
             return {
@@ -985,11 +1168,29 @@
             let mesPayback = 'Não atingido';
             for (let i = 0; i < fluxoCaixaCorrigido.length; i++) {
                 if (fluxoCaixaCorrigido[i].saldo >= 0) {
-                    const mesReal = fluxoCaixaCorrigido[i].mes === -1 ? 0 : fluxoCaixaCorrigido[i].mes + 1;
-                    mesPayback = 'Mês ' + mesReal;
+                    mesPayback = 'Mês ' + fluxoCaixaCorrigido[i].mes;
                     break;
                 }
             }
+
+            // ---- Módulo comercial (Fase 1) ----
+            const custoDireto = Number.isFinite(inputs.custoDireto) ? num(inputs.custoDireto) : (num(inputs.custoProducao) + num(inputs.despesaFrete) + num(inputs.despesaComercial) + num(inputs.seguroRS));
+            const custoComercialIntermediacao = num(inputs.custoComercialIntermediacao);
+            const custoComercialPctReceita = valorTotal ? (custoComercialIntermediacao / valorTotal) : 0;
+            const lucroBrutoPreComissao = receitaCorrigida - custoDireto;
+            const margemBrutaPreComissao = receitaCorrigida ? (lucroBrutoPreComissao / receitaCorrigida) : 0;
+
+            // Preço mínimo de arremate (break-even): resolve valorTotal tal que lucroCorrigido = 0,
+            // isolando os componentes fixos (R$) dos percentuais incidentes sobre o próprio valorTotal
+            // (seguro + comissão leiloeiro + comissão assessoria). receitaFactor é a receita corrigida
+            // por R$ 1,00 de valorTotal na curva de parcelamento atual (constante, pois é proporcional).
+            const receitaFactor = valorTotal ? (receitaCorrigida / valorTotal) : 0;
+            const custosFixosComerciais = num(inputs.custoProducao) + num(inputs.despesaFrete) + num(inputs.despesaComercial) + num(inputs.incentivoMesaRS) + num(inputs.bonusIndicacaoRS);
+            const taxasPercentuaisSobreVenda = num(inputs.seguroPct) + num(inputs.comissaoLeiloeiroPct) + num(inputs.comissaoAssessoriaPct);
+            const denominadorBreakeven = receitaFactor - taxasPercentuaisSobreVenda;
+            const precoMinimoArremate = denominadorBreakeven > 0 ? (custosFixosComerciais / denominadorBreakeven) : Infinity;
+            const numeroLotes = Math.max(1, Math.round(num(inputs.numeroLotes)) || 1);
+            const precoMinimoArrematePorLote = Number.isFinite(precoMinimoArremate) ? precoMinimoArremate / numeroLotes : Infinity;
 
             return {
                 receitaVista: receitaVista,
@@ -1001,7 +1202,16 @@
                 tirMensal: tirMensal,
                 tirMensalPercentual: isNaN(tirMensal) ? 'N/A' : tirMensal * 100,
                 tirAnualPercentual: isNaN(tirMensal) ? 'N/A' : (Math.pow(1 + tirMensal, 12) - 1) * 100,
-                mesPayback: mesPayback
+                mesPayback: mesPayback,
+                custoDireto: custoDireto,
+                custoComercialIntermediacao: custoComercialIntermediacao,
+                custoComercialPctReceita: custoComercialPctReceita,
+                lucroBrutoPreComissao: lucroBrutoPreComissao,
+                margemBrutaPreComissao: margemBrutaPreComissao,
+                precoMinimoArremate: precoMinimoArremate,
+                precoMinimoArrematePorLote: precoMinimoArrematePorLote,
+                descontoComercialEfetivoPct: num(inputs.descontoComercialEfetivoPct),
+                precoTabelaImplicito: num(inputs.precoTabelaImplicito)
             };
         }
 
@@ -1101,21 +1311,23 @@
         }
 
         // ---------- Variáveis de risco ----------
-        const MC_KEYS = ['valorTotal', 'custoProducao', 'despesaComercial', 'custoOportunidade', 'descontoVista'];
+        // Nota: descontoVista fica fora daqui de propósito — ele só afeta a coluna
+        // "À Vista" (receitaVista/margemVista), nunca o Lucro Corrigido (VPL), que é
+        // a métrica de saída do Monte Carlo e do Tornado. Incluí-lo aqui sempre
+        // renderiza impacto/correlação zero, o que parece erro para quem lê o relatório.
+        const MC_KEYS = ['valorTotal', 'custoProducao', 'despesaComercial', 'custoOportunidade'];
         const MC_LABELS = {
             valorTotal: 'Valor Total da Venda (R$)',
             custoProducao: 'Custo de Produção (R$)',
             despesaComercial: 'Despesa Comercial (R$)',
-            custoOportunidade: 'Custo de Oportunidade (% a.m.)',
-            descontoVista: 'Desconto à Vista (%)'
+            custoOportunidade: 'Custo de Oportunidade (% a.m.)'
         };
         // scale: fator de conversão entre o valor interno e o exibido na tabela de faixas.
         const MC_UNITS = {
             valorTotal: { scale: 1, decimals: 2 },
             custoProducao: { scale: 1, decimals: 2 },
             despesaComercial: { scale: 1, decimals: 2 },
-            custoOportunidade: { scale: 100, decimals: 4 },
-            descontoVista: { scale: 100, decimals: 2 }
+            custoOportunidade: { scale: 100, decimals: 4 }
         };
 
         function defaultRanges(rawInputs) {
@@ -1124,8 +1336,7 @@
                 valorTotal: { min: i.valorTotal * 0.90, mode: i.valorTotal, max: i.valorTotal * 1.10 },
                 custoProducao: { min: i.custoProducao * 0.90, mode: i.custoProducao, max: i.custoProducao * 1.10 },
                 despesaComercial: { min: i.despesaComercial * 0.85, mode: i.despesaComercial, max: i.despesaComercial * 1.15 },
-                custoOportunidade: { min: Math.max(0, i.custoOportunidade * 0.80), mode: i.custoOportunidade, max: i.custoOportunidade * 1.20 },
-                descontoVista: { min: Math.max(0, i.descontoVista * 0.80), mode: i.descontoVista, max: Math.min(1, i.descontoVista * 1.20) }
+                custoOportunidade: { min: Math.max(0, i.custoOportunidade * 0.80), mode: i.custoOportunidade, max: i.custoOportunidade * 1.20 }
             };
         }
 
@@ -1166,9 +1377,11 @@
         }
 
         function applySample(base, sampled) {
-            const merged = Object.assign({}, base, sampled);
-            merged.custoTotal = num(merged.custoProducao) + num(merged.despesaComercial);
-            return merged;
+            // custoTotal não é setado aqui: normalizeInputs() (chamado por lucroCorrigidoDe)
+            // sempre recalcula o custo total completo a partir dos campos brutos, então
+            // qualquer valor definido aqui seria descartado — deixar explícito evita a
+            // falsa impressão de que o Monte Carlo ignora frete/seguro/comissões.
+            return Object.assign({}, base, sampled);
         }
 
         function runMonteCarlo(rawInputs, config) {
@@ -1237,8 +1450,12 @@
         // ---------- Estrutura alternativa de parcelamento ----------
         // Concentra o recebimento: metade das parcelas simples vira parcela dupla,
         // encurtando o prazo sem alterar o valor total negociado.
+        // Nota: Cenários, Otimizador e esta função sempre analisam o modelo CLÁSSICO
+        // (duplas/triplas), mesmo que a curva de parcelamento personalizada esteja ativa
+        // no formulário. A curva livre ainda não tem uma varredura equivalente nessas
+        // três análises; isso fica marcado na tela para não sugerir cobertura que não existe.
         function estruturaAlternativa(rawInputs) {
-            const i = normalizeInputs(rawInputs);
+            const i = Object.assign({}, normalizeInputs(rawInputs), { modeloParcelamento: 'classico' });
             const unicas = i.totalParcelas - (i.parcelasDuplas * 2) - (i.parcelasTriplas * 3);
             if (unicas < 0) return Object.assign({}, i);
             const extraDuplas = Math.floor(unicas / 4);
@@ -1262,9 +1479,8 @@
             const linhas = [];
             SCENARIO_DEFS.forEach(def => {
                 estruturas.forEach(est => {
-                    const inp = Object.assign({}, est.inputs);
+                    const inp = Object.assign({}, est.inputs, { modeloParcelamento: 'classico' });
                     Object.keys(def.mult).forEach(k => { inp[k] = num(est.inputs[k]) * def.mult[k]; });
-                    inp.custoTotal = num(inp.custoProducao) + num(inp.despesaComercial);
                     let av = null;
                     try { av = avaliar(inp); } catch (e) { av = null; }
                     linhas.push({
@@ -1294,7 +1510,7 @@
             const pontos = [];
             for (let n = 1; n <= teto; n++) {
                 const est = escalarEstrutura(n, base);
-                const inp = Object.assign({}, base, { totalParcelas: n, parcelasDuplas: est.parcelasDuplas, parcelasTriplas: est.parcelasTriplas });
+                const inp = Object.assign({}, base, { modeloParcelamento: 'classico', totalParcelas: n, parcelasDuplas: est.parcelasDuplas, parcelasTriplas: est.parcelasTriplas });
                 let av = null;
                 try { av = avaliar(inp); } catch (e) { continue; }
                 pontos.push({
@@ -1342,6 +1558,7 @@
         return Object.freeze({
             VERSION: VERSION,
             normalizeInputs: normalizeInputs,
+            parseCurvaPesos: parseCurvaPesos,
             cronograma: cronograma,
             calcularVPL: calcularVPL,
             calcularDerivadaVPL: calcularDerivadaVPL,
@@ -1450,6 +1667,9 @@
         const tickColor = () => (isDark() ? '#e2e8f0' : '#475569');
         const gridColor = () => (isDark() ? 'rgba(148,163,184,.20)' : 'rgba(148,163,184,.30)');
         const moneyTick = (v) => (Math.abs(v) >= 1000 ? (v / 1000).toFixed(0) + 'k' : formatNum(v, 0));
+        const descreverEstrutura = (i, prazoMeses) => i.modeloParcelamento === 'personalizado'
+            ? 'Curva personalizada (' + i.curvaPesos.join('+') + ') em ' + prazoMeses + ' meses'
+            : i.totalParcelas + ' parcelas (' + i.parcelasDuplas + ' duplas, ' + i.parcelasTriplas + ' triplas) em ' + prazoMeses + ' meses';
 
         function fitText(id, maxSize) {
             const el = $(id);
@@ -1504,11 +1724,54 @@
             document.querySelectorAll('input[data-type="monetario"]').forEach(aplicarMascaraMonetaria);
             document.querySelectorAll('input[data-type="percentual"]').forEach(aplicarMascaraPercentual);
 
+            document.querySelectorAll('input[name="modeloParcelamento"]').forEach(r => r.addEventListener('change', toggleModeloParcelamento));
+            $('curvaTexto').addEventListener('input', renderCurvaPreview);
+
             document.addEventListener('click', (e) => {
                 if (!dom.shareDropdown.classList.contains('hidden') && !dom.shareDropdown.contains(e.target) && e.target !== dom.shareBtn) {
                     dom.shareDropdown.classList.add('hidden');
                 }
             });
+        }
+
+        // ---------------- Modelo de parcelamento: clássico x curva personalizada ----------------
+        function toggleModeloParcelamento() {
+            const personalizado = $('modeloParcelamentoPersonalizado').checked;
+            $('parcelamentoClassico').classList.toggle('hidden', personalizado);
+            $('parcelamentoPersonalizado').classList.toggle('hidden', !personalizado);
+            if (personalizado) renderCurvaPreview();
+        }
+
+        function renderCurvaPreview() {
+            const texto = $('curvaTexto').value;
+            const pesos = Engine.parseCurvaPesos(texto);
+            const resumo = $('curvaPreviewResumo');
+            if (!pesos.length) {
+                if (state.chartInstances.curvaPreviewChart) { state.chartInstances.curvaPreviewChart.destroy(); delete state.chartInstances.curvaPreviewChart; }
+                resumo.textContent = 'Digite os pesos da curva para ver a prévia (ex.: 2+2+2+2+2+20).';
+                return;
+            }
+            const total = pesos.reduce((a, b) => a + b, 0);
+            // O resumo textual não depende do Chart.js: calcula e escreve primeiro, para continuar
+            // informativo mesmo se a prévia gráfica falhar (rede lenta, bloqueador de anúncios etc.).
+            resumo.textContent = pesos.length + ' meses, ' + total + ' partes no total. A menor parcela representa ' +
+                formatPercent(Math.min(...pesos) / total) + ' do valor da venda e a maior ' + formatPercent(Math.max(...pesos) / total) +
+                ' (aplicado ao Valor Total da Venda informado acima quando você calcular).';
+            try {
+                const labels = pesos.map((_, idx) => 'Mês ' + idx);
+                const valoresRelativos = pesos.map(p => (p / total) * 100);
+                createOrUpdateChart('curvaPreviewChart', {
+                    type: 'bar',
+                    data: { labels: labels, datasets: [{ label: '% do valor total', data: valoresRelativos, backgroundColor: '#0d6b83' }] },
+                    options: Object.assign({}, baseChartOptions(''), {
+                        plugins: { legend: { display: false }, datalabels: { display: false } },
+                        scales: { x: { ticks: { color: tickColor() }, grid: { display: false } }, y: { ticks: { color: tickColor(), callback: (v) => v + '%' }, grid: { color: gridColor() } } }
+                    })
+                });
+            } catch (e) {
+                // Prévia gráfica é um "nice-to-have"; o resumo textual acima já cobre o essencial.
+                console.warn('Prévia gráfica da curva indisponível:', e.message);
+            }
         }
 
         function toggleDarkMode() {
@@ -1563,13 +1826,29 @@
         function getInputs() {
             const getVal = (id) => parseFloat($(id).dataset.value) || 0;
             const custoOportunidadeAnual = getVal('custoOportunidade');
+            const modeloParcelamentoEl = document.querySelector('input[name="modeloParcelamento"]:checked');
+            const modeloParcelamento = modeloParcelamentoEl ? modeloParcelamentoEl.value : 'classico';
             return Engine.normalizeInputs({
                 valorTotal: getVal('valorTotal'),
+                modeloParcelamento: modeloParcelamento,
+                curvaTexto: $('curvaTexto') ? $('curvaTexto').value : '',
                 totalParcelas: parseInt($('totalParcelas').value, 10) || 0,
                 parcelasDuplas: parseInt($('parcelasDuplas').value, 10) || 0,
                 parcelasTriplas: parseInt($('parcelasTriplas').value, 10) || 0,
                 custoProducao: getVal('custoProducao'),
                 despesaComercial: getVal('despesaComercial'),
+                despesaFrete: getVal('despesaFrete'),
+                seguroPct: getVal('seguroPct'),
+                comissaoLeiloeiroPct: getVal('comissaoLeiloeiroPct'),
+                comissaoAssessoriaPct: getVal('comissaoAssessoriaPct'),
+                incentivoMesaPorLote: getVal('incentivoMesaPorLote'),
+                numeroLotes: parseInt($('numeroLotes').value, 10) || 1,
+                nIndicacoes: parseInt($('nIndicacoes').value, 10) || 0,
+                valorPorIndicacao: getVal('valorPorIndicacao'),
+                compradorRecorrente: $('compradorRecorrente').checked,
+                descontoRecompraPct: getVal('descontoRecompraPct'),
+                compradorVolume: $('compradorVolume').checked,
+                descontoVolumePct: getVal('descontoVolumePct'),
                 descontoVista: getVal('descontoVista'),
                 custoOportunidade: Math.pow(1 + custoOportunidadeAnual, 1 / 12) - 1,
                 custoOportunidadeAnual: custoOportunidadeAnual,
@@ -1589,6 +1868,10 @@
         function loadExample(showMsg) {
             const example = {
                 valorTotal: '20.000,00', custoProducao: '7.500,00', despesaComercial: '2.500,00',
+                despesaFrete: '3.500,00', seguroPct: '0,50',
+                comissaoLeiloeiroPct: '3,00', comissaoAssessoriaPct: '2,00', incentivoMesaPorLote: '50,00',
+                numeroLotes: 1, nIndicacoes: 1, valorPorIndicacao: '100,00',
+                descontoRecompraPct: '5,00', descontoVolumePct: '3,00',
                 descontoVista: '10,00', custoOportunidade: '14,75', inflacaoMensal: '0,45', taxaAntecipacao: '1,50',
                 totalParcelas: 30, parcelasDuplas: 5, parcelasTriplas: 0, maxParcelasOtim: 12,
                 fazenda: 'Fazenda Exemplo', raca: 'Nelore', categoriaVenda: 'Touros',
@@ -1601,12 +1884,17 @@
                     el.dispatchEvent(new Event('input', { bubbles: true }));
                 }
             });
+            $('modeloParcelamentoClassico').checked = true;
+            $('curvaTexto').value = '2+2+2+2+2+20';
+            toggleModeloParcelamento();
             if (showMsg) showMessage('Exemplo Carregado', "Os campos foram preenchidos. Clique em 'Calcular' para ver os resultados.");
         }
 
         function limparFormulario() {
             dom.calcForm.reset();
             document.querySelectorAll('input[data-type]').forEach(input => { input.value = ''; input.dataset.value = ''; });
+            $('modeloParcelamentoClassico').checked = true;
+            toggleModeloParcelamento();
             dom.resultsSection.classList.add('hidden');
             Object.values(state.chartInstances).forEach(chart => { if (chart) chart.destroy(); });
             state.chartInstances = {};
@@ -1658,6 +1946,8 @@
         function renderAll(sim) {
             renderIndicators(sim);
             renderizarResultados(sim);
+            renderIndicatorsComerciais(sim);
+            renderComercial(sim);
             renderizarGraficos(sim);
             renderSensitivityCharts(sim);
             renderTornado(sim);
@@ -1684,6 +1974,39 @@
                 '<div class="indicator-value' + (c[3] ? '' : ' neg') + '" id="ind-card-' + idx + '"' + (c[2] ? ' title="' + escapeHtml(c[2]) + '"' : '') + '>' + escapeHtml(c[1]) + '</div></div>'
             ).join('');
             cards.forEach((_, idx) => fitText('ind-card-' + idx, 21));
+        }
+
+        // Indicadores do módulo comercial (Fase 1): custo de intermediação, margem antes/depois
+        // de comissão e preço mínimo de arremate (break-even por lote).
+        function renderIndicatorsComerciais(sim) {
+            const r = sim.resultados;
+            const cards = [
+                ['Custo Comercial (Comissões)', formatCurrencyCompact(r.custoComercialIntermediacao), formatCurrency(r.custoComercialIntermediacao) + ' (' + formatPercent(r.custoComercialPctReceita) + ' da receita)', true],
+                ['Margem Bruta (pré-comissão)', formatPercent(r.margemBrutaPreComissao), null, r.margemBrutaPreComissao >= 0],
+                ['Preço Mínimo de Arremate/Lote', Number.isFinite(r.precoMinimoArrematePorLote) ? formatCurrencyCompact(r.precoMinimoArrematePorLote) : 'Não cobre custo', Number.isFinite(r.precoMinimoArrematePorLote) ? formatCurrency(r.precoMinimoArrematePorLote) : null, Number.isFinite(r.precoMinimoArrematePorLote)]
+            ];
+            $('indicatorGridComercial').innerHTML = cards.map((c, idx) =>
+                '<div class="indicator-card"><div class="indicator-label">' + escapeHtml(c[0]) + '</div>' +
+                '<div class="indicator-value' + (c[3] ? '' : ' neg') + '" id="ind-com-' + idx + '"' + (c[2] ? ' title="' + escapeHtml(c[2]) + '"' : '') + '>' + escapeHtml(c[1]) + '</div></div>'
+            ).join('');
+            cards.forEach((_, idx) => fitText('ind-com-' + idx, 21));
+        }
+
+        function renderComercial(sim) {
+            const i = sim.inputs, r = sim.resultados;
+            const linhas = [
+                ['Comissão Leiloeiro/Corretora', formatCurrency(i.comissaoLeiloeiroRS)],
+                ['Comissão de Assessoria', formatCurrency(i.comissaoAssessoriaRS)],
+                ['Incentivo de Venda (total, ' + i.numeroLotes + ' lote(s))', formatCurrency(i.incentivoMesaRS)],
+                ['Bônus de Indicação (' + i.nIndicacoes + ' indicação(ões))', formatCurrency(i.bonusIndicacaoRS)],
+                ['Seguro dos Animais', formatCurrency(i.seguroRS)],
+                ['Custo Comercial Total (comissões + incentivos)', formatCurrency(r.custoComercialIntermediacao) + ' — ' + formatPercent(r.custoComercialPctReceita) + ' da receita'],
+                ['Desconto Comercial Efetivo (recompra × volume)', i.compradorRecorrente || i.compradorVolume ? formatPercent(i.descontoComercialEfetivoPct) : 'Não aplicado'],
+                ['Preço de Tabela Implícito', i.compradorRecorrente || i.compradorVolume ? formatCurrency(i.precoTabelaImplicito) : '—']
+            ];
+            $('comercialTableBody').innerHTML = linhas.map(l =>
+                '<tr><td class="p-2">' + escapeHtml(l[0]) + '</td><td class="p-2 text-right font-medium">' + escapeHtml(l[1]) + '</td></tr>'
+            ).join('');
         }
 
         function renderizarResultados(sim) {
@@ -1768,7 +2091,7 @@
                 options: optDesv
             });
 
-            const labels = sim.fluxoCaixaCorrigido.map(item => (item.mes === -1 ? 'Mês 0' : 'Mês ' + (item.mes + 1)));
+            const labels = sim.fluxoCaixaCorrigido.map(item => 'Mês ' + item.mes);
             const optFluxo = baseChartOptions('Fluxo de Caixa — Nominal, Corrigido (juros) e Real (inflação)');
             createOrUpdateChart('fluxoCaixaChart', {
                 type: 'line',
@@ -2265,11 +2588,28 @@
             setMasked('valorTotal', sim.inputs.valorTotal, 'monetario');
             setMasked('custoProducao', sim.inputs.custoProducao, 'monetario');
             setMasked('despesaComercial', sim.inputs.despesaComercial, 'monetario');
+            setMasked('despesaFrete', sim.inputs.despesaFrete || 0, 'monetario');
+            setMasked('seguroPct', sim.inputs.seguroPct || 0, 'percentual');
+            setMasked('comissaoLeiloeiroPct', sim.inputs.comissaoLeiloeiroPct || 0, 'percentual');
+            setMasked('comissaoAssessoriaPct', sim.inputs.comissaoAssessoriaPct || 0, 'percentual');
+            setMasked('incentivoMesaPorLote', sim.inputs.incentivoMesaPorLote || 0, 'monetario');
+            setMasked('valorPorIndicacao', sim.inputs.valorPorIndicacao || 0, 'monetario');
+            setMasked('descontoRecompraPct', sim.inputs.descontoRecompraPct || 0, 'percentual');
+            setMasked('descontoVolumePct', sim.inputs.descontoVolumePct || 0, 'percentual');
             setMasked('descontoVista', sim.inputs.descontoVista, 'percentual');
             setMasked('custoOportunidade', sim.inputs.custoOportunidadeAnual, 'percentual');
             setMasked('inflacaoMensal', sim.inputs.inflacaoMensal || 0, 'percentual');
             setMasked('taxaAntecipacao', sim.inputs.taxaAntecipacao || 0, 'percentual');
             ['totalParcelas', 'parcelasDuplas', 'parcelasTriplas', 'fazenda', 'raca', 'categoriaVenda', 'sexo', 'idade', 'tecnico', 'localLeilao'].forEach(k => setMasked(k, sim.inputs[k]));
+            $('numeroLotes').value = sim.inputs.numeroLotes || 1;
+            $('nIndicacoes').value = sim.inputs.nIndicacoes || 0;
+            $('compradorRecorrente').checked = !!sim.inputs.compradorRecorrente;
+            $('compradorVolume').checked = !!sim.inputs.compradorVolume;
+            $('curvaTexto').value = Array.isArray(sim.inputs.curvaPesos) ? sim.inputs.curvaPesos.join('+') : '';
+            const personalizado = sim.inputs.modeloParcelamento === 'personalizado';
+            $('modeloParcelamentoPersonalizado').checked = personalizado;
+            $('modeloParcelamentoClassico').checked = !personalizado;
+            toggleModeloParcelamento();
             showMessage('Simulação Carregada', 'Dados da simulação "' + escapeHtml(sim.inputs.fazenda || 'Sem nome') + "\" foram carregados. Clique em 'Calcular' para re-analisar.");
             switchTab('simulation');
         }
@@ -2363,14 +2703,15 @@
 
         // ---------------- Tour ----------------
         const TOUR_STEPS = [
-            { title: 'Boas-vindas!', content: 'Este tour apresenta o Simulador de Venda em Leilão, agora com análise de risco, cenários e otimização de parcelas.' },
+            { title: 'Boas-vindas!', content: 'Este tour apresenta o Simulador de Venda em Leilão, agora com política comercial (comissões, incentivos e descontos), curva de parcelamento livre, análise de risco, cenários e otimização de parcelas.' },
             { title: 'Informações Financeiras', content: 'Informe valor da venda, custos, desconto à vista e custo de oportunidade. Em "Premissas avançadas" estão a inflação mensal e a taxa de antecipação.' },
-            { title: 'Estrutura de Parcelas', content: 'Total de parcelas, parcelas duplas e triplas definem o cronograma de recebimento — é ele que determina o VPL e a TIR.' },
-            { title: 'Resultados', content: 'A tabela traz quatro bases de comparação: nominal, à vista, corrigida por juros e real (deflacionada pela inflação).' },
+            { title: 'Estrutura de Parcelas', content: 'Escolha entre o modelo clássico (duplas/triplas) ou uma curva personalizada, digitando os pesos de cada mês (ex.: 2+2+2+2+2+20). É essa curva que determina o VPL e a TIR.' },
+            { title: 'Política Comercial', content: 'Frete, seguro, comissão de leiloeiro/assessoria, incentivo de venda, bônus de indicação e descontos de recompra/volume. Tudo opcional e zerado por padrão.' },
+            { title: 'Resultados', content: 'A tabela traz quatro bases de comparação: nominal, à vista, corrigida por juros e real (deflacionada pela inflação). Logo abaixo aparecem os indicadores e o detalhamento comercial.' },
             { title: 'Sensibilidade e Tornado', content: 'Veja como receita, custos e a taxa de desconto movem o resultado. O tornado ordena as variáveis por impacto.' },
-            { title: 'Cenários e Parcelas', content: 'O quadro cruza 3 cenários macro com 2 estruturas de parcelamento. O otimizador varre a quantidade de parcelas e a tabela de antecipação indica quais recebíveis vale antecipar.' },
+            { title: 'Cenários e Parcelas', content: 'O quadro cruza 3 cenários macro com 2 estruturas de parcelamento clássicas. O otimizador varre a quantidade de parcelas e a tabela de antecipação indica quais recebíveis vale antecipar.' },
             { title: 'Monte Carlo', content: 'Execute milhares de cenários sorteados para estimar a probabilidade de prejuízo e os percentis do lucro.' },
-            { title: 'Exportações', content: 'Gere PDF completo, planilha Excel multi-abas ou uma imagem vertical pronta para redes sociais.' }
+            { title: 'Exportações', content: 'Gere PDF completo, planilha Excel multi-abas (com a aba "Comissões e Descontos") ou uma imagem vertical pronta para redes sociais.' }
         ];
 
         function startTour() { state.tourStep = 0; updateTourContent(); dom.tourModal.classList.remove('hidden'); }
@@ -2432,13 +2773,21 @@
                 ['Idade', i.idade || 'Não informada', 'anos'],
                 ['Valor Total da Venda', formatCurrency(i.valorTotal), 'R$'],
                 ['Custo de Produção', formatCurrency(i.custoProducao), 'R$'],
+                ['Despesa com Frete', formatCurrency(i.despesaFrete), 'R$'],
                 ['Despesa Comercial', formatCurrency(i.despesaComercial), 'R$'],
-                ['Custo Total', formatCurrency(i.custoTotal), 'R$'],
+                ['Seguro dos Animais', formatCurrency(i.seguroRS), 'R$'],
+                ['Custo Total (com comissões)', formatCurrency(i.custoTotal), 'R$'],
+                ['Comissão Leiloeiro/Corretora', formatCurrency(i.comissaoLeiloeiroRS), 'R$'],
+                ['Comissão de Assessoria', formatCurrency(i.comissaoAssessoriaRS), 'R$'],
+                ['Incentivo de Venda (' + i.numeroLotes + ' lote(s))', formatCurrency(i.incentivoMesaRS), 'R$'],
+                ['Bônus de Indicação (' + i.nIndicacoes + ')', formatCurrency(i.bonusIndicacaoRS), 'R$'],
                 ['Desconto à Vista', formatPercent(i.descontoVista), '%'],
+                ['Desconto Comercial Efetivo (recompra/volume)', i.compradorRecorrente || i.compradorVolume ? formatPercent(i.descontoComercialEfetivoPct) : 'Não aplicado', ''],
                 ['Custo de Oportunidade', formatPercent(i.custoOportunidadeAnual), '% a.a.'],
                 ['Custo de Oportunidade (mensal equivalente)', formatPercent(i.custoOportunidade), '% a.m.'],
                 ['Inflação Mensal', formatPercent(i.inflacaoMensal), '% a.m.'],
                 ['Taxa de Antecipação', formatPercent(i.taxaAntecipacao), '% a.m.'],
+                ['Modelo de Parcelamento', i.modeloParcelamento === 'personalizado' ? 'Curva personalizada' : 'Clássico (duplas/triplas)', ''],
                 ['Total de Parcelas', String(i.totalParcelas), 'parcelas'],
                 ['Parcelas Duplas', String(i.parcelasDuplas), 'parcelas'],
                 ['Parcelas Triplas', String(i.parcelasTriplas), 'parcelas']
@@ -2452,15 +2801,21 @@
                 ['Receita à Vista', formatCurrency(r.receitaVista), 'R$'],
                 ['Receita Corrigida (juros)', formatCurrency(r.receitaCorrigida), 'R$'],
                 ['Receita Real (inflação)', formatCurrency(r.receitaReal), 'R$'],
+                ['Custo Direto (produção + frete + comercial + seguro)', formatCurrency(r.custoDireto), 'R$'],
+                ['Custo Comercial (comissões + incentivos)', formatCurrency(r.custoComercialIntermediacao) + ' (' + formatNum(r.custoComercialPctReceita * 100, 2) + '%)', 'R$'],
                 ['Custo Total', formatCurrency(i.custoTotal), 'R$'],
                 ['Lucro Nominal', formatCurrency(r.lucroNominal), 'R$'],
                 ['Lucro à Vista', formatCurrency(r.lucroVista), 'R$'],
-                ['Lucro Corrigido (VPL)', formatCurrency(r.lucroCorrigido), 'R$'],
+                ['Lucro Bruto (pré-comissão)', formatCurrency(r.lucroBrutoPreComissao), 'R$'],
+                ['Lucro Corrigido (VPL, pós-comissão)', formatCurrency(r.lucroCorrigido), 'R$'],
                 ['Lucro Real (deflacionado)', formatCurrency(r.lucroReal), 'R$'],
                 ['Margem Nominal', formatPercent(r.margemNominal), '%'],
                 ['Margem à Vista', formatPercent(r.margemVista), '%'],
-                ['Margem Corrigida', formatPercent(r.margemCorrigida), '%'],
+                ['Margem Bruta (pré-comissão)', formatPercent(r.margemBrutaPreComissao), '%'],
+                ['Margem Corrigida (pós-comissão)', formatPercent(r.margemCorrigida), '%'],
                 ['Margem Real', formatPercent(r.margemReal), '%'],
+                ['Preço Mínimo de Arremate (break-even)', Number.isFinite(r.precoMinimoArremate) ? formatCurrency(r.precoMinimoArremate) : 'Custos percentuais excedem a receita', 'R$'],
+                ['Preço Mínimo de Arremate por Lote', Number.isFinite(r.precoMinimoArrematePorLote) ? formatCurrency(r.precoMinimoArrematePorLote) : 'N/A', 'R$'],
                 ['TIR Mensal', Number.isFinite(r.tirMensal) ? formatPercent(r.tirMensal) : 'N/A', '% a.m.'],
                 ['TIR Anual Equivalente', Number.isFinite(r.tirMensal) ? formatNum(r.tirAnualPercentual, 2) + '%' : 'N/A', '% a.a.'],
                 ['Payback (saldo corrigido)', r.mesPayback, ''],
@@ -2600,7 +2955,7 @@
                 // --- Página 3: fluxo de caixa ---
                 doc.addPage(); addHeader('Fluxo de Caixa');
                 pdfTable(42, ['Mês', 'Receita Nominal', 'Receita Corrigida', 'Receita Real', 'Custo', 'Saldo Corrigido'], sim.fluxoCaixa.map((x, idx) => [
-                    x.mes === -1 ? '0' : String(x.mes + 1),
+                    String(x.mes),
                     formatCurrency(x.receita),
                     formatCurrency(sim.fluxoCaixaCorrigido[idx].receita),
                     formatCurrency(sim.fluxoCaixaReal[idx].receita),
@@ -2752,7 +3107,7 @@
                 ['Técnico', i.tecnico || 'Não informado'],
                 ['Local do Leilão', i.localLeilao || 'Não informado'],
                 ['Categoria / Raça', (i.categoriaVenda || 'N/A') + ' / ' + (i.raca || 'N/A')],
-                ['Estrutura', i.totalParcelas + ' parcelas (' + i.parcelasDuplas + ' duplas, ' + i.parcelasTriplas + ' triplas) em ' + sim.cronograma.prazoMeses + ' meses'],
+                ['Estrutura', descreverEstrutura(i, sim.cronograma.prazoMeses)],
                 ['Data-base', new Date().toLocaleDateString('pt-BR')],
                 ['Motor econômico', 'v' + Engine.VERSION]
             ];
@@ -2856,17 +3211,35 @@
                     ['Idade', i.idade || '', 'anos'],
                     ['Valor Total da Venda', i.valorTotal, 'R$'],
                     ['Custo de Produção', i.custoProducao, 'R$'],
+                    ['Despesa com Frete', i.despesaFrete, 'R$'],
                     ['Despesa Comercial', i.despesaComercial, 'R$'],
-                    ['Custo Total', i.custoTotal, 'R$'],
+                    ['Seguro dos Animais', i.seguroRS, 'R$'],
+                    ['Custo Total (com comissões)', i.custoTotal, 'R$'],
                     ['Desconto à Vista', i.descontoVista * 100, '%'],
                     ['Custo de Oportunidade', i.custoOportunidadeAnual * 100, '% a.a.'],
                     ['Custo de Oportunidade (mensal)', i.custoOportunidade * 100, '% a.m.'],
                     ['Inflação Mensal', i.inflacaoMensal * 100, '% a.m.'],
                     ['Taxa de Antecipação', i.taxaAntecipacao * 100, '% a.m.'],
+                    ['Modelo de Parcelamento', i.modeloParcelamento === 'personalizado' ? 'Curva personalizada' : 'Clássico', ''],
                     ['Total de Parcelas', i.totalParcelas, 'parcelas'],
                     ['Parcelas Duplas', i.parcelasDuplas, 'parcelas'],
                     ['Parcelas Triplas', i.parcelasTriplas, 'parcelas'],
                     ['Prazo Total', sim.cronograma.prazoMeses, 'meses']
+                ]);
+
+                addExcelTable(workbook, 'Comissões e Descontos', ['Item', 'Valor', 'Unidade'], [
+                    ['Comissão Leiloeiro/Corretora', i.comissaoLeiloeiroRS, 'R$'],
+                    ['Comissão de Assessoria', i.comissaoAssessoriaRS, 'R$'],
+                    ['Incentivo de Venda (' + i.numeroLotes + ' lote(s))', i.incentivoMesaRS, 'R$'],
+                    ['Bônus de Indicação (' + i.nIndicacoes + ')', i.bonusIndicacaoRS, 'R$'],
+                    ['Custo Comercial Total', r.custoComercialIntermediacao, 'R$'],
+                    ['Custo Comercial (% da receita)', r.custoComercialPctReceita * 100, '%'],
+                    ['Comprador Recorrente', i.compradorRecorrente ? 'Sim' : 'Não', ''],
+                    ['Desconto de Recompra', i.descontoRecompraPct * 100, '%'],
+                    ['Comprador de Volume (+1 lote)', i.compradorVolume ? 'Sim' : 'Não', ''],
+                    ['Desconto de Volume', i.descontoVolumePct * 100, '%'],
+                    ['Desconto Comercial Efetivo', i.descontoComercialEfetivoPct * 100, '%'],
+                    ['Preço de Tabela Implícito', i.precoTabelaImplicito, 'R$']
                 ]);
 
                 addExcelTable(workbook, 'Resultados', ['Indicador', 'Valor', 'Unidade'], [
@@ -2874,15 +3247,21 @@
                     ['Receita à Vista', r.receitaVista, 'R$'],
                     ['Receita Corrigida (juros)', r.receitaCorrigida, 'R$'],
                     ['Receita Real (inflação)', r.receitaReal, 'R$'],
+                    ['Custo Direto', r.custoDireto, 'R$'],
+                    ['Custo Comercial (comissões + incentivos)', r.custoComercialIntermediacao, 'R$'],
                     ['Custo Total', i.custoTotal, 'R$'],
                     ['Lucro Nominal', r.lucroNominal, 'R$'],
                     ['Lucro à Vista', r.lucroVista, 'R$'],
-                    ['Lucro Corrigido (VPL)', r.lucroCorrigido, 'R$'],
+                    ['Lucro Bruto (pré-comissão)', r.lucroBrutoPreComissao, 'R$'],
+                    ['Lucro Corrigido (VPL, pós-comissão)', r.lucroCorrigido, 'R$'],
                     ['Lucro Real (deflacionado)', r.lucroReal, 'R$'],
                     ['Margem Nominal', r.margemNominal * 100, '%'],
                     ['Margem à Vista', r.margemVista * 100, '%'],
-                    ['Margem Corrigida', r.margemCorrigida * 100, '%'],
+                    ['Margem Bruta (pré-comissão)', r.margemBrutaPreComissao * 100, '%'],
+                    ['Margem Corrigida (pós-comissão)', r.margemCorrigida * 100, '%'],
                     ['Margem Real', r.margemReal * 100, '%'],
+                    ['Preço Mínimo de Arremate', Number.isFinite(r.precoMinimoArremate) ? r.precoMinimoArremate : 'N/A', 'R$'],
+                    ['Preço Mínimo de Arremate por Lote', Number.isFinite(r.precoMinimoArrematePorLote) ? r.precoMinimoArrematePorLote : 'N/A', 'R$'],
                     ['TIR Mensal', Number.isFinite(r.tirMensal) ? r.tirMensal * 100 : 'N/A', '% a.m.'],
                     ['TIR Anual Equivalente', Number.isFinite(r.tirMensal) ? r.tirAnualPercentual : 'N/A', '% a.a.'],
                     ['Payback (saldo corrigido)', r.mesPayback, '']
@@ -2890,7 +3269,7 @@
 
                 addExcelTable(workbook, 'Fluxo de Caixa', ['Mês', 'Receita Nominal', 'Receita Corrigida', 'Receita Real', 'Custo', 'Saldo Nominal', 'Saldo Corrigido', 'Saldo Real'],
                     sim.fluxoCaixa.map((x, idx) => [
-                        x.mes === -1 ? 0 : x.mes + 1,
+                        x.mes,
                         x.receita,
                         sim.fluxoCaixaCorrigido[idx].receita,
                         sim.fluxoCaixaReal[idx].receita,
@@ -2938,8 +3317,8 @@
                     ]);
                     addExcelTable(workbook, 'Monte Carlo - Correlacoes', ['Variável', 'Correlação (Spearman)'], mc.correlations.map(c => [c.label, c.value]));
                     addExcelTable(workbook, 'Monte Carlo - Amostras',
-                        ['Iteração', 'Valor Total (R$)', 'Custo Produção (R$)', 'Despesa Comercial (R$)', 'Custo Oport. (% a.m.)', 'Desconto à Vista (%)', 'Lucro Corrigido (R$)'],
-                        mc.samples.map(s => [s.iteracao, s.valorTotal, s.custoProducao, s.despesaComercial, s.custoOportunidade * 100, s.descontoVista * 100, s.lucroCorrigido]));
+                        ['Iteração', 'Valor Total (R$)', 'Custo Produção (R$)', 'Despesa Comercial (R$)', 'Custo Oport. (% a.m.)', 'Lucro Corrigido (R$)'],
+                        mc.samples.map(s => [s.iteracao, s.valorTotal, s.custoProducao, s.despesaComercial, s.custoOportunidade * 100, s.lucroCorrigido]));
                 } else {
                     addExcelTable(workbook, 'Monte Carlo - Resumo', ['Status', 'Observação'], [['Não executado', 'Execute o Monte Carlo antes da exportação para incluir os dados de risco.']]);
                 }
@@ -2993,7 +3372,7 @@
                     }
                 };
             } else if (type === 'fluxo') {
-                const labels = sim.fluxoCaixaCorrigido.map(x => (x.mes === -1 ? '0' : String(x.mes + 1)));
+                const labels = sim.fluxoCaixaCorrigido.map(x => String(x.mes));
                 config = {
                     type: 'line',
                     data: {
@@ -3170,7 +3549,7 @@
                     kpi: formatCurrency(r.lucroCorrigido), kpiCaption: 'lucro corrigido (VPL)', chart: 'desvalorizacao'
                 },
                 fluxo: {
-                    title: 'Fluxo de Caixa', subtitle: i.totalParcelas + ' parcelas em ' + sim.cronograma.prazoMeses + ' meses',
+                    title: 'Fluxo de Caixa', subtitle: descreverEstrutura(i, sim.cronograma.prazoMeses),
                     kpi: formatCurrency(r.receitaCorrigida), kpiCaption: 'receita corrigida a valor presente', chart: 'fluxo'
                 },
                 sensibilidade: {
