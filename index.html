@@ -1371,7 +1371,7 @@ footer {
         <p class="section-desc">Cotações, sazonalidade e projeções do boi gordo, bezerro, milho e soja — atualizadas semanalmente com dados de Cepea/Esalq-USP, BCB, B3 e Abiec. Toque na imagem para ampliar.</p>
       </div>
       <!-- boletim-pdf:inicio (skill publicar-boletim-pdf atualiza só o href) -->
-      <a class="btn-outline" href="boletim/2026-09-11-destaques.pdf" target="_blank" rel="noopener">
+      <a class="btn-outline" href="boletim/2026-09-18-destaques.pdf" target="_blank" rel="noopener">
         Baixar boletim completo (PDF)
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
@@ -2079,7 +2079,7 @@ function submitForm(e) {
 (function() {
   var track = document.getElementById('mercadoTrack');
   var dotsContainer = document.getElementById('mercadoDots');
-  var total = track ? track.children.length : 0;
+  var total = track ? track.querySelectorAll('.market-slide').length : 0;
   if (!track || !total) return;
   for (var s = 0; s < total; s++) {
     var dotBtn = document.createElement('button');
