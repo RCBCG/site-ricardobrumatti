@@ -12,6 +12,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Apache ECharts — fixado para reprodutibilidade do piloto gráfico -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js"></script>
     <!-- jsPDF & AutoTable -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -549,7 +551,7 @@
                 <div class="chart-box">
                     <h4 style="text-align:center; margin-bottom:10px; opacity:0.8;">Composição Financeira</h4>
                     <div style="height: 300px; position: relative;">
-                        <canvas id="revenueChart"></canvas>
+                        <div id="revenueChart" style="width:100%; height:100%;" role="img" aria-label="Cascata financeira da receita até o resultado"></div>
                     </div>
                 </div>
                 <div class="chart-box">
@@ -968,6 +970,10 @@
                 totalArrProduced, avgArrProduced, costPerArrProduced
             };
 
+            // Exibe a área antes de inicializar os gráficos para que os contêineres
+            // tenham dimensões reais (necessário para ECharts e benéfico ao Chart.js).
+            document.getElementById('results-area').style.display = 'block';
+
             // Charts
             renderCharts(totalRev, cVar, cFix, profit);
 
@@ -976,7 +982,6 @@
             renderTornado();
 
             // Show UI
-            document.getElementById('results-area').style.display = 'block';
             document.getElementById('btn-save').style.display = 'flex';
             requestAnimationFrame(() => {
                 Object.values(appState.charts).forEach(c => c && c.resize());
@@ -984,22 +989,160 @@
             setTimeout(() => document.getElementById('results-area').scrollIntoView({behavior:'smooth'}), 100);
         }
 
+        function renderRevenueWaterfall(rev, cv, cf, profit) {
+            const container = document.getElementById('revenueChart');
+            if (!container || !window.echarts) {
+                showToast("Não foi possível carregar o gráfico de composição financeira.", "error");
+                return null;
+            }
+
+            if (appState.charts.revenue && typeof appState.charts.revenue.dispose === 'function') {
+                appState.charts.revenue.dispose();
+            }
+
+            const afterVariable = rev - cv;
+            const steps = [
+                { name: 'Receita total', start: 0, end: rev, display: rev, color: '#0d6b83', kind: 'total' },
+                { name: 'Custo variável', start: rev, end: afterVariable, display: -cv, color: '#cf1818', kind: 'cost' },
+                { name: 'Custo fixo', start: afterVariable, end: profit, display: -cf, color: '#f59e0b', kind: 'cost' },
+                { name: 'Resultado', start: 0, end: profit, display: profit, color: profit >= 0 ? '#10b981' : '#cf1818', kind: 'result' }
+            ];
+
+            const extentValues = steps.flatMap(step => [step.start, step.end]);
+            const rawMin = Math.min(...extentValues, 0);
+            const rawMax = Math.max(...extentValues, 0);
+            const span = Math.max(rawMax - rawMin, 1);
+            const axisMin = rawMin - span * 0.12;
+            const axisMax = rawMax + span * 0.12;
+            const dark = document.body.classList.contains('dark-mode');
+            const textColor = dark ? '#e2e8f0' : '#475569';
+            const gridColor = dark ? '#334155' : '#e2e8f0';
+
+            const chart = echarts.init(container, null, { renderer: 'canvas' });
+            chart.setOption({
+                animationDuration: 350,
+                aria: {
+                    enabled: true,
+                    description: 'Cascata financeira: receita total menos custo variável e custo fixo resulta no resultado econômico.'
+                },
+                grid: { left: 82, right: 22, top: 22, bottom: 66, containLabel: false },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: params => {
+                        const step = steps[params.dataIndex];
+                        if (!step) return '';
+                        const value = step.kind === 'cost'
+                            ? '−' + formatMoney(Math.abs(step.display))
+                            : formatMoney(step.display);
+                        return `<strong>${step.name}</strong><br>${value}`;
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: steps.map(step => step.name),
+                    axisLabel: { color: textColor, interval: 0, fontSize: 11 },
+                    axisLine: { lineStyle: { color: gridColor } },
+                    axisTick: { show: false }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: axisMin,
+                    max: axisMax,
+                    name: 'R$ — total da simulação',
+                    nameTextStyle: { color: textColor },
+                    axisLabel: {
+                        color: textColor,
+                        formatter: value => 'R$ ' + Math.round(value).toLocaleString('pt-BR')
+                    },
+                    splitLine: { lineStyle: { color: gridColor, type: 'dashed' } }
+                },
+                series: [{
+                    type: 'custom',
+                    name: 'Formação do resultado',
+                    encode: { x: 0, y: [1, 2] },
+                    data: steps.map((step, index) => ({
+                        value: [index, step.start, step.end, step.display],
+                        itemStyle: { color: step.color, borderRadius: 3 }
+                    })),
+                    renderItem: function(params, api) {
+                        const index = api.value(0);
+                        const startValue = api.value(1);
+                        const endValue = api.value(2);
+                        const step = steps[params.dataIndex];
+                        const start = api.coord([index, startValue]);
+                        const end = api.coord([index, endValue]);
+                        const width = Math.min(70, api.size([1, 0])[0] * 0.56);
+                        const rect = echarts.graphic.clipRectByRect({
+                            x: start[0] - width / 2,
+                            y: Math.min(start[1], end[1]),
+                            width: width,
+                            height: Math.max(1, Math.abs(end[1] - start[1]))
+                        }, params.coordSys);
+                        if (!rect) return null;
+
+                        const children = [];
+
+                        if (index > 0 && step.kind !== 'result') {
+                            const previous = api.coord([index - 1, startValue]);
+                            children.push({
+                                type: 'line',
+                                shape: {
+                                    x1: previous[0] + width / 2,
+                                    y1: start[1],
+                                    x2: start[0] - width / 2,
+                                    y2: start[1]
+                                },
+                                style: { stroke: '#94a3b8', lineWidth: 1, lineDash: [4, 4] }
+                            });
+                        }
+
+                        children.push({
+                            type: 'rect',
+                            shape: rect,
+                            style: api.style()
+                        });
+
+                        const labelValue = step.kind === 'cost'
+                            ? '−' + formatMoney(Math.abs(step.display))
+                            : formatMoney(step.display);
+                        children.push({
+                            type: 'text',
+                            style: {
+                                text: labelValue,
+                                x: end[0],
+                                y: Math.min(start[1], end[1]) - 8,
+                                textAlign: 'center',
+                                textVerticalAlign: 'bottom',
+                                fill: textColor,
+                                font: '600 11px sans-serif'
+                            }
+                        });
+
+                        return { type: 'group', children };
+                    }
+                }]
+            }, true);
+
+            appState.charts.revenue = chart;
+
+            if (!appState.echartsResizeBound) {
+                window.addEventListener('resize', () => {
+                    const revenueChart = appState.charts.revenue;
+                    if (revenueChart && typeof revenueChart.resize === 'function') revenueChart.resize();
+                });
+                appState.echartsResizeBound = true;
+            }
+
+            return chart;
+        }
+
         function renderCharts(rev, cv, cf, profit) {
             Chart.defaults.color = document.body.classList.contains('dark-mode') ? '#e2e8f0' : '#666';
-            
-            // Chart 1
-            if(appState.charts.revenue) appState.charts.revenue.destroy();
-            const ctx1 = document.getElementById('revenueChart').getContext('2d');
-            appState.charts.revenue = new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Custo Variável', 'Custo Fixo', 'Lucro'],
-                    datasets: [{ data: [cv, cf, profit > 0 ? profit : 0], backgroundColor: ['#ef4444', '#f59e0b', '#22c55e'] }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
 
-            // Chart 2 (Sensitivity)
+            // Chart 1 — cascata financeira (ECharts), sem alterar os valores calculados.
+            renderRevenueWaterfall(rev, cv, cf, profit);
+
+            // Chart 2 (Sensitivity) — preservado em Chart.js.
             if(appState.charts.scenario) appState.charts.scenario.destroy();
             const ctx2 = document.getElementById('scenarioChart').getContext('2d');
             const base = profit;
@@ -1470,11 +1613,12 @@
                 theme: 'striped'
             });
 
-            const chart1 = document.getElementById('revenueChart');
+            const chart1 = appState.charts.revenue;
             const chart2 = document.getElementById('scenarioChart');
             
-            if(chart1 && chart2) {
-                const img1 = chart1.toDataURL('image/png');
+            if(chart1 && typeof chart1.getDataURL === 'function' && chart2) {
+                chart1.resize();
+                const img1 = chart1.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#ffffff' });
                 const img2 = chart2.toDataURL('image/png');
                 let chartY = doc.lastAutoTable.finalY + 10;
                 if (chartY > 200) { doc.addPage(); chartY = 20; }
