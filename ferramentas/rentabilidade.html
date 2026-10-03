@@ -76,6 +76,8 @@
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <!-- Apache ECharts — fixado para reprodutibilidade do piloto gráfico -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js"></script>
 
     <!-- jsPDF & html2canvas for PDF Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -367,11 +369,11 @@
                     <div id="table-container-3" class="card p-6"></div>
                     <div class="card p-6">
                         <h2 class="text-lg font-semibold text-slate-700 mb-3">Análise Comparativa de Rentabilidade</h2>
-                        <div class="relative h-96 w-full"><canvas id="rentabilidadeComparativaChart"></canvas></div>
+                        <div class="relative h-96 w-full"><div id="rentabilidadeComparativaChart" class="w-full h-full" role="img" aria-label="Comparação da rentabilidade com as faixas históricas de referência"></div></div>
                     </div>
                     <div class="card p-6">
                         <h2 class="text-lg font-semibold text-slate-700 mb-3">Análise de Desempenho vs. Faixa de Mercado</h2>
-                        <div class="relative h-96 w-full"><canvas id="rentabilidadeFaixaChart"></canvas></div>
+                        <div class="relative h-96 w-full"><div id="rentabilidadeFaixaChart" class="w-full h-full" role="img" aria-label="Posição da rentabilidade do usuário em relação à faixa histórica de referência"></div></div>
                     </div>
                 </div>
             </div>
@@ -471,6 +473,7 @@
             currentSimulation: null,
             savedSimulations: [],
             chartInstances: {},
+            echartsInstances: {},
             tourStep: 0,
         };
 
@@ -506,6 +509,11 @@
             dom.exportExcelBtn.addEventListener('click', exportToExcel);
             dom.tourBtn.addEventListener('click', startTour);
             dom.exampleBtn.addEventListener('click', loadExample);
+            window.addEventListener('resize', () => {
+                Object.values(state.echartsInstances).forEach(chart => {
+                    if (chart && typeof chart.resize === 'function') chart.resize();
+                });
+            });
 
             ['investimentoUsuario', 'receitaUsuario', 'custoUsuario'].forEach(id => {
                 document.getElementById(id).addEventListener('input', (e) => e.target.value = formatAsCurrency(e.target.value));
@@ -571,9 +579,10 @@
                     dom.statusMessage.textContent = 'Exibindo resultados...';
                     state.currentSimulation = { inputs: userInputs, results: result.data, timestamp: Date.now() };
                     displayResults(result.data);
-                    displayCharts(result.data);
+                    // ECharts precisa que o contêiner esteja visível e dimensionado antes do init.
                     dom.resultsSection.style.display = 'block';
                     dom.resultsSection.classList.add('active');
+                    requestAnimationFrame(() => displayCharts(result.data));
                     setTimeout(() => dom.statusMessage.textContent = '', 2000);
                 } else { throw new Error(result.message || 'Erro no script.'); }
             } catch (error) {
@@ -596,8 +605,8 @@
         function displayCharts(data) {
             const chartData = findChartData(data);
             if (!chartData) return;
-            createOrUpdateChart('rentabilidadeComparativaChart', getComparativaChartConfig(chartData));
-            createOrUpdateChart('rentabilidadeFaixaChart', getFaixaChartConfig(chartData));
+            createOrUpdateEChart('rentabilidadeComparativaChart', getComparativaChartConfig(chartData));
+            createOrUpdateEChart('rentabilidadeFaixaChart', getFaixaChartConfig(chartData));
         }
 
         // --- New Feature Functions ---
@@ -828,8 +837,10 @@
             y = margin;
             const charts = ['rentabilidadeComparativaChart', 'rentabilidadeFaixaChart'];
             for (const chartId of charts) {
-                const chartCanvas = document.getElementById(chartId);
-                const imgData = chartCanvas.toDataURL('image/png');
+                const chart = state.echartsInstances[chartId];
+                if (!chart || typeof chart.getDataURL !== 'function') continue;
+                chart.resize();
+                const imgData = chart.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#ffffff' });
                 const imgProps = doc.getImageProperties(imgData);
                 const pdfWidth = docWidth - 2 * margin;
                 const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
@@ -920,6 +931,21 @@
             state.chartInstances[canvasId] = new Chart(ctx, config);
         }
 
+        function createOrUpdateEChart(containerId, option) {
+            const container = document.getElementById(containerId);
+            if (!container || !window.echarts) {
+                console.error('ECharts indisponível para', containerId);
+                return;
+            }
+            if (state.echartsInstances[containerId]) {
+                state.echartsInstances[containerId].dispose();
+            }
+            const chart = echarts.init(container, null, { renderer: 'canvas' });
+            chart.setOption(option, true);
+            state.echartsInstances[containerId] = chart;
+            requestAnimationFrame(() => chart.resize());
+        }
+
         function showAlert(title, content) {
             dom.alertTitle.textContent = title;
             dom.alertContent.innerHTML = content;
@@ -992,11 +1018,20 @@
         function findChartData(data) {
              const chartBlock = findBlock(data, 'Sistema Produtivo - LB', 100, 12);
              if (!chartBlock || chartBlock.length < 2) return null;
-             const parseFloatOrZero = (val) => {
-                 if (val === null || val === undefined || val === '') return 0;
-                 let cleanVal = String(val).replace('%', '').replace(/\./g, '').replace(',', '.');
-                 return parseFloat(cleanVal) || 0;
+
+             // Ausência/valor inválido permanece ausente: não fabricar referência de 0%.
+             const parseNullablePercent = (val) => {
+                 if (val === null || val === undefined || String(val).trim() === '') return null;
+                 const cleanVal = String(val).replace('%', '').replace(/\./g, '').replace(',', '.').trim();
+                 const parsed = Number.parseFloat(cleanVal);
+                 return Number.isFinite(parsed) ? parsed : null;
              };
+             const averageFinite = (arr) => {
+                 const valid = arr.filter(Number.isFinite);
+                 if (!valid.length) return null;
+                 return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+             };
+
              const groupedData = {};
              for (let i = 1; i < chartBlock.length; i++) {
                  const row = chartBlock[i];
@@ -1005,145 +1040,255 @@
                  if (!groupedData[sistema]) {
                      groupedData[sistema] = { rBaixa: [], rMedia: [], rAlta: [], rUsuario: [] };
                  }
-                 groupedData[sistema].rBaixa.push(parseFloatOrZero(row[5]));
-                 groupedData[sistema].rMedia.push(parseFloatOrZero(row[6]));
-                 groupedData[sistema].rAlta.push(parseFloatOrZero(row[7]));
-                 groupedData[sistema].rUsuario.push(parseFloatOrZero(row[11]));
+                 groupedData[sistema].rBaixa.push(parseNullablePercent(row[5]));
+                 groupedData[sistema].rMedia.push(parseNullablePercent(row[6]));
+                 groupedData[sistema].rAlta.push(parseNullablePercent(row[7]));
+                 groupedData[sistema].rUsuario.push(parseNullablePercent(row[11]));
              }
-             const averagedData = Object.entries(groupedData).map(([sistema, data]) => {
-                 const sum = arr => arr.reduce((a, b) => a + b, 0);
-                 const count = data.rUsuario.length;
+
+             const averagedData = Object.entries(groupedData).map(([sistema, values]) => {
+                 const baixa = averageFinite(values.rBaixa);
+                 const media = averageFinite(values.rMedia);
+                 const alta = averageFinite(values.rAlta);
+                 const usuario = averageFinite(values.rUsuario);
+                 const rangeValid = Number.isFinite(baixa) && Number.isFinite(alta) && baixa <= alta;
+                 let position = 'sem referência';
+                 if (rangeValid && Number.isFinite(usuario)) {
+                     position = usuario < baixa ? 'abaixo da faixa' : usuario > alta ? 'acima da faixa' : 'dentro da faixa';
+                 } else if (Number.isFinite(baixa) && Number.isFinite(alta) && baixa > alta) {
+                     position = 'faixa inconsistente';
+                 }
                  return {
                      sistema,
-                     avgRentabilidadeBaixa: sum(data.rBaixa) / count,
-                     avgRentabilidadeMedia: sum(data.rMedia) / count,
-                     avgRentabilidadeAlta: sum(data.rAlta) / count,
-                     avgRentabilidadeUsuario: sum(data.rUsuario) / count
+                     avgRentabilidadeBaixa: baixa,
+                     avgRentabilidadeMedia: media,
+                     avgRentabilidadeAlta: alta,
+                     avgRentabilidadeUsuario: usuario,
+                     rangeValid,
+                     position
                  };
              });
              return averagedData.length > 0 ? averagedData : null;
         }
 
+        function formatPercentChart(value) {
+            return Number.isFinite(value)
+                ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%'
+                : 'sem dado';
+        }
+
+        function referenceTooltip(row) {
+            if (!row) return '';
+            const rangeText = row.rangeValid
+                ? `${formatPercentChart(row.avgRentabilidadeBaixa)} a ${formatPercentChart(row.avgRentabilidadeAlta)}`
+                : (Number.isFinite(row.avgRentabilidadeBaixa) && Number.isFinite(row.avgRentabilidadeAlta)
+                    ? 'inconsistente (baixa > alta)'
+                    : 'sem dados suficientes');
+            return [
+                `<strong>${row.sistema}</strong>`,
+                `Faixa histórica/de referência: ${rangeText}`,
+                `Média de referência: ${formatPercentChart(row.avgRentabilidadeMedia)}`,
+                `Sua rentabilidade: ${formatPercentChart(row.avgRentabilidadeUsuario)}`,
+                `Posição: ${row.position}`
+            ].join('<br>');
+        }
+
         function getComparativaChartConfig(chartData) {
-            const pastelColors = [
-                { bg: 'rgba(179, 229, 252, 0.7)', border: 'rgb(179, 229, 252)' },
-                { bg: 'rgba(255, 204, 170, 0.7)', border: 'rgb(255, 204, 170)' },
-                { bg: 'rgba(255, 179, 186, 0.7)', border: 'rgb(255, 179, 186)' },
-                { bg: 'rgba(167, 223, 195, 0.7)', border: 'rgb(167, 223, 195)' }
-            ];
+            const rows = chartData;
+            const validRanges = rows.map((d, index) => [index,
+                d.rangeValid ? d.avgRentabilidadeBaixa : null,
+                d.rangeValid ? d.avgRentabilidadeAlta : null
+            ]);
+            const meanData = rows
+                .map((d, index) => Number.isFinite(d.avgRentabilidadeMedia) ? [index, d.avgRentabilidadeMedia] : null)
+                .filter(Boolean);
+            const userData = rows
+                .map((d, index) => Number.isFinite(d.avgRentabilidadeUsuario) ? [index, d.avgRentabilidadeUsuario] : null)
+                .filter(Boolean);
+
             return {
-                type: 'bar',
-                data: {
-                    labels: chartData.map(d => d.sistema),
-                    datasets: [
-                        { label: 'Sua Rentab. (%)', data: chartData.map(d => d.avgRentabilidadeUsuario), backgroundColor: pastelColors[0].bg, borderColor: pastelColors[0].border, borderWidth: 2, borderRadius: 5, borderSkipped: false },
-                        { label: 'Média Hist. (%)', data: chartData.map(d => d.avgRentabilidadeMedia), backgroundColor: pastelColors[1].bg, borderColor: pastelColors[1].border, borderWidth: 2, borderRadius: 5, borderSkipped: false },
-                        { label: 'Baixa Hist. (%)', data: chartData.map(d => d.avgRentabilidadeBaixa), backgroundColor: pastelColors[2].bg, borderColor: pastelColors[2].border, borderWidth: 2, borderRadius: 5, borderSkipped: false },
-                        { label: 'Alta Hist. (%)', data: chartData.map(d => d.avgRentabilidadeAlta), backgroundColor: pastelColors[3].bg, borderColor: pastelColors[3].border, borderWidth: 2, borderRadius: 5, borderSkipped: false }
-                    ]
+                animationDuration: 350,
+                aria: {
+                    enabled: true,
+                    description: 'Comparação da rentabilidade por sistema com faixa histórica de referência, média de referência e valor do usuário.'
                 },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    scales: { 
-                        y: { 
-                            ticks: { callback: v => `${v.toFixed(2)}%` } 
-                        } 
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.parsed.y !== null) { label += `${context.parsed.y.toFixed(2)}%`; }
-                                    return label;
-                                }
-                            }
-                        }
+                grid: { left: 64, right: 24, top: 54, bottom: 86, containLabel: true },
+                legend: {
+                    top: 0,
+                    data: ['Média de referência', 'Sua rentabilidade']
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    formatter: params => {
+                        const axisValue = params && params.length ? params[0].axisValue : null;
+                        const row = rows.find(d => d.sistema === axisValue);
+                        return referenceTooltip(row);
                     }
-                }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: rows.map(d => d.sistema),
+                    axisLabel: { interval: 0, rotate: rows.length > 4 ? 24 : 0 }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Rentabilidade (%)',
+                    axisLabel: { formatter: value => value.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%' },
+                    splitLine: { lineStyle: { type: 'dashed', color: '#e2e8f0' } }
+                },
+                series: [
+                    {
+                        name: 'Faixa histórica/de referência',
+                        type: 'custom',
+                        data: validRanges,
+                        encode: { x: 0, y: [1, 2] },
+                        silent: true,
+                        z: 1,
+                        renderItem: function(params, api) {
+                            const index = api.value(0);
+                            const low = api.value(1);
+                            const high = api.value(2);
+                            if (!Number.isFinite(low) || !Number.isFinite(high)) return null;
+                            const lowPoint = api.coord([index, low]);
+                            const highPoint = api.coord([index, high]);
+                            const cap = Math.min(14, api.size([1, 0])[0] * 0.18);
+                            return {
+                                type: 'group',
+                                children: [
+                                    { type: 'line', shape: { x1: lowPoint[0], y1: lowPoint[1], x2: highPoint[0], y2: highPoint[1] }, style: { stroke: '#0d6b83', lineWidth: 5, opacity: 0.35 } },
+                                    { type: 'line', shape: { x1: lowPoint[0] - cap, y1: lowPoint[1], x2: lowPoint[0] + cap, y2: lowPoint[1] }, style: { stroke: '#0d6b83', lineWidth: 2 } },
+                                    { type: 'line', shape: { x1: highPoint[0] - cap, y1: highPoint[1], x2: highPoint[0] + cap, y2: highPoint[1] }, style: { stroke: '#0d6b83', lineWidth: 2 } }
+                                ]
+                            };
+                        }
+                    },
+                    {
+                        name: 'Média de referência',
+                        type: 'scatter',
+                        data: meanData,
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        itemStyle: { color: '#f59e0b', borderColor: '#ffffff', borderWidth: 1.5 },
+                        z: 3
+                    },
+                    {
+                        name: 'Sua rentabilidade',
+                        type: 'scatter',
+                        data: userData,
+                        symbol: 'diamond',
+                        symbolSize: 14,
+                        itemStyle: { color: '#064e65', borderColor: '#ffffff', borderWidth: 1.5 },
+                        z: 4
+                    }
+                ]
             };
         }
 
         function getFaixaChartConfig(chartData) {
-            const pastelColors = {
-                user: { line: 'rgb(179, 229, 252)', point: 'rgb(179, 229, 252)', pointHover: 'white' },
-                average: { line: 'rgb(255, 204, 170)' },
-                range: { fill: 'rgba(167, 223, 195, 0.3)', border: 'rgba(167, 223, 195, 0.5)' }
-            };
-             return {
-                type: 'line',
-                data: {
-                    labels: chartData.map(d => d.sistema),
-                    datasets: [
-                        { 
-                            label: 'Sua Rentabilidade', 
-                            data: chartData.map(d => d.avgRentabilidadeUsuario), 
-                            borderColor: pastelColors.user.line,
-                            backgroundColor: pastelColors.user.point,
-                            borderWidth: 4, 
-                            tension: 0.4, 
-                            pointRadius: 5,
-                            pointHoverRadius: 8,
-                            pointHoverBorderWidth: 2,
-                            pointHoverBackgroundColor: pastelColors.user.pointHover
-                        },
-                        { 
-                            label: 'Rentabilidade Média de Mercado', 
-                            data: chartData.map(d => d.avgRentabilidadeMedia), 
-                            borderColor: pastelColors.average.line, 
-                            borderDash: [5, 5],
-                            borderWidth: 2, 
-                            pointRadius: 0,
-                            fill: false,
-                            tension: 0.4
-                        },
-                        { 
-                            label: 'Rentabilidade Baixa', // Hidden from legend
-                            data: chartData.map(d => d.avgRentabilidadeBaixa), 
-                            borderColor: 'transparent',
-                            backgroundColor: 'transparent',
-                            pointRadius: 0, 
-                            fill: false
-                        },
-                        { 
-                            label: 'Faixa de Mercado', 
-                            data: chartData.map(d => d.avgRentabilidadeAlta), 
-                            fill: '-1', 
-                            backgroundColor: pastelColors.range.fill, 
-                            borderColor: pastelColors.range.border,
-                            borderWidth: 1,
-                            pointRadius: 0, 
-                            tension: 0.4,
-                        }
-                    ]
+            const rows = chartData;
+            const rangeData = rows.map((d, index) => [
+                d.rangeValid ? d.avgRentabilidadeBaixa : null,
+                d.rangeValid ? d.avgRentabilidadeAlta : null,
+                index
+            ]);
+            const meanData = rows
+                .map((d, index) => Number.isFinite(d.avgRentabilidadeMedia) ? [d.avgRentabilidadeMedia, index] : null)
+                .filter(Boolean);
+            const userData = rows
+                .map((d, index) => {
+                    if (!Number.isFinite(d.avgRentabilidadeUsuario)) return null;
+                    const color = d.position === 'dentro da faixa' ? '#0d6b83'
+                        : d.position === 'acima da faixa' ? '#7c3aed'
+                        : d.position === 'abaixo da faixa' ? '#64748b'
+                        : '#cf1818';
+                    return { value: [d.avgRentabilidadeUsuario, index], itemStyle: { color, borderColor: '#ffffff', borderWidth: 1.5 } };
+                })
+                .filter(Boolean);
+
+            return {
+                animationDuration: 350,
+                aria: {
+                    enabled: true,
+                    description: 'Posição da rentabilidade do usuário diante da faixa histórica de referência de cada sistema produtivo.'
                 },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    scales: { y: { ticks: { callback: v => `${v.toFixed(2)}%` } } },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                filter: item => item.text !== 'Rentabilidade Baixa'
-                            }
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                             callbacks: {
-                                filter: item => item.dataset.label !== 'Rentabilidade Baixa',
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.parsed.y !== null) { label += `${context.parsed.y.toFixed(2)}%`; }
-                                    return label;
-                                }
-                            }
-                        }
+                grid: { left: 24, right: 36, top: 54, bottom: 44, containLabel: true },
+                legend: {
+                    top: 0,
+                    data: ['Média de referência', 'Sua rentabilidade']
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    formatter: params => {
+                        const axisValue = params && params.length ? params[0].axisValue : null;
+                        const row = rows.find(d => d.sistema === axisValue);
+                        return referenceTooltip(row);
                     }
-                }
+                },
+                xAxis: {
+                    type: 'value',
+                    name: 'Rentabilidade (%)',
+                    axisLabel: { formatter: value => value.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%' },
+                    splitLine: { lineStyle: { type: 'dashed', color: '#e2e8f0' } }
+                },
+                yAxis: {
+                    type: 'category',
+                    inverse: true,
+                    data: rows.map(d => d.sistema),
+                    axisTick: { show: false }
+                },
+                series: [
+                    {
+                        name: 'Faixa histórica/de referência',
+                        type: 'custom',
+                        data: rangeData,
+                        encode: { x: [0, 1], y: 2 },
+                        silent: true,
+                        z: 1,
+                        renderItem: function(params, api) {
+                            const low = api.value(0);
+                            const high = api.value(1);
+                            const index = api.value(2);
+                            if (!Number.isFinite(low) || !Number.isFinite(high)) return null;
+                            const lowPoint = api.coord([low, index]);
+                            const highPoint = api.coord([high, index]);
+                            const height = Math.min(18, api.size([0, 1])[1] * 0.34);
+                            return {
+                                type: 'group',
+                                children: [
+                                    {
+                                        type: 'rect',
+                                        shape: {
+                                            x: lowPoint[0],
+                                            y: lowPoint[1] - height / 2,
+                                            width: Math.max(1, highPoint[0] - lowPoint[0]),
+                                            height
+                                        },
+                                        style: { fill: 'rgba(13,107,131,0.18)', stroke: '#0d6b83', lineWidth: 1 }
+                                    }
+                                ]
+                            };
+                        }
+                    },
+                    {
+                        name: 'Média de referência',
+                        type: 'scatter',
+                        data: meanData,
+                        symbol: 'circle',
+                        symbolSize: 9,
+                        itemStyle: { color: '#f59e0b', borderColor: '#ffffff', borderWidth: 1.5 },
+                        z: 3
+                    },
+                    {
+                        name: 'Sua rentabilidade',
+                        type: 'scatter',
+                        data: userData,
+                        symbol: 'diamond',
+                        symbolSize: 15,
+                        z: 4
+                    }
+                ]
             };
         }
 
