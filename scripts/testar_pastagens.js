@@ -99,6 +99,23 @@ ok(marg({ ...sil.raw, gmdSeca: .30 }) < mBase && marg({ ...fen.raw, gmdSeca: .30
 const gmdBE = (raw) => { for (let g = .30; g <= .60; g += .005) if (marg({ ...raw, gmdSeca: g }) >= mBase) return g; return NaN; };
 ok(gmdBE(sil.raw) >= .37 && gmdBE(sil.raw) <= .40 && gmdBE(fen.raw) >= .37 && gmdBE(fen.raw) <= .40, `GMD de equilíbrio na seca: silagem ${gmdBE(sil.raw).toFixed(3)}, feno ${gmdBE(fen.raw).toFixed(3)} kg/dia (texto: cerca de 0,38)`);
 
+// ---------- 2C. Reforma de pastagem e TIP de seca ----------
+console.log('');
+const ref = P.porId['reforma-adequada'], cc1 = P.porId['cc-1'], tipS = P.porId['tip-seca'], tipA = P.porId['tip-aguas'];
+const rR = E.calculateEconomics(ref.raw);
+ok(Math.abs(rR.custoTotalImplantacao_ha - 4700) < 1, `reforma: implantação de R$ ${rR.custoTotalImplantacao_ha.toFixed(0)}/ha (alvo R$ 4.700)`);
+ok(marg(ref.raw) > marg(cc1.raw) && marg(ref.raw) < marg(cc3.raw), `reforma: margem de R$ ${marg(ref.raw).toFixed(0)}/ha fica entre a pastagem degradada Baixa Tec (R$ ${marg(cc1.raw).toFixed(0)}) e a Adequada sem reforma (R$ ${marg(cc3.raw).toFixed(0)})`);
+const vidaBE = (() => { for (let v = 1; v <= 15; v++) if (marg({ ...ref.raw, vidaUtil: v }) >= marg(cc1.raw)) return v; return NaN; })();
+ok(vidaBE >= 2 && vidaBE <= 4, `reforma: vida útil de equilíbrio frente à pastagem degradada de ${vidaBE} anos (texto: cerca de 3)`);
+ok(marg({ ...ref.raw, vidaUtil: 2 }) < marg(cc1.raw), 'reforma: com 2 anos de vida útil a reforma perde para manter a pastagem degradada');
+const rT = E.calculateEconomics(tipS.raw);
+ok(tipS.raw.mesEntrada === 6 && tipS.raw.permanencia === 120, 'TIP seca: 120 dias de junho a setembro, inteiro na estação seca');
+ok(rT.precoEquilibrio > 345 && rT.precoEquilibrio < 360, `TIP seca: preço de equilíbrio R$ ${rT.precoEquilibrio.toFixed(0)}/@ acima dos R$ 345,00 (texto: cerca de R$ 352)`);
+ok(rT.margemLiquida_total / tipS.raw.cabecas < 0, 'TIP seca: com entrada de R$ 4.650 e R$ 345,00/@ o lote dá prejuízo (resultado honesto, não ajustado)');
+const tipMargemCab = (o) => { const r = E.calculateEconomics({ ...tipS.raw, ...o }); return r.margemLiquida_total / tipS.raw.cabecas; };
+ok(tipMargemCab({ precoArroba: 369.9 }) > 0 && tipMargemCab({ custoAnimalEntrada_cab: 4500 }) >= 0, 'TIP seca: positivo a R$ 369,90/@ (Cepea) ou com o magro a R$ 4.500');
+ok(E.calculateEconomics(tipS.raw).margemLiquida_ha < E.calculateEconomics(tipA.raw).margemLiquida_ha, 'TIP seca rende menos por hectare que o TIP de águas (GMD menor)');
+
 // ---------- 3. Compatibilidade com um HTML de referência (opcional) ----------
 const arg = process.argv.find((a) => a.startsWith('--ref='));
 if (arg) {

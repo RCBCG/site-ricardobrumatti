@@ -310,7 +310,7 @@
                         <p><strong>Custos:</strong> Beef Report ABIEC/Athenagro, valores de 2025 em R$/@ por componente (planilha Dados_Custos_Bovinos), corrigidos por IPCA com o mesmo fator do relatório de 02/10/2026 (×1,0363) e convertidos em R$/ha pelo ponto médio de cada faixa de produtividade (2; 4,5; 9; 15; 22 e 32 @/ha/ano). Seis níveis tecnológicos: extrativista, baixa, média, adequada, alta e intensiva.</p>
                         <p><strong>Preços:</strong> arroba de R$ 345,00 (receita adotada no Beef Report); referência de sensibilidade: Cepea R$ 369,90/@ no pregão de 02/10/2026. Reposição por @ produzida: Engorda do Beef Report (R$ 148,77 a R$ 130,50). Bezerro de R$ 3.450/cab (Cepea). Magro Nelore de 360 kg de R$ 4.500 a R$ 4.800/cab: referência de mercado do autor, sem fonte oficial. Preços de insumos de partida (ureia R$ 3,00/kg, PK R$ 3,30/kg, calcário R$ 180/t, concentrado R$ 2,00/kg) não foram verificados em fonte primária.</p>
                         <p><strong>Parte técnica (a validar):</strong> GMD, acúmulo de forragem e lotação de cada nível são hipóteses coerentes com a literatura, calibradas para o balanço de forragem fechar com utilização de cerca de 70% e para o lucro por hectare reproduzir o relatório. Referências: Almeida et al. (2002), Rev. Bras. Zootec.; Costa et al. (2021), Animal; Euclides et al. (2008), Rev. Bras. Zootec., e (2016), Anim. Prod. Sci.; Euclides et al. (2022), Sci. Rep.; Gimenes et al. (2011), Pesq. Agropec. Bras.; Dias et al. (2016), Semina: Ciênc. Agrár.; Araújo et al. (2017), J. Agric. Sci.; Baião et al. (2005), Ciênc. Agrotec.; Santos et al. (2004), Rev. Bras. Zootec.</p>
-                        <p><strong>Limites:</strong> sem cria e reprodução; o relatório não separa TIP nem RIP (os custos de pasto vêm da Engorda e a entrada do animal é editável); ILP, ILPF, feno e silagem usam os custos de pasto do nível Adequada e padrões do simulador para lavoura, floresta e conservação, sem fonte primária verificada (o relatório não traz esses sistemas); reforma de pasto e TIP de seca ainda não têm cenário padrão. Os resultados dependem das premissas informadas e não substituem orientação técnica.</p>
+                        <p><strong>Limites:</strong> sem cria e reprodução; o relatório não separa TIP nem RIP (os custos de pasto vêm da Engorda e a entrada do animal é editável); ILP, ILPF, feno e silagem usam os custos de pasto do nível Adequada e padrões do simulador para lavoura, floresta e conservação, sem fonte primária verificada (o relatório não traz esses sistemas); a reforma de pasto leva a implantação a R$ 4.700/ha (referência de 2026 não verificada) e o TIP de seca usa GMD e massa de pasto diferido a validar. O simulador não liga o GMD ao suplemento nem rodízio de dois lotes (águas e seca) na mesma área. Os resultados dependem das premissas informadas e não substituem orientação técnica.</p>
                     </div>
                 </details>
             </div>
@@ -1294,16 +1294,47 @@
       base: 'Custos de pasto do Beef Report (Engorda, nível Intensivo, sem reposição). O custo de entrada do bezerro é editável.', raw, ui: c.ui, meta: { entradaCab: 3450 } };
   }
 
-  function terminacaoTIP() {
+  function terminacaoTIP(seca) {
     const i = 4, c = custosPasto(EN, i, { semNutricao: true }), raw = {
-      ...baseTecnica(i, { estrategia: 'tip', pesoInicial: 360, rcInicial: 50, rcFinal: 54, permanencia: 120, mesEntrada: 11, gmd: 1.15, cabecas: 470, acumuloAguas: 72, acumuloSeca: 16, massaMSDisponivel: 2500, modoEconomico: 'ciclo', custoAnimalEntrada_cab: 4650, despesasComerciaisPct: 2, outrasDespesas_cab: 60 }),
-      ...c.raw, modoSuplementacao: 'detalhado', suplementoKgCabDia: 3.6, precoSuplementoKg: 2.0, diasSuplementacao: 120, reposicaoPorArroba: 0
+      ...baseTecnica(i, { estrategia: 'tip', pesoInicial: 360, rcInicial: 50, rcFinal: 54, permanencia: 120, mesEntrada: seca ? 6 : 11, gmd: seca ? .95 : 1.15, cabecas: seca ? 244 : 470, acumuloAguas: 72, acumuloSeca: 16, massaMSDisponivel: seca ? 3500 : 2500, modoEconomico: 'ciclo', custoAnimalEntrada_cab: 4650, despesasComerciaisPct: 2, outrasDespesas_cab: 60 }),
+      ...c.raw, modoSuplementacao: 'detalhado', suplementoKgCabDia: seca ? 4.0 : 3.6, precoSuplementoKg: 2.0, diasSuplementacao: 120, reposicaoPorArroba: 0
     };
+    const entrada = 'Entrada do magro sem fonte oficial (referência de mercado do autor) e preço do concentrado a validar: o resultado depende mais deles que da pastagem.';
+    if (seca) return { id: 'tip-seca', grupo: 'Estratégias intensivas (compra de animais)', nome: 'TIP · terminação intensiva em pasto diferido, seca (120 dias)', nivel: 'Alta Tec', faixa: '18–26', sistema: 'terminacao',
+      resumo: 'Magro de 360 kg a R$ 4.650/cab (faixa R$ 4.500 a R$ 4.800), 120 dias de junho a setembro em pasto diferido (3.500 kg MS/ha), GMD 0,95, concentrado de 4,0 kg/cab/dia (cerca de 1% do PV) a R$ 2,00/kg, 244 cab./100 ha.',
+      base: `Custos de pasto do Beef Report (Engorda, Alta Tec, sem nutrição). GMD de 0,95 kg/dia na ordem dos 915 g/dia de Santos et al. (2004), medidos em tourinhos Limousin x Nelore em pasto diferido; concentrado a cerca de 1% do PV, nível que Andrade et al. (2015) indicam para terminar na seca. Massa diferida de 3.500 kg MS/ha e acúmulo da seca de 16 kg MS/ha/dia: hipóteses a validar. A R$ 345,00/@ o lote não se paga (equilíbrio em cerca de R$ 352/@), em linha com Silva et al. (2010), que só encontraram viabilidade em níveis abaixo de 0,3% do PV. ${entrada} A venda de setembro e outubro cai na entressafra, mas o simulador usa um único preço de arroba: confira o preço de saída esperado.`,
+      raw, ui: c.ui, meta: { entradaCab: 4650, faixaEntrada: [4500, 4800], precoEquilibrio: [345, 360] } };
     return { id: 'tip-aguas', grupo: 'Estratégias intensivas (compra de animais)', nome: 'TIP · terminação intensiva a pasto, águas (120 dias)', nivel: 'Alta Tec', faixa: '18–26', sistema: 'terminacao',
       resumo: 'Magro de 360 kg a R$ 4.650/cab (faixa R$ 4.500 a R$ 4.800), 120 dias de novembro a fevereiro, GMD 1,15, concentrado de 3,6 kg/cab/dia a R$ 2,00/kg, 470 cab./100 ha.',
-      base: 'Custos de pasto do Beef Report (Engorda, Alta Tec, sem nutrição). Entrada do magro sem fonte oficial (referência de mercado do autor) e preço do concentrado a validar: o resultado depende mais deles que da pastagem.', raw, ui: c.ui, meta: { entradaCab: 4650, faixaEntrada: [4500, 4800] } };
+      base: `Custos de pasto do Beef Report (Engorda, Alta Tec, sem nutrição). ${entrada}`, raw, ui: c.ui, meta: { entradaCab: 4650, faixaEntrada: [4500, 4800] } };
   }
 
+  // Reforma de pastagem degradada: o relatório não traz a implantação, então os itens de implantação do simulador
+  // são levados a R$ 4.700/ha (referência de mercado de 2026, a confirmar) mudando só os preços unitários.
+  function reforma() {
+    const i = 3, c = custosPasto(CC, i), f = 4700 / 3660, r2 = (x) => Math.round(x * 100) / 100;
+    const q = { 'qty-calcario': 2, 'qty-gesso': 1, 'qty-fosfatado': 250, 'qty-nitrogenio-implantacao': 120, 'qty-semente': 8, 'qty-herbicida-dessecacao': 3.5, 'qty-herbicida-pos': 2,
+      'qty-op-dessecacao': 2, 'qty-op-distribuicao': 2, 'qty-op-gradagem-pesada': 1, 'qty-op-gradagem-niveladora': 1, 'qty-op-semeadura': 1, 'qty-op-adubacao-cobertura': 1 };
+    const pb = { 'preco-calcario': 180, 'preco-gesso': 220, 'preco-fosfatado': 3.2, 'preco-nitrogenio-implantacao': 3, 'preco-semente': 50, 'preco-herbicida-dessecacao': 38, 'preco-herbicida-pos': 75,
+      'preco-op-dessecacao': 60, 'preco-op-distribuicao': 55, 'preco-op-gradagem-pesada': 280, 'preco-op-gradagem-niveladora': 180, 'preco-op-semeadura': 160, 'preco-op-adubacao-cobertura': 55 };
+    const ui = { ...c.ui, ...q };
+    Object.entries(pb).forEach(([k, v]) => { ui[k] = r2(v * f); });
+    ui['custo-adjuvante-pragas'] = r2(100 * f); ui['custo-inoculantes'] = r2(60 * f); ui['custo-outros-implantacao'] = r2(172 * f);
+    const pq = (a, b) => ui[`qty-${a}`] * ui[`preco-${b || a}`];
+    const parcial = Object.keys(q).reduce((t, k) => t + q[k] * ui[k.replace('qty-', 'preco-')], 0) + ui['custo-adjuvante-pragas'] + ui['custo-inoculantes'];
+    ui['custo-outros-implantacao'] = r2(4700 - parcial);
+    const impl = {
+      custoCalagemGessagem_ha: pq('calcario') + pq('gesso'), custoFertilizantesImplantacao_ha: pq('fosfatado') + pq('nitrogenio-implantacao'), custoSementesMudas_ha: pq('semente'),
+      custoHerbicidas_ha: pq('herbicida-dessecacao') + pq('herbicida-pos') + ui['custo-adjuvante-pragas'],
+      custoPreparoMecanizado_ha: ['dessecacao', 'distribuicao', 'gradagem-pesada', 'gradagem-niveladora', 'semeadura', 'adubacao-cobertura'].reduce((t, k) => t + pq('op-' + k), 0),
+      custoInoculantes_ha: ui['custo-inoculantes'], custoOutrosImplantacao_ha: ui['custo-outros-implantacao']
+    };
+    const raw = { ...baseTecnica(i, {}), ...c.raw, situacaoPastagem: 'nova', vidaUtil: 10, ...impl };
+    return { id: 'reforma-adequada', grupo: 'Reforma de pastagem', nome: 'Reforma de pastagem degradada para o nível Adequada', nivel: 'Adequada', faixa: '12–18', sistema: 'reforma',
+      resumo: 'Pastagem degradada (comportamento da faixa Baixa Tec, 3–6 @/ha/ano) reformada para 15 @/ha/ano, 200 cab./100 ha, implantação de R$ 4.700/ha com vida útil de 10 anos e adubação de manutenção do nível Adequada.',
+      base: 'Custos de manutenção do Beef Report (Ciclo completo, Adequada). Implantação: itens do simulador com preços unitários elevados em 28% para totalizar R$ 4.700/ha (referência de 2026 de nota do Agrolink, não verificada). O custo entra como parcela anual de capital (8% a.a., 10 anos) e o ano de formação, sem pastejo útil, não é descontado. Frente a manter a pastagem degradada, a reforma se paga a partir de 3 anos de vida útil; com 2 anos perde. A vida útil de 10 anos só se sustenta com a adubação de manutenção do cenário; sem ela a pastagem volta a degradar.',
+      raw, ui, meta: { referencia: 'cc-1', implantacaoHa: 4700 } };
+  }
 
   // Sistemas integrados e conservação: nível Adequada (pasto próprio, 15 @/ha/ano) com os módulos de lavoura, floresta e forragem conservada.
   // O Beef Report não traz ILP, ILPF, feno nem silagem: custos de pasto vêm da planilha, e a parte agrícola, florestal e de conservação usa os padrões do simulador, a validar.
@@ -1338,7 +1369,7 @@
   const lista = [];
   for (let i = 0; i < 6; i++) lista.push(nivelPreset(i, 'cc'));
   for (let i = 0; i < 6; i++) lista.push(nivelPreset(i, 'engorda'));
-  lista.push(recriaRIP(), terminacaoTIP(), ilp(), ilpf(), conservacao('silagem'), conservacao('feno'));
+  lista.push(recriaRIP(), terminacaoTIP(false), terminacaoTIP(true), ilp(), ilpf(), conservacao('silagem'), conservacao('feno'), reforma());
   root.PastagensPresets = Object.freeze({ lista, porId: Object.freeze(Object.fromEntries(lista.map((p) => [p.id, p]))), NIVEIS, FAIXAS, AT, PRECO, FATOR_IPCA: F });
 })(typeof window !== 'undefined' ? window : globalThis);
     </script>
