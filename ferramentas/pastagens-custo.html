@@ -310,7 +310,7 @@
                         <p><strong>Custos:</strong> Beef Report ABIEC/Athenagro, valores de 2025 em R$/@ por componente (planilha Dados_Custos_Bovinos), corrigidos por IPCA com o mesmo fator do relatório de 02/10/2026 (×1,0363) e convertidos em R$/ha pelo ponto médio de cada faixa de produtividade (2; 4,5; 9; 15; 22 e 32 @/ha/ano). Seis níveis tecnológicos: extrativista, baixa, média, adequada, alta e intensiva.</p>
                         <p><strong>Preços:</strong> arroba de R$ 345,00 (receita adotada no Beef Report); referência de sensibilidade: Cepea R$ 369,90/@ no pregão de 02/10/2026. Reposição por @ produzida: Engorda do Beef Report (R$ 148,77 a R$ 130,50). Bezerro de R$ 3.450/cab (Cepea). Magro Nelore de 360 kg de R$ 4.500 a R$ 4.800/cab: referência de mercado do autor, sem fonte oficial. Preços de insumos de partida (ureia R$ 3,00/kg, PK R$ 3,30/kg, calcário R$ 180/t, concentrado R$ 2,00/kg) não foram verificados em fonte primária.</p>
                         <p><strong>Parte técnica (a validar):</strong> GMD, acúmulo de forragem e lotação de cada nível são hipóteses coerentes com a literatura, calibradas para o balanço de forragem fechar com utilização de cerca de 70% e para o lucro por hectare reproduzir o relatório. Referências: Almeida et al. (2002), Rev. Bras. Zootec.; Costa et al. (2021), Animal; Euclides et al. (2008), Rev. Bras. Zootec., e (2016), Anim. Prod. Sci.; Euclides et al. (2022), Sci. Rep.; Gimenes et al. (2011), Pesq. Agropec. Bras.; Dias et al. (2016), Semina: Ciênc. Agrár.; Araújo et al. (2017), J. Agric. Sci.; Baião et al. (2005), Ciênc. Agrotec.; Santos et al. (2004), Rev. Bras. Zootec.</p>
-                        <p><strong>Limites:</strong> sem cria e reprodução; o relatório não separa TIP nem RIP (os custos de pasto vêm da Engorda e a entrada do animal é editável); ILP, ILPF, feno, silagem e reforma ainda não têm cenário padrão calibrado. Os resultados dependem das premissas informadas e não substituem orientação técnica.</p>
+                        <p><strong>Limites:</strong> sem cria e reprodução; o relatório não separa TIP nem RIP (os custos de pasto vêm da Engorda e a entrada do animal é editável); ILP, ILPF, feno e silagem usam os custos de pasto do nível Adequada e padrões do simulador para lavoura, floresta e conservação, sem fonte primária verificada (o relatório não traz esses sistemas); reforma de pasto e TIP de seca ainda não têm cenário padrão. Os resultados dependem das premissas informadas e não substituem orientação técnica.</p>
                     </div>
                 </details>
             </div>
@@ -1245,7 +1245,8 @@
 
   // Converte custos por @ em custos por hectare e nos campos quantidade x preço da tela. Devolve {raw (chaves do motor), ui (ids de quantidade e preço)}.
   function custosPasto(t, i, opt = {}) {
-    const k = (c) => t[c][i] * F * AT[i];
+    const esc = opt.escala || 1, PAST = ['nut', 'san', 'fert', 'def', 'man'];
+    const k = (c) => t[c][i] * F * AT[i] * (PAST.includes(c) ? esc : 1);
     const fert = k('fert'), qU = r2(.6 * fert / UREIA), qP = r2(.3 * fert / PK), qC = r3(.1 * fert / CALC);
     const man = k('man'), qOp = r3((man / 2) / OP), benf = r2(man / 2), def = r2(k('def'));
     const ui = {
@@ -1303,10 +1304,41 @@
       base: 'Custos de pasto do Beef Report (Engorda, Alta Tec, sem nutrição). Entrada do magro sem fonte oficial (referência de mercado do autor) e preço do concentrado a validar: o resultado depende mais deles que da pastagem.', raw, ui: c.ui, meta: { entradaCab: 4650, faixaEntrada: [4500, 4800] } };
   }
 
+
+  // Sistemas integrados e conservação: nível Adequada (pasto próprio, 15 @/ha/ano) com os módulos de lavoura, floresta e forragem conservada.
+  // O Beef Report não traz ILP, ILPF, feno nem silagem: custos de pasto vêm da planilha, e a parte agrícola, florestal e de conservação usa os padrões do simulador, a validar.
+  const SOJA = { integracao: 'ilp', usoAreaAgricola: 'separada', fracaoAreaAgricola: 25, safrasAno: 1, produtividadeAgricola: 4000, precoProdutoAgricola: 2.40, custoOperacionalAgricola_ha: 5828, perdasAgricolasPct: 3 };
+  const FLORESTA = { integracao: 'ilpf', arvoresHa: 200, sobrevivenciaFlorestalPct: 90, volumeArvoreM3: .35, precoMadeiraM3: 180, cicloFlorestalAnos: 12, custoImplantacaoFlorestal_ha: 3500, custoManutencaoFlorestal_ha_ano: 250 };
+  const FONTE_SOJA = 'Soja: 4.000 kg/ha (premissa do autor, a validar), R$ 2,40/kg (cerca de 90% dos R$ 2,67/kg do relatório de 02/10/2026, descontando frete e base) e custo operacional de R$ 5.828/ha (Imea 2026/27 em MT, obtido por resumo de busca, não verificado). Pasto pós-lavoura com acúmulo 10% maior, na ordem de Yokoyama et al. (1999), que mediram 21.310 contra 19.500 kg MS/ha.';
+
+  function integrado(id, nome, extra, resumo, base) {
+    const i = 3, c = custosPasto(CC, i, { escala: .75 });
+    const raw = { ...baseTecnica(i, { cabecas: 165, acumuloAguas: 57.2, acumuloSeca: 12.1 }), ...c.raw, ...SOJA, ...extra };
+    return { id, grupo: 'Sistemas integrados e conservação (nível Adequada)', nome, nivel: 'Adequada', faixa: '12–18', sistema: 'integrado', resumo, base, raw, ui: c.ui, meta: { referencia: 'cc-3' } };
+  }
+  function ilp() {
+    return integrado('ilp-4anos', 'ILP · rotação de 4 anos, 25% da área em soja', {},
+      '165 cab./100 ha, 1,68 UA/ha no pasto, pastejo rotacionado em 75% da área; soja em 25% da área por ano.',
+      `Custos de pasto do Beef Report (Ciclo completo, Adequada) sobre 75% da área. ${FONTE_SOJA}`);
+  }
+  function ilpf() {
+    return integrado('ilpf-200', 'ILPF · ILP com 200 eucaliptos/ha', FLORESTA,
+      'ILP de 4 anos com 200 eucaliptos/ha, 90% de sobrevivência, 0,35 m³/árvore aos 12 anos, madeira a R$ 180/m³.',
+      `${FONTE_SOJA} Floresta: padrões do simulador (implantação de R$ 3.500/ha, manutenção de R$ 250/ha/ano), sem fonte verificada. A 8% a.a. o componente florestal só se paga acima de 0,42 m³/árvore (76 m³/ha). Trivelin et al. (2020) indicam 196 árvores/ha sem perda de desempenho animal e perda acima disso (448 árvores/ha).`);
+  }
+  function conservacao(tipo) {
+    const i = 3, c = custosPasto(CC, i), feno = tipo === 'feno';
+    const raw = { ...baseTecnica(i, { cabecas: 184, gmd: .575 }), ...c.raw, gmdAguas: .85, gmdSeca: .45, conservacao: tipo, destinoConservacao: 'interno', fracaoAreaConservacao: 10, produtividadeForragem_t_ha: 25, teorMSConservacaoPct: 35, perdasCampoPct: 8, perdasArmazenamentoPct: 8,
+      custoColheita_ha: 500, custoProcessamento_ha: 700, custoTransporteConservacao_ha: 350, custoArmazenamento_ha: 300, custoMaterialConservacao_ha: feno ? 150 : 400, valorForragemMS_t: 800, teorMSProdutoFinalPct: 85 };
+    return { id: feno ? 'feno-10' : 'silagem-10', grupo: 'Sistemas integrados e conservação (nível Adequada)', nome: feno ? 'Feno do excedente de águas, 10% da área' : 'Silagem de capim do excedente de águas, 10% da área', nivel: 'Adequada', faixa: '12–18', sistema: 'conservacao',
+      resumo: `184 cab./100 ha, GMD de 0,85 kg/dia nas águas e 0,45 na seca (a mesma pastagem sem conservação rende 0,30 na seca), ${feno ? 'feno' : 'silagem'} em 10% da área para consumo interno.`,
+      base: `Custos de pasto do Beef Report (Ciclo completo, Adequada). Conservação: padrões do simulador (25 t de matéria natural/ha, 35% de MS, perdas de 8% + 8%, R$ ${feno ? '1.900' : '2.250'}/ha colhido), sem fonte verificada. O ganho vem do GMD da seca: ele precisa subir pelo menos 0,08 kg/dia (de 0,30 para cerca de 0,38) para a conservação pagar o próprio custo; a literatura de suplementação na seca mostra ganhos de +0,33 a +0,52 kg/dia (Manella et al., 2002; Araújo et al., 2017), mas com suplemento múltiplo, não com ${feno ? 'feno' : 'silagem'}, e eu não tenho medida de GMD de seca com forragem conservada.`,
+      raw, ui: c.ui, meta: { referencia: 'sazonal', gmdSecaEquilibrio: [.38, .385] } };
+  }
   const lista = [];
   for (let i = 0; i < 6; i++) lista.push(nivelPreset(i, 'cc'));
   for (let i = 0; i < 6; i++) lista.push(nivelPreset(i, 'engorda'));
-  lista.push(recriaRIP(), terminacaoTIP());
+  lista.push(recriaRIP(), terminacaoTIP(), ilp(), ilpf(), conservacao('silagem'), conservacao('feno'));
   root.PastagensPresets = Object.freeze({ lista, porId: Object.freeze(Object.fromEntries(lista.map((p) => [p.id, p]))), NIVEIS, FAIXAS, AT, PRECO, FATOR_IPCA: F });
 })(typeof window !== 'undefined' ? window : globalThis);
     </script>

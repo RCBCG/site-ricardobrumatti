@@ -80,6 +80,25 @@ for (const p of P.lista) {
   }
 }
 
+// ---------- 2B. Sistemas integrados e conservação (nível Adequada) ----------
+console.log('');
+const marg = (raw) => E.calculateEconomics(raw).margemAnual_ha;
+const cc3 = P.porId['cc-3'];
+const ilp = P.porId['ilp-4anos'], ilpf = P.porId['ilpf-200'], sil = P.porId['silagem-10'], fen = P.porId['feno-10'];
+const rI = E.calculateEconomics(ilp.raw), rF = E.calculateEconomics(ilpf.raw);
+ok(rI.margemAgricola_ha > 0 || rI.margemLiquidaAgricola_total > 0 || marg(ilp.raw) > marg(cc3.raw), 'ILP: lavoura contribui positivamente');
+ok(marg(ilp.raw) >= marg(cc3.raw), `ILP: margem de R$ ${marg(ilp.raw).toFixed(0)}/ha não fica abaixo do pasto próprio Adequada (R$ ${marg(cc3.raw).toFixed(0)}/ha)`);
+ok(marg(ilp.raw) / marg(cc3.raw) < 1.25, 'ILP: ganho sobre o pasto próprio abaixo de 25% (sem efeito fantasioso)');
+ok(marg(ilpf.raw) <= marg(ilp.raw), 'ILPF: com o volume padrão de madeira a floresta não supera a ILP (break-even de 0,42 m³/árvore)');
+const volBE = (v) => marg({ ...ilpf.raw, volumeArvoreM3: v });
+ok(volBE(.30) < marg(ilp.raw) && volBE(.60) > marg(ilp.raw), 'ILPF: o break-even do volume por árvore está entre 0,30 e 0,60 m³');
+const semCons = { ...cc3.raw, cabecas: 188, gmd: .575, gmdAguas: .85, gmdSeca: .30 };
+const mBase = marg(semCons);
+ok(marg(sil.raw) > mBase && marg(fen.raw) > mBase, `silagem (R$ ${marg(sil.raw).toFixed(0)}) e feno (R$ ${marg(fen.raw).toFixed(0)}) superam a mesma pastagem sem conservação (R$ ${mBase.toFixed(0)}) quando a seca rende 0,45 kg/dia`);
+ok(marg({ ...sil.raw, gmdSeca: .30 }) < mBase && marg({ ...fen.raw, gmdSeca: .30 }) < mBase, 'conservação sem ganho de GMD na seca perde para a pastagem sem conservação');
+const gmdBE = (raw) => { for (let g = .30; g <= .60; g += .005) if (marg({ ...raw, gmdSeca: g }) >= mBase) return g; return NaN; };
+ok(gmdBE(sil.raw) >= .37 && gmdBE(sil.raw) <= .40 && gmdBE(fen.raw) >= .37 && gmdBE(fen.raw) <= .40, `GMD de equilíbrio na seca: silagem ${gmdBE(sil.raw).toFixed(3)}, feno ${gmdBE(fen.raw).toFixed(3)} kg/dia (texto: cerca de 0,38)`);
+
 // ---------- 3. Compatibilidade com um HTML de referência (opcional) ----------
 const arg = process.argv.find((a) => a.startsWith('--ref='));
 if (arg) {
