@@ -73,10 +73,11 @@ for (const p of P.lista) {
   ok(b.atende, `${p.id}: balanço de forragem sem déficit`);
   ok(b.utilizacaoPct <= 85, `${p.id}: utilização da forragem ${b.utilizacaoPct.toFixed(0)}% (limite 85%)`);
   if (p.meta.lucroHaRelatorio !== undefined) {
-    const i = P.NIVEIS.indexOf(p.nivel), at = r.producaoTotal_at_ha * r.cyclesPerYear, dif = r.margemAnual_ha / p.meta.lucroHaNoPreco - 1;
+    const i = P.NIVEIS.indexOf(p.nivel), at = r.producaoTotal_at_ha * r.cyclesPerYear, rc = E.calculateEconomics({ ...p.raw, rcFinal: p.meta.rcRelatorio }), dif = rc.margemAnual_ha / p.meta.lucroHaNoPreco - 1;
     const tol = i < 2 ? .08 : .02;
     ok(at >= FAIXA[i][0] && at <= FAIXA[i][1], `${p.id}: ${at.toFixed(1)} @/ha/ano dentro da faixa ${FAIXA[i][0]}–${FAIXA[i][1]}`);
-    ok(Math.abs(dif) <= tol, `${p.id}: lucro de R$ ${r.margemAnual_ha.toFixed(0)}/ha contra R$ ${p.meta.lucroHaNoPreco}/ha do relatório refeito a R$ ${P.PRECO},00/@ (${(dif * 100).toFixed(1)}%, tolerância ${tol * 100}%)`);
+    ok(Math.abs(dif) <= tol, `${p.id}: com rendimento de carcaça de ${p.meta.rcRelatorio}%, lucro de R$ ${rc.margemAnual_ha.toFixed(0)}/ha contra R$ ${p.meta.lucroHaNoPreco}/ha do relatório refeito a R$ ${P.PRECO},00/@ (${(dif * 100).toFixed(1)}%, tolerância ${tol * 100}%)`);
+    ok(r.margemAnual_ha > rc.margemAnual_ha, `${p.id}: com o rendimento do autor (${p.raw.rcFinal}%) a margem (R$ ${r.margemAnual_ha.toFixed(0)}/ha) fica acima da calibrada ao relatório`);
   }
 }
 
@@ -106,11 +107,11 @@ const rR = E.calculateEconomics(ref.raw);
 ok(Math.abs(rR.custoTotalImplantacao_ha - 4700) < 1, `reforma: implantação de R$ ${rR.custoTotalImplantacao_ha.toFixed(0)}/ha (alvo R$ 4.700)`);
 ok(marg(ref.raw) > marg(cc1.raw) && marg(ref.raw) < marg(cc3.raw), `reforma: margem de R$ ${marg(ref.raw).toFixed(0)}/ha fica entre a pastagem degradada Baixa Tec (R$ ${marg(cc1.raw).toFixed(0)}) e a Adequada sem reforma (R$ ${marg(cc3.raw).toFixed(0)})`);
 const vidaBE = (() => { for (let v = 1; v <= 15; v++) if (marg({ ...ref.raw, vidaUtil: v }) >= marg(cc1.raw)) return v; return NaN; })();
-ok(vidaBE >= 2 && vidaBE <= 4, `reforma: vida útil de equilíbrio frente à pastagem degradada de ${vidaBE} anos (texto: cerca de 3)`);
-ok(marg({ ...ref.raw, vidaUtil: 2 }) < marg(cc1.raw), 'reforma: com 2 anos de vida útil a reforma perde para manter a pastagem degradada');
+ok(vidaBE === 2, `reforma: vida útil de equilíbrio frente à pastagem degradada de ${vidaBE} anos (texto: a partir de 2)`);
+ok(marg({ ...ref.raw, vidaUtil: 1 }) < marg(cc1.raw), 'reforma: com 1 ano de vida útil a reforma perde para manter a pastagem degradada');
 const rT = E.calculateEconomics(tipS.raw);
 ok(tipS.raw.mesEntrada === 6 && tipS.raw.permanencia === 120, 'TIP seca: 120 dias de junho a setembro, inteiro na estação seca');
-ok(rT.precoEquilibrio > 320 && rT.precoEquilibrio < 330, `TIP seca: preço de equilíbrio R$ ${rT.precoEquilibrio.toFixed(0)}/@, abaixo dos R$ 350,00 (texto: cerca de R$ 325)`);
+ok(rT.precoEquilibrio > 306 && rT.precoEquilibrio < 316, `TIP seca: preço de equilíbrio R$ ${rT.precoEquilibrio.toFixed(0)}/@, abaixo dos R$ 350,00 (texto: cerca de R$ 311)`);
 ok(rT.margemLiquida_total / tipS.raw.cabecas > 0, 'TIP seca: com entrada de R$ 4.300 e R$ 350,00/@ a margem por cabeça é positiva (resultado, não ajuste)');
 const tipMargemCab = (o) => { const r = E.calculateEconomics({ ...tipS.raw, ...o }); return r.margemLiquida_total / tipS.raw.cabecas; };
 ok(tipMargemCab({ precoArroba: 369.9 }) > 0 && tipMargemCab({ custoAnimalEntrada_cab: 4500 }) >= 0, 'TIP seca: positivo a R$ 369,90/@ (Cepea) ou com o magro a R$ 4.500');
@@ -123,6 +124,9 @@ const ciclos = P.lista.filter((p) => p.raw.modoEconomico === 'ciclo');
 ok(ciclos.length === 3 && ciclos.every((p) => p.raw.despesasComerciaisPct === 0.5 && p.raw.outrasDespesas_cab === 50), 'cenários de ciclo completo (RIP e TIP): despesas comerciais de 0,5% e fretes/outros de R$ 50/cab');
 ok(['tip-aguas', 'tip-seca'].every((id) => P.porId[id].raw.custoAnimalEntrada_cab === 4300), 'TIP: magro de 360 kg a R$ 4.300/cab');
 ok(P.porId['rip-intensivo'].raw.custoAnimalEntrada_cab === 3450, 'RIP: bezerro de 210 kg segue em R$ 3.450/cab (Cepea)');
+
+ok(P.lista.filter((p) => p.nivel).every((p) => p.raw.rcFinal === (['Extrativista', 'Baixa Tec', 'Média Tec'].includes(p.nivel) ? 54 : 56.5)), 'rendimento de carcaça final: 54,0% de Extrativista a Média Tec e 56,5% de Adequada a Intensivo (inclui RIP, TIP, ILP, ILPF, silagem, feno e reforma)');
+ok(P.lista.every((p) => p.raw.rcInicial === 50), 'rendimento de carcaça inicial segue em 50% em todos os cenários');
 
 // ---------- 3. Compatibilidade com um HTML de referência (opcional) ----------
 const arg = process.argv.find((a) => a.startsWith('--ref='));
