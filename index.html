@@ -1330,6 +1330,17 @@ footer {
         <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
       </div>
 
+      <div class="tool-card reveal reveal-d3" onclick="openTool('pastagens','Avaliação Econômica de Pastagens')">
+        <div class="tool-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+        </div>
+        <div class="tool-text">
+          <div class="tool-name">Avaliação Econômica de Pastagens</div>
+          <div class="tool-desc">Custo de formação, reforma e manutenção de pastagens por nível tecnológico.</div>
+        </div>
+        <div class="tool-arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      </div>
+
     </div>
 
     <!-- CALCULADORAS -->
@@ -1841,6 +1852,7 @@ footer {
         <li><button onclick="openTool('engorda','Recria + Engorda');return false;">Recria + Engorda</button></li>
         <li><button onclick="openTool('ponto-venda','Ponto Ótimo de Venda');return false;">Ponto Ótimo de Venda</button></li>
         <li><button onclick="openTool('bioecon','BioEcon Corte');return false;">BioEcon Corte</button></li>
+        <li><button onclick="openTool('pastagens','Avaliação Econômica de Pastagens');return false;">Pastagens</button></li>
       </ul>
     </div>
 
@@ -1892,6 +1904,7 @@ const toolMap = {
   'engorda':          'ferramentas/engorda-completa.html',
   'ponto-venda':      'ferramentas/confinamento-venda.html',
   'bioecon':          'ferramentas/bioecon.html',
+  'pastagens':        'ferramentas/pastagens-custo.html',
   'rentabilidade':    'ferramentas/rentabilidade.html',
   'leilao':           'ferramentas/venda-leilao.html',
 };
