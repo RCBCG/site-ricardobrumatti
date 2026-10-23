@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /*
- * Teste de regressão do Manejo de Pastagens (ferramentas/pastagens-custo.html, motor 3.2.0).
+ * Teste de regressão do Manejo de Pastagens (ferramentas/pastagens-custo.html, motor 3.3.0).
  *
  * Extrai o motor de cálculo e os cenários padrão do próprio HTML (sem navegador) e confere:
- *   1. recursos do motor 3.2.0 (GMD sazonal, reposição, lotes por ano, financeiro, utilização, validações);
+ *   1. recursos do motor 3.2.0 e da silagem de lavoura do 3.3.0 (GMD sazonal, reposição, lotes por ano, financeiro, utilização, validações);
  *   2. critérios de aceite de cada cenário padrão contra o Beef Report (planilha Dados_Custos_Bovinos, IPCA x1,0363);
  *   3. opcionalmente, compatibilidade com um HTML de referência (ex.: motor 3.1.0): --ref=caminho.html
  *
@@ -19,7 +19,8 @@ let falhas = 0, total = 0;
 const ok = (cond, msg) => { total++; if (!cond) falhas++; console.log((cond ? 'OK     ' : 'FALHA  ') + msg); };
 
 function carregar(arquivo) {
-  const s = fs.readFileSync(arquivo, 'utf8');
+  // No Windows (core.autocrlf) o HTML chega com CRLF; os marcadores abaixo usam \n.
+  const s = fs.readFileSync(arquivo, 'utf8').replace(/\r\n/g, '\n');
   const bloco = (ini, fim) => { const a = s.indexOf(ini); if (a < 0) return ''; const b = s.indexOf(fim, a); return s.slice(a, b + fim.length); };
   const fimMotor = "})(typeof window!=='undefined'?window:globalThis);";
   const fimPre = "})(typeof window !== 'undefined' ? window : globalThis);";
@@ -117,11 +118,68 @@ const tipMargemCab = (o) => { const r = E.calculateEconomics({ ...tipS.raw, ...o
 ok(tipMargemCab({ precoArroba: 369.9 }) > 0 && tipMargemCab({ custoAnimalEntrada_cab: 4500 }) >= 0, 'TIP seca: positivo a R$ 369,90/@ (Cepea) ou com o magro a R$ 4.500');
 ok(E.calculateEconomics(tipS.raw).margemLiquida_ha < E.calculateEconomics(tipA.raw).margemLiquida_ha, 'TIP seca rende menos por hectare que o TIP de águas (GMD menor)');
 
-// ---------- 2D. Preços e despesas definidos pelo autor ----------
+// ---------- 2D. Silagem de lavoura (motor 3.3.0) ----------
+console.log('');
+const near = (a, b, tol = 1e-6) => Math.abs(a - b) <= tol * Math.max(1, Math.abs(b));
+const SIL_PADRAO_MOTOR = () => { const n = E.normalizeInputs({}); return Object.fromEntries(Object.keys(n).filter((k) => k.startsWith('silCusto') || ['silProdutividade_t_ha', 'silTeorMSPct', 'silPerdasColheitaPct', 'silPerdasFermentacaoPct', 'silPerdasDesabastecimentoPct', 'silDensidade', 'silLarguraPainel', 'silAlturaPainel', 'silCustoSilo_m3', 'silVidaUtilSilo', 'silPrecoVenda_t'].includes(k)).map((k) => [k, n[k]])); };
+// Preset do milho com 8% da área: todos os campos da silagem preenchidos e iguais aos padrões do motor.
+const silBase = { ...P.porId['silagem-milho'].raw, fracaoAreaSilagem: 8 };
+ok(Object.entries(SIL_PADRAO_MOTOR()).every(([k, v]) => near(silBase[k], v)), 'padrões do milho na tela (cenário) = padrões do motor');
+const rS = E.calculateEconomics(silBase), sM = rS.silage;
+ok(near(sM.msUtil_t_ha, 45 * .33 * .97 * .92 * .95), `milho padrão: MS útil de ${sM.msUtil_t_ha.toFixed(2)} t/ha = MS colhida × (1 − perdas de colheita, fermentação e desabastecimento)`);
+const custoTColhida = sM.custo_ha / sM.mnColhida_t_ha;
+ok(custoTColhida > 150 && custoTColhida < 260, `milho padrão: R$ ${custoTColhida.toFixed(0)}/t colhida, entre os R$ 183 (Cultivar 2025) e os R$ 238 (Epagri 2022) com folga`);
+ok(near(sM.custoCaixa_ha + sM.custoCapital_ha, sM.custo_ha) && near(rS.silagemCusto_ha, sM.custo_ha * .08), 'caixa + capital = custo da silagem; no ciclo de 365 dias entra 8% da área × custo/ha');
+const rSemSil = E.calculateEconomics({ ...silBase, conservacao: 'nao' });
+ok(near(rS.custeioCaixaCiclo_total - rSemSil.custeioCaixaCiclo_total, sM.custoCaixa_ha * 8), 'o custeio de caixa recebe só a parte de caixa da silagem (o CAE do silo fica fora)');
+ok(rS.capitalSilagem_total > 0 && near(rS.capitalSilagem_total, sM.investimentoSilo_ha * 8), `trincheira nova: investimento de R$ ${rS.capitalSilagem_total.toFixed(0)} no ano 0`);
+const rEx = E.calculateEconomics({ ...silBase, silInvestimentoSilo: 'existente' }), rBag = E.calculateEconomics({ ...silBase, silTipoSilo: 'bolsa' });
+ok(rEx.capitalSilagem_total === 0 && rEx.silage.caeSilo_ha === 0 && rBag.silage.volume_m3_ha === 0 && rBag.silage.avancoPainel_m_dia === null, 'silo existente não tem investimento; silo bolsa não tem estrutura nem painel');
+const rPer = E.calculateEconomics({ ...silBase, silPerene: 'sim', silVidaUtilCultura: 6 });
+ok(near(rPer.silage.implantacaoPerene_ha, 415 + 150 + 3070) && near(rPer.silage.custoCaixa_ha, sM.custoCaixa_ha - 415 / 3 - 150 - 3070), 'perene: correção + preparo + plantio viram implantação (capital), fora do caixa anual');
+ok(rS.balancoForragem.conservado_kg > 0 && near(rS.balancoForragem.conservado_kg, sM.msUtilCiclo_kg), 'planta inteira de consumo interno entra no balanço de forragem');
+const rVenda = E.calculateEconomics({ ...silBase, silDestino: 'venda' });
+ok(rVenda.balancoForragem.conservado_kg === 0 && near(rVenda.receitaConservacao_ha, rVenda.silage.mnUtil_t_ha * 280 * .08), 'venda: silagem fora do balanço, receita = t MN útil × preço');
+const d285 = E.dimensionarAreaSilagem({ ...silBase, cabecas: 285 });
+const atendeCom = (p) => E.calculateEconomics({ ...silBase, cabecas: 285, fracaoAreaSilagem: p }).balancoForragem.atende;
+ok(d285 && d285.atingivel && atendeCom(d285.areaPct + .01) && !atendeCom(d285.areaPct - .5), `dimensionamento: ${d285 && d285.areaPct.toFixed(1)}% da área zera o déficit com 285 cab./100 ha (meio ponto a menos não zera)`);
+ok(E.dimensionarAreaSilagem(silBase).areaPct === 0, 'dimensionamento: sem déficit, a área necessária é zero');
+const lote120 = { ...silBase, permanencia: 120, mesEntrada: 6 };
+ok(near(E.calculateEconomics(lote120).silage.msUtilCiclo_kg, sM.msUtil_t_ha * 1000 * 8) && near(E.calculateEconomics({ ...lote120, ciclosAno: 3 }).silage.msUtilCiclo_kg, sM.msUtil_t_ha * 1000 * 8 / 3), 'silagem é estoque: um lote de 120 dias recebe a silagem do ano; com 3 lotes, um terço');
+const tipG = P.porId['tip-seca-grao-umido'], rG = E.calculateEconomics(tipG.raw), rT0 = E.calculateEconomics(tipS.raw);
+ok(rG.balancoForragem.conservado_kg === 0 && rG.abatimentoGrao_ha > 0 && rG.abatimentoGrao_ha <= rG.custoSuplementacaoCiclo_ha + 1e-9, `grão úmido: fora do balanço, abate R$ ${rG.abatimentoGrao_ha.toFixed(0)}/ha de R$ ${rG.custoSuplementacaoCiclo_ha.toFixed(0)}/ha de suplemento`);
+ok(near(rG.coe_ha - rT0.coe_ha, -rG.abatimentoGrao_ha), 'grão úmido: o COE cai exatamente o abatimento');
+const rGmax = E.calculateEconomics({ ...tipG.raw, fracaoAreaSilagem: 60 });
+ok(near(rGmax.abatimentoGrao_ha, rGmax.custoSuplementacaoCiclo_ha) && rGmax.excedenteGrao_ha > 0 && E.assessViability(E.normalizeInputs({ ...tipG.raw, fracaoAreaSilagem: 60 }), rGmax).reasons.some((x) => x.includes('grão úmido acima')), 'grão úmido acima do suplemento: abatimento no teto e alerta de excedente');
+ok(rG.margemAnual_ha > rT0.margemAnual_ha, `TIP seca com grão úmido em 5% da área: margem anual de R$ ${rG.margemAnual_ha.toFixed(0)}/ha contra R$ ${rT0.margemAnual_ha.toFixed(0)}/ha sem ele`);
+for (const id of ['silagem-milho', 'silagem-sorgo', 'silagem-capim']) {
+  const pr = P.porId[id], refSaz = { ...pr.raw, conservacao: 'nao', gmdSeca: .30 }, mRef = marg(refSaz);
+  const be = (() => { for (let g = .30; g <= .70; g += .001) if (marg({ ...pr.raw, gmdSeca: g }) >= mRef) return g; return NaN; })();
+  ok(marg(pr.raw) > mRef && marg({ ...pr.raw, gmdSeca: .30 }) < mRef && be >= pr.meta.gmdSecaEquilibrio[0] && be <= pr.meta.gmdSecaEquilibrio[1], `${id}: supera o pasto sem silagem com GMD da seca de 0,45 e perde com 0,30; equilíbrio em ${be.toFixed(3)} kg/dia (texto: ${pr.meta.gmdSecaEquilibrio.join(' a ')})`);
+  ok(E.assessViability(E.normalizeInputs(pr.raw), E.calculateEconomics(pr.raw)).status === 'viavel', `${id}: veredito sem ressalvas (MS, perdas e avanço do painel dentro das faixas)`);
+}
+ok(P.porId['silagem-capim'].raw.silPerene === 'sim' && E.calculateEconomics(P.porId['silagem-capim'].raw).silage.caePerene_ha > 0, 'Capiaçu: cultura perene com implantação amortizada');
+ok(E.validateInputs({ ...silBase, integracao: 'ilp', usoAreaAgricola: 'separada', fracaoAreaAgricola: 50, fracaoAreaSilagem: 50 }).errors.some((e) => e.field === 'fracaoAreaSilagem'), 'validação: área agrícola separada + silagem não podem somar 100%');
+ok(E.validateInputs({ ...silBase, silPerdasFermentacaoPct: 99, silPerdasColheitaPct: 99, silPerdasDesabastecimentoPct: 99 }).valid && !E.validateInputs({ ...silBase, silPerdasFermentacaoPct: 100 }).valid, 'validação: perdas de 100% são rejeitadas');
+ok(E.validateInputs({ ...silBase, silTipoSilo: 'bolsa', silDensidade: 1 }).valid && !E.validateInputs({ ...silBase, silDensidade: 1 }).valid, 'validação: densidade só é exigida em trincheira e superfície');
+ok(!E.calculateEconomics({ ...silBase, conservacao: 'silagem' }).silage.active && E.calculateEconomics({ ...silBase }).conservation.active === false, 'silagem simplificada e silagem de lavoura não se misturam');
+{
+  let s2 = 7; const R2 = () => { s2 = (s2 * 1664525 + 1013904223) >>> 0; return s2 / 4294967296; };
+  const pick2 = (a) => a[Math.floor(R2() * a.length)];
+  let ruins = 0;
+  for (let i = 0; i < 300; i++) {
+    const raw = { ...silBase, culturaSilagem: pick2(['milho', 'sorgo', 'graoUmido', 'capim', 'cana', 'outra']), fracaoAreaSilagem: .1 + R2() * 40, silTipoSilo: pick2(['trincheira', 'superficie', 'bolsa']), silPerene: pick2(['sim', 'nao']), silDestino: pick2(['interno', 'venda']), silInvestimentoSilo: pick2(['novo', 'existente']), silProdutividade_t_ha: 1 + R2() * 120, silTeorMSPct: 15 + R2() * 60, permanencia: Math.round(60 + R2() * 305), mesEntrada: 1 + Math.floor(R2() * 12), modoSuplementacao: pick2(['agregado', 'detalhado']), modoEconomico: pick2(['incremental', 'ciclo']), custoAnimalEntrada_cab: 3000 };
+    const r = E.calculateEconomics(raw), v = E.assessViability(E.normalizeInputs(raw), r);
+    if (![r.margemLiquida_ha, r.margemAnual_ha, r.cot_ha, r.silage.custo_ha].every(Number.isFinite) || !v.status) ruins++;
+  }
+  ok(ruins === 0, `300 entradas aleatórias de silagem de lavoura: resultados finitos e veredito (${ruins} falhas)`);
+}
+
+// ---------- 2E. Preços e despesas definidos pelo autor ----------
 console.log('');
 ok(P.lista.every((p) => p.raw.precoArroba === 350), 'todos os cenários usam a arroba a R$ 350,00');
 const ciclos = P.lista.filter((p) => p.raw.modoEconomico === 'ciclo');
-ok(ciclos.length === 3 && ciclos.every((p) => p.raw.despesasComerciaisPct === 0.5 && p.raw.outrasDespesas_cab === 50), 'cenários de ciclo completo (RIP e TIP): despesas comerciais de 0,5% e fretes/outros de R$ 50/cab');
+ok(ciclos.length === 4 && ciclos.every((p) => p.raw.despesasComerciaisPct === 0.5 && p.raw.outrasDespesas_cab === 50), 'cenários de ciclo completo (RIP, TIP e TIP com grão úmido): despesas comerciais de 0,5% e fretes/outros de R$ 50/cab');
 ok(['tip-aguas', 'tip-seca'].every((id) => P.porId[id].raw.custoAnimalEntrada_cab === 4300), 'TIP: magro de 360 kg a R$ 4.300/cab');
 ok(P.porId['rip-intensivo'].raw.custoAnimalEntrada_cab === 3450, 'RIP: bezerro de 210 kg segue em R$ 3.450/cab (Cepea)');
 
